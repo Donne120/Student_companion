@@ -1,0 +1,115 @@
+
+/* Root container styling with ALU branding */
+#root {
+  margin: 0 auto;
+  text-align: center;
+  /* Add a subtle gradient background inspired by ALU colors */
+  background: linear-gradient(135deg, rgba(0, 51, 102, 0.02) 0%, rgba(94, 45, 121, 0.05) 100%);
+}
+
+/* ALU Logo styling */
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em rgba(255, 0, 51, 0.6));
+}
+.logo.alu:hover {
+  filter: drop-shadow(0 0 2em rgba(94, 45, 121, 0.6));
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em rgba(0, 51, 102, 0.6));
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 51, 102, 0.1);
+  border-radius: 8px;
+}
+
+.read-the-docs {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ALU specific styling */
+.alu-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.alu-heading {
+  font-weight: bold;
+  color: #FFFFFF;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.alu-text {
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.alu-link {
+  color: #FF0033;
+  transition: all 0.3s ease;
+}
+
+.alu-link:hover {
+  color: #5E2D79;
+  text-decoration: underline;
+}
+
+/* ALU button styles */
+.alu-button {
+  background-color: #FF0033;
+  color: white;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.alu-button:hover {
+  background-color: #D00029;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.alu-button.secondary {
+  background-color: #5E2D79;
+}
+
+.alu-button.secondary:hover {
+  background-color: #4A2361;
+}
+
+.alu-button.outline {
+  background-color: transparent;
+  border: 1px solid #FF0033;
+  color: #FF0033;
+}
+
+.alu-button.outline:hover {
+  background-color: rgba(255, 0, 51, 0.1);
+}

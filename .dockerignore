@@ -1,0 +1,20 @@
+# Directories to exclude
+node_modules
+dist
+.git
+__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+env/
+venv/
+compat_venv/
+.env
+.venv
+
+# Large files or directories
+**/models/
+**/datasets/
+**/vector_store/
+**/cache/

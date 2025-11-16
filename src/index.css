@@ -1,0 +1,170 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ALU Primary Colors */
+    --alu-navy: 215 100% 20%;      /* #003366 - Navy blue for trustworthiness and professionalism */
+    --alu-red: 350 100% 50%;       /* #FF0033 - Bold red for passion and energy */
+    --alu-purple: 280 45% 35%;     /* #5E2D79 - Deep purple for creativity and innovation */
+    
+    /* Background colors */
+    --background: var(--alu-navy);
+    --foreground: 0 0% 100%;       /* White text on dark backgrounds */
+
+    /* Card colors */
+    --card: 215 50% 23%;           /* Slightly lighter navy for cards */
+    --card-foreground: 0 0% 100%;  /* White text on cards */
+
+    /* Component colors */
+    --popover: 215 50% 23%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Primary action colors - using ALU red */
+    --primary: var(--alu-red);
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary colors - using ALU purple */
+    --secondary: var(--alu-purple);
+    --secondary-foreground: 0 0% 100%;
+
+    /* Other UI colors */
+    --muted: 215 30% 30%;
+    --muted-foreground: 215 10% 80%;
+
+    --accent: 350 80% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 30% 30%;
+    --input: 215 30% 30%;
+    --ring: 215 90% 40%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar specific colors */
+    --sidebar-background: 215 100% 15%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: var(--alu-red);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--alu-purple);
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 30% 25%;
+    --sidebar-ring: 350 90% 60%;
+  }
+
+  .light {
+    /* Light mode variants */
+    --background: 0 0% 100%;
+    --foreground: 215 100% 20%;    /* ALU navy for text */
+
+    --card: 0 0% 99%;
+    --card-foreground: 215 100% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 100% 20%;
+
+    /* Using ALU red for primary actions */
+    --primary: var(--alu-red);
+    --primary-foreground: 0 0% 100%;
+
+    /* Using ALU purple for secondary elements */
+    --secondary: var(--alu-purple);
+    --secondary-foreground: 0 0% 100%;
+
+    /* Other UI colors adjusted for light mode */
+    --muted: 215 30% 90%;
+    --muted-foreground: 215 30% 40%;
+
+    --accent: 350 80% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 30% 80%;
+    --input: 215 30% 80%;
+    --ring: 215 90% 40%;
+
+    /* Sidebar specific colors for light mode */
+    --sidebar-background: 215 30% 95%;
+    --sidebar-foreground: 215 100% 20%;
+    --sidebar-primary: var(--alu-red);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--alu-purple);
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 30% 85%;
+    --sidebar-ring: var(--alu-red);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* KaTeX Math Formatting */
+.katex-display {
+  @apply my-4 overflow-x-auto;
+}
+
+.katex {
+  @apply text-white;
+}
+
+/* Table Styles */
+.prose table {
+  @apply w-full border-collapse;
+}
+
+.prose thead {
+  @apply bg-gray-800;
+}
+
+.prose th {
+  @apply px-4 py-2 text-left border border-gray-700;
+}
+
+.prose td {
+  @apply px-4 py-2 border border-gray-700;
+}
+
+.prose tr:nth-child(even) {
+  @apply bg-gray-800/50;
+}
+
+.prose tr:hover {
+  @apply bg-gray-700/50;
+}
+
+/* ALU specific utility classes */
+@layer utilities {
+  .alu-gradient-primary {
+    @apply bg-gradient-to-r from-[#003366] to-[#5E2D79];
+  }
+  
+  .alu-gradient-accent {
+    @apply bg-gradient-to-r from-[#FF0033] to-[#5E2D79];
+  }
+
+  .alu-card {
+    @apply bg-card border border-[#003366]/30 shadow-lg rounded-lg overflow-hidden;
+  }
+
+  .alu-button-primary {
+    @apply bg-[#FF0033] hover:bg-[#D00029] text-white font-medium px-4 py-2 rounded transition-colors;
+  }
+
+  .alu-button-secondary {
+    @apply bg-[#5E2D79] hover:bg-[#4A2361] text-white font-medium px-4 py-2 rounded transition-colors;
+  }
+}

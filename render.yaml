@@ -1,0 +1,14 @@
+# Frontend service - separated to reduce memory pressure
+  - type: web
+    name: alu-companion
+    runtime: node
+    nodeVersion: 18.x
+    region: ohio
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npx serve -s dist -l $PORT
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: VITE_API_URL
+        value: https://ngum-alu-chatbot.hf.space
