@@ -1,0 +1,20 @@
+# Ignore Python backend files
+requirements.txt
+Dockerfile
+*.py
+__pycache__/
+*.pyc
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore documentation that's not needed for deployment
+*.md
+!README.md
+
+# Ignore development files
+.git/
+.gitignore
+node_modules/
+
