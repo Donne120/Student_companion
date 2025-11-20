@@ -121,9 +121,9 @@ export const aiService = {
       // Gemini API Key
       const geminiApiKey = localStorage.getItem('GEMINI_API_KEY') || '';
       
-      // Hugging Face Model Settings (FREE AI!)
-      const useHuggingFaceModel = localStorage.getItem('USE_HUGGINGFACE_MODEL') === 'true';
-      const hfModelName = localStorage.getItem('HF_MODEL_NAME') || 'mistralai/Mistral-7B-Instruct-v0.2';
+      // Hugging Face Model Settings (FREE AI!) - DEFAULT TO TRUE for better responses
+      const useHuggingFaceModel = localStorage.getItem('USE_HUGGINGFACE_MODEL') !== 'false'; // Default: enabled
+      const hfModelName = localStorage.getItem('HF_MODEL_NAME') || 'meta-llama/Llama-2-7b-chat-hf'; // Use Llama by default
       
       // Backend URL (check if custom backend is enabled)
       const customBackendUrl = localStorage.getItem('BACKEND_URL');
