@@ -212,6 +212,8 @@ const isAdminUser = () => {
 export default function Settings() {
   // System settings
   const [geminiKey, setGeminiKey] = useState("");
+  const [useHuggingFaceModel, setUseHuggingFaceModel] = useState(false); // 🤗 NEW: HF Model toggle
+  const [hfModelName, setHfModelName] = useState("mistralai/Mistral-7B-Instruct-v0.2"); // 🤗 NEW: Model selection
   const [useLocalBackend, setUseLocalBackend] = useState(true);
   const [backendUrl, setBackendUrl] = useState("https://ngum-alu-student-companion.hf.space");
   const [theme, setTheme] = useState("system");
@@ -550,6 +552,8 @@ export default function Settings() {
       localStorage.setItem('KNOWLEDGE_SOURCES', JSON.stringify(knowledgeSources));
       localStorage.setItem('FEATURES', JSON.stringify(features));
       localStorage.setItem('GEMINI_API_KEY', geminiKey);
+      localStorage.setItem('USE_HUGGINGFACE_MODEL', useHuggingFaceModel.toString()); // 🤗 Save HF toggle
+      localStorage.setItem('HF_MODEL_NAME', hfModelName); // 🤗 Save model name
       localStorage.setItem('USE_LOCAL_BACKEND', useLocalBackend.toString());
       localStorage.setItem('BACKEND_URL', backendUrl);
       localStorage.setItem('THEME', theme);
@@ -570,6 +574,8 @@ export default function Settings() {
   // Load settings from localStorage on component mount
   useEffect(() => {
     const savedGeminiKey = localStorage.getItem("GEMINI_API_KEY") || "";
+    const savedUseHuggingFaceModel = localStorage.getItem("USE_HUGGINGFACE_MODEL") === "true"; // 🤗 Load HF toggle
+    const savedHfModelName = localStorage.getItem("HF_MODEL_NAME") || "mistralai/Mistral-7B-Instruct-v0.2"; // 🤗 Load model name
     const savedUseLocalBackend = localStorage.getItem("USE_LOCAL_BACKEND") === "true";
     const savedBackendUrl = localStorage.getItem("BACKEND_URL") || "https://ngum-alu-student-companion.hf.space";
     const savedUserRole = localStorage.getItem("USER_ROLE") || "student";
@@ -589,6 +595,8 @@ export default function Settings() {
     
     // Set loaded settings
     setGeminiKey(savedGeminiKey);
+    setUseHuggingFaceModel(savedUseHuggingFaceModel); // 🤗 Set HF toggle
+    setHfModelName(savedHfModelName); // 🤗 Set model name
     setUseLocalBackend(savedUseLocalBackend);
     setBackendUrl(savedBackendUrl);
     setTheme(savedTheme);

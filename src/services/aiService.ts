@@ -121,6 +121,10 @@ export const aiService = {
       // Gemini API Key
       const geminiApiKey = localStorage.getItem('GEMINI_API_KEY') || '';
       
+      // Hugging Face Model Settings (FREE AI!)
+      const useHuggingFaceModel = localStorage.getItem('USE_HUGGINGFACE_MODEL') === 'true';
+      const hfModelName = localStorage.getItem('HF_MODEL_NAME') || 'mistralai/Mistral-7B-Instruct-v0.2';
+      
       // Backend URL (check if custom backend is enabled)
       const customBackendUrl = localStorage.getItem('BACKEND_URL');
       const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
@@ -151,7 +155,11 @@ export const aiService = {
           system_prompt: systemInstructions || undefined,
           response_style: responseStyle,
           gemini_api_key: geminiApiKey || undefined, // ✅ SEND GEMINI KEY
-          options,
+          options: {
+            ...options,
+            use_huggingface_model: useHuggingFaceModel, // ✅ ENABLE HF MODEL
+            hf_model: hfModelName // ✅ SEND MODEL NAME
+          },
         }),
       });
 
