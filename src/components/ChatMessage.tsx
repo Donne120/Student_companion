@@ -116,28 +116,26 @@ export const ChatMessage = ({
         isAi ? "bg-transparent" : "bg-brand-blue-dark/20"
       )}
     >
-      <div className="max-w-3xl mx-auto flex gap-6 items-start">
-        {/* Avatar */}
-        <div className="flex-shrink-0 w-8 h-8">
-          {isAi ? (
-            <div className="w-8 h-8 rounded-sm bg-brand-gradient-gold flex items-center justify-center p-1.5">
-              <img 
-                src="/logo.png" 
-                alt="AI" 
-                className="w-full h-full object-contain"
-              />
-            </div>
-          ) : (
-            <div className="w-8 h-8 rounded-sm bg-brand-gradient-blue-gold flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-              </svg>
-            </div>
-          )}
-        </div>
+      <div className={cn(
+        "max-w-3xl mx-auto flex gap-6 items-start",
+        isAi ? "flex-row" : "flex-row-reverse" // User messages on right
+      )}>
+        {/* Avatar - Only show for AI messages */}
+        {isAi && (
+          <div className="flex-shrink-0">
+            <img 
+              src="/logo.png" 
+              alt="ALU AI" 
+              className="w-12 h-12 object-contain"
+            />
+          </div>
+        )}
 
         {/* Content */}
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className={cn(
+          "flex-1 min-w-0 space-y-3",
+          !isAi && "text-right" // Align user text to right
+        )}>
           {/* Message Content */}
           {isEditing ? (
             <div className="space-y-3">
@@ -166,7 +164,10 @@ export const ChatMessage = ({
               </div>
             </div>
           ) : (
-            <div className="text-gray-100">
+            <div className={cn(
+              "text-gray-100",
+              isAi ? "text-left" : "text-right" // AI left, User right
+            )}>
               {cardData ? (
                 <ChatCard {...cardData} />
               ) : (
@@ -212,10 +213,10 @@ export const ChatMessage = ({
                       </code>
                     );
                   },
-                  p: ({ children }) => <p className="mb-4 leading-7 text-left">{children}</p>,
-                  ul: ({ children }) => <ul className="mb-4 pl-6 list-disc space-y-2 marker:text-brand-gold">{children}</ul>,
-                  ol: ({ children }) => <ol className="mb-4 pl-6 list-decimal space-y-2 marker:text-brand-gold">{children}</ol>,
-                  li: ({ children }) => <li className="leading-7">{children}</li>,
+                  p: ({ children }) => <p className={cn("mb-4 leading-7", isAi ? "text-left" : "text-right")}>{children}</p>,
+                  ul: ({ children }) => <ul className={cn("mb-4 pl-6 list-disc space-y-2 marker:text-brand-gold", !isAi && "list-inside")}>{children}</ul>,
+                  ol: ({ children }) => <ol className={cn("mb-4 pl-6 list-decimal space-y-2 marker:text-brand-gold", !isAi && "list-inside")}>{children}</ol>,
+                  li: ({ children }) => <li className={cn("leading-7", !isAi && "text-right")}>{children}</li>,
                   h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 mt-6 text-white">{children}</h1>,
                   h2: ({ children }) => <h2 className="text-xl font-bold mb-3 mt-5 text-white">{children}</h2>,
                   h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4 text-white">{children}</h3>,
