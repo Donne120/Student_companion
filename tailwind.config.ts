@@ -23,7 +23,7 @@ export default {
         'alu-navy': '#003366',
         'alu-red': '#FF0033',
         'alu-purple': '#5E2D79',
-        // New brand colors from the image
+        // New Brand Colors - Blue & Gold Theme
         'brand-blue-dark': '#0A2463',
         'brand-blue': '#1E3A8A',
         'brand-blue-light': '#3B5998',
@@ -85,34 +85,6 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
-        "slide-in-right": {
-          "0%": { transform: "translateX(100%)", opacity: "0" },
-          "100%": { transform: "translateX(0)", opacity: "1" },
-        },
-        "slide-in-left": {
-          "0%": { transform: "translateX(-100%)", opacity: "0" },
-          "100%": { transform: "translateX(0)", opacity: "1" },
-        },
-        "slide-up": {
-          "0%": { transform: "translateY(100%)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" },
-        },
-        "scale-in": {
-          "0%": { transform: "scale(0.9)", opacity: "0" },
-          "100%": { transform: "scale(1)", opacity: "1" },
-        },
-        "shimmer": {
-          "0%": { backgroundPosition: "200% 0" },
-          "100%": { backgroundPosition: "-200% 0" },
-        },
-        "bounce-subtle": {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-5px)" },
-        },
-        "wiggle": {
-          "0%, 100%": { transform: "rotate(-3deg)" },
-          "50%": { transform: "rotate(3deg)" },
-        },
         "alu-pulse": {
           "0%, 100%": { 
             boxShadow: "0 0 0 0 rgba(255, 0, 51, 0.4)" 
@@ -121,29 +93,28 @@ export default {
             boxShadow: "0 0 0 15px rgba(255, 0, 51, 0)" 
           },
         },
-        "glow": {
-          "0%, 100%": { 
-            boxShadow: "0 0 20px rgba(255, 0, 51, 0.3)" 
-          },
-          "50%": { 
-            boxShadow: "0 0 30px rgba(255, 0, 51, 0.6)" 
-          },
+        "shimmer": {
+          "0%": { backgroundPosition: "-1000px 0" },
+          "100%": { backgroundPosition: "1000px 0" },
         },
+        "glow": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.5" },
+        },
+        "scale-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "message-fade-in": "message-fade-in 0.3s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "slide-in-right": "slide-in-right 0.3s ease-out",
-        "slide-in-left": "slide-in-left 0.3s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
-        "scale-in": "scale-in 0.2s ease-out",
-        "shimmer": "shimmer 2s linear infinite",
-        "bounce-subtle": "bounce-subtle 2s ease-in-out infinite",
-        "wiggle": "wiggle 0.5s ease-in-out",
         "alu-pulse": "alu-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "glow": "glow 2s ease-in-out infinite"
+        "shimmer": "shimmer 2s linear infinite",
+        "glow": "glow 2s ease-in-out infinite",
+        "scale-in": "scale-in 0.2s ease-out",
       },
       typography: {
         DEFAULT: {
@@ -165,7 +136,7 @@ export default {
       backgroundImage: {
         'alu-gradient-primary': 'linear-gradient(to right, #003366, #5E2D79)',
         'alu-gradient-accent': 'linear-gradient(to right, #FF0033, #5E2D79)',
-        // New brand gradients
+        // New Brand Gradients
         'brand-gradient': 'linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #3B5998 100%)',
         'brand-gradient-gold': 'linear-gradient(135deg, #D4AF37 0%, #F4D03F 100%)',
         'brand-gradient-blue-gold': 'linear-gradient(135deg, #0A2463 0%, #1E3A8A 50%, #D4AF37 100%)',

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Cache</title>
+</head>
+<body>
+    <h1>Clearing Cache...</h1>
+    <script>
+        // Clear the wrong backend URL
+        localStorage.removeItem('BACKEND_URL');
+        localStorage.setItem('BACKEND_URL', 'https://ngum-alu-student-companion.hf.space');
+        localStorage.setItem('USE_LOCAL_BACKEND', 'true');
+        
+        alert('Cache cleared! Backend URL set to: https://ngum-alu-student-companion.hf.space');
+        
+        // Redirect back to main app
+        window.location.href = '/';
+    </script>
+</body>
+</html>
+
+

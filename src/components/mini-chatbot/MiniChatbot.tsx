@@ -63,57 +63,50 @@ export const MiniChatbot = () => {
       onMouseDown={handleMouseDown}
     >
       {isOpen ? (
-      <Card className="w-80 shadow-lg animate-fade-in bg-brand-blue-dark border border-brand-gold/20 rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between p-3 bg-brand-gradient-gold text-brand-blue-dark">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/logo.png" 
-              alt="Student Companion" 
-              className="h-6 w-auto object-contain"
-            />
-            <h3 className="font-semibold">Student Companion</h3>
+        <Card className="w-80 shadow-lg animate-fade-in bg-[#003366] border border-[#FF0033]/20 rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between p-3 bg-gradient-to-r from-[#FF0033] to-[#5E2D79] text-white">
+            <h3 className="font-medium">ALU Mother Care</h3>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-white hover:bg-white/10" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-brand-blue-dark hover:bg-brand-blue-dark/10" 
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsOpen(false);
-            }}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <MiniChatbotContent />
-      </Card>
+          <MiniChatbotContent />
+        </Card>
       ) : (
         <div className="relative group">
           {/* Flag pole with greater height */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-14 w-1.5 h-14 bg-brand-gradient-gold rounded-t-sm"></div>
+          <div className="absolute left-1/2 -translate-x-1/2 -top-14 w-1.5 h-14 bg-gradient-to-b from-[#5E2D79] to-[#FF0033] rounded-t-sm"></div>
           
           {/* Flag directly on the pole */}
           <div className="absolute -top-14 left-1/2 -translate-x-[10%]">
             {/* Flag body with wave effect */}
-            <div className="bg-brand-gradient-gold text-brand-blue-dark px-3 py-1 rounded-r-md shadow-md w-32 h-8 flex items-center justify-center">
-              <span className="font-semibold text-xs whitespace-nowrap">Companion AI</span>
+            <div className="bg-gradient-to-r from-[#FF0033] to-[#5E2D79] text-white px-3 py-1 rounded-r-md shadow-md w-32 h-8 flex items-center justify-center">
+              <span className="font-medium text-xs whitespace-nowrap">ALU Mother Care</span>
               
               {/* Wave effect at the end of the flag */}
               <div className="absolute -right-1 top-0 h-full w-3 overflow-hidden">
-                <div className="h-full w-6 rounded-l-full bg-brand-gold transform translate-x-1"></div>
+                <div className="h-full w-6 rounded-l-full bg-[#5E2D79] transform translate-x-1"></div>
               </div>
             </div>
           </div>
           
           {/* Chat button */}
           <Button 
-            className="rounded-full h-14 w-14 shadow-lg animate-glow bg-brand-gradient-gold hover:opacity-90"
+            className="rounded-full h-14 w-14 shadow-lg animate-pulse bg-gradient-to-r from-[#FF0033] to-[#5E2D79] hover:from-[#D00029] hover:to-[#4A2361]"
             onClick={(e) => {
               e.stopPropagation();
               setIsOpen(true);
             }}
           >
-            <MessageCircle size={24} className="text-brand-blue-dark" />
+            <MessageCircle size={24} />
           </Button>
         </div>
       )}

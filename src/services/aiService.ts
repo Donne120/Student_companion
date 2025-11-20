@@ -100,52 +100,38 @@ export const aiService = {
     options: { personality?: Personality } = {}
   ): Promise<string> {
     try {
-      // ✅ READ MODEL PARAMETERS FROM SETTINGS
+      // ✅ READ SETTINGS FROM LOCALSTORAGE
+      
+      // Model parameters
       const savedModelParams = JSON.parse(
         localStorage.getItem('MODEL_PARAMETERS') || 
-        JSON.stringify({
-          temperature: 0.7,
-          topP: 0.9,
-          maxTokens: 1024,
-          presencePenalty: 0.2,
-          frequencyPenalty: 0.2
-        })
-      );
-
-      // ✅ READ KNOWLEDGE SOURCES FROM SETTINGS
-      const savedKnowledgeSources = JSON.parse(
-        localStorage.getItem('KNOWLEDGE_SOURCES') || '{}'
+        JSON.stringify({ temperature: 0.7, topP: 0.9, maxTokens: 1024, presencePenalty: 0.2, frequencyPenalty: 0.2 })
       );
       
-      // Filter to only enabled sources
-      const enabledKnowledgeSources = Object.keys(savedKnowledgeSources)
-        .filter(key => savedKnowledgeSources[key]);
-
-      // ✅ READ SYSTEM INSTRUCTIONS FROM SETTINGS
+      // Knowledge sources
+      const savedKnowledgeSources = JSON.parse(localStorage.getItem('KNOWLEDGE_SOURCES') || '{}');
+      const enabledKnowledgeSources = Object.keys(savedKnowledgeSources).filter(key => savedKnowledgeSources[key]);
+      
+      // System instructions
       const systemInstructions = localStorage.getItem('SYSTEM_INSTRUCTIONS') || '';
-
-      // ✅ READ RESPONSE STYLE FROM SETTINGS
+      
+      // Response style
       const responseStyle = localStorage.getItem('RESPONSE_STYLE') || 'balanced';
-
+      
+      // Gemini API Key
+      const geminiApiKey = localStorage.getItem('GEMINI_API_KEY') || '';
+      
+      // Backend URL (check if custom backend is enabled)
+      const customBackendUrl = localStorage.getItem('BACKEND_URL');
+      const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
+      const backendUrl = (useLocalBackend && customBackendUrl) ? customBackendUrl : API_URL;
+      const endpoint = `${backendUrl}/api/chat`;
+      
       // Convert the conversation history to the format expected by the backend
       const history = conversationHistory.map((message) => ({
         role: message.isAi ? "assistant" : "user",
         content: message.text,
       }));
-
-      // ✅ USE CUSTOM BACKEND URL IF SET
-      const customBackendUrl = localStorage.getItem('BACKEND_URL');
-      const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
-      const backendUrl = (useLocalBackend && customBackendUrl) ? customBackendUrl : API_URL;
-      const endpoint = `${backendUrl}/api/chat`;
-
-      console.log('🎯 Using settings:', {
-        modelParams: savedModelParams,
-        knowledgeSources: enabledKnowledgeSources,
-        responseStyle,
-        hasSystemInstructions: !!systemInstructions,
-        backendUrl: endpoint
-      });
 
       const response = await fetch(endpoint, {
         method: "POST",
@@ -155,7 +141,7 @@ export const aiService = {
         body: JSON.stringify({
           message: query,
           history,
-          // ✅ APPLY ALL SETTINGS TO REQUEST
+          // ✅ SEND ALL SETTINGS TO BACKEND
           temperature: savedModelParams.temperature,
           top_p: savedModelParams.topP,
           max_tokens: savedModelParams.maxTokens,
@@ -164,6 +150,7 @@ export const aiService = {
           knowledge_sources: enabledKnowledgeSources.length > 0 ? enabledKnowledgeSources : undefined,
           system_prompt: systemInstructions || undefined,
           response_style: responseStyle,
+          gemini_api_key: geminiApiKey || undefined, // ✅ SEND GEMINI KEY
           options,
         }),
       });

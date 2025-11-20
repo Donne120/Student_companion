@@ -61,20 +61,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-brand-gradient">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#003366] to-[#5E2D79]">
       <div className="flex-1 flex items-center justify-center">
         <div className="max-w-md w-full space-y-8 p-8 rounded-2xl bg-black/20 backdrop-blur-sm border border-white/10">
-        <div className="text-center">
-          <div className="flex items-center justify-center mx-auto mb-6">
-            <img 
-              src="/logo.png" 
-              alt="ALU Student Companion" 
-              className="h-20 w-auto object-contain"
-            />
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-2">
-            Welcome Back
-          </h2>
+          <div className="text-center">
+            <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-tr from-[#FF0033] to-[#5E2D79]">
+              <div className="text-2xl font-bold text-white">ALU</div>
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-2">
+              Welcome Back
+            </h2>
             <p className="text-gray-300 mb-6">
               Sign in to continue your journey with the ALU Student Companion
             </p>
@@ -121,7 +117,7 @@ export default function Login() {
             </div>
             <Button
               type="submit"
-              className="w-full h-12 bg-brand-gradient-gold hover:opacity-90 text-brand-blue-dark font-semibold"
+              className="w-full h-12 bg-gradient-to-r from-[#FF0033] to-[#5E2D79] hover:from-[#D00029] hover:to-[#4A2361] text-white"
               disabled={isLoading || isGoogleLoading}
             >
               {isLoading ? (

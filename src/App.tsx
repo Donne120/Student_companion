@@ -15,44 +15,10 @@ import ApiDocumentation from "./pages/admin/ApiDocumentation";
 import FeedbackDashboard from "./pages/admin/FeedbackDashboard";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
-import { useEffect } from "react";
 import "./App.css";
+import "./utils/resetBackendUrl"; // Auto-fix wrong backend URL
 
 function App() {
-  // ✅ Apply theme from settings
-  useEffect(() => {
-    const applyTheme = () => {
-      const savedTheme = localStorage.getItem('THEME') || 'system';
-      
-      console.log('✅ Applying theme from settings:', savedTheme);
-      
-      if (savedTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else if (savedTheme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        // System default - check user's preference
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', prefersDark);
-      }
-    };
-    
-    applyTheme();
-    
-    // Listen for theme changes from other tabs/windows
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'THEME') {
-        applyTheme();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   return (
     <AuthProvider>
       <NextThemeProvider attribute="class" defaultTheme="dark">

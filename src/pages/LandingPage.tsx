@@ -20,13 +20,6 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-b from-[#0F4C81] to-[#0F4C81]/90 text-white">
       <div className="container mx-auto pt-20 px-4">
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-8">
-            <img 
-              src="/logo.png" 
-              alt="ALU Student Companion" 
-              className="h-24 md:h-32 w-auto object-contain"
-            />
-          </div>
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
             ALU Student Companion
           </h1>

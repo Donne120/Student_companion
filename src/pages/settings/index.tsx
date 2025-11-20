@@ -213,7 +213,7 @@ export default function Settings() {
   // System settings
   const [geminiKey, setGeminiKey] = useState("");
   const [useLocalBackend, setUseLocalBackend] = useState(true);
-  const [backendUrl, setBackendUrl] = useState("https://ngum-alu-chatbot.hf.space");
+  const [backendUrl, setBackendUrl] = useState("https://ngum-alu-student-companion.hf.space");
   const [theme, setTheme] = useState("system");
   const [userRole, setUserRole] = useState("student");
   const [performanceMetrics, setPerformanceMetrics] = useState({
@@ -538,7 +538,7 @@ export default function Settings() {
     }, 2000); // 2 second delay after changes
     
     return () => clearTimeout(saveTimer);
-  }, [modelParameters, knowledgeSources, features]);
+  }, [modelParameters, knowledgeSources, features, geminiKey, useLocalBackend, backendUrl, theme]);
 
   // Consolidated save function
   const saveAllSettings = () => {
@@ -549,8 +549,10 @@ export default function Settings() {
       localStorage.setItem('MODEL_PARAMETERS', JSON.stringify(modelParameters));
       localStorage.setItem('KNOWLEDGE_SOURCES', JSON.stringify(knowledgeSources));
       localStorage.setItem('FEATURES', JSON.stringify(features));
-      
-      // Save other settings as needed
+      localStorage.setItem('GEMINI_API_KEY', geminiKey);
+      localStorage.setItem('USE_LOCAL_BACKEND', useLocalBackend.toString());
+      localStorage.setItem('BACKEND_URL', backendUrl);
+      localStorage.setItem('THEME', theme);
       
       setLastSaved(new Date());
       setIsSaving(false);
@@ -569,7 +571,7 @@ export default function Settings() {
   useEffect(() => {
     const savedGeminiKey = localStorage.getItem("GEMINI_API_KEY") || "";
     const savedUseLocalBackend = localStorage.getItem("USE_LOCAL_BACKEND") === "true";
-    const savedBackendUrl = localStorage.getItem("BACKEND_URL") || "https://ngum-alu-chatbot.hf.space";
+    const savedBackendUrl = localStorage.getItem("BACKEND_URL") || "https://ngum-alu-student-companion.hf.space";
     const savedUserRole = localStorage.getItem("USER_ROLE") || "student";
     const savedTheme = localStorage.getItem("THEME") || "system";
     const savedFeatures = JSON.parse(localStorage.getItem("FEATURES") || "null");
@@ -1179,15 +1181,7 @@ export default function Settings() {
                     
                     <div className="space-y-2">
                       <Label>Response Style</Label>
-                      <Select 
-                        value={localStorage.getItem('RESPONSE_STYLE') || 'balanced'}
-                        onValueChange={(value) => {
-                          localStorage.setItem('RESPONSE_STYLE', value);
-                          toast.success('Response style updated', {
-                            description: `AI will now use ${value} style`
-                          });
-                        }}
-                      >
+                      <Select defaultValue="balanced">
                         <SelectTrigger>
                           <SelectValue placeholder="Select style" />
                         </SelectTrigger>
@@ -1205,13 +1199,6 @@ export default function Settings() {
                       <Textarea 
                         placeholder="Enter custom instructions for the AI assistant..."
                         className="min-h-[120px]"
-                        defaultValue={localStorage.getItem('SYSTEM_INSTRUCTIONS') || ''}
-                        onChange={(e) => {
-                          localStorage.setItem('SYSTEM_INSTRUCTIONS', e.target.value);
-                        }}
-                        onBlur={() => {
-                          toast.success('System instructions saved');
-                        }}
                       />
                       <p className="text-sm text-muted-foreground">
                         Define how the AI should behave, what tone to use, and any specific instructions for responses.

@@ -13,32 +13,26 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.ico', 'logo.png', 'og-image.png', 'message.mp3'],
+        includeAssets: ['favicon.ico', 'og-image.png', 'message.mp3'],
         manifest: {
-          name: 'Student Companion AI',
-          short_name: 'Companion AI',
+          name: 'ALU Student Companion',
+          short_name: 'ALU Companion',
           description: 'Your AI-powered guide through the ALU journey',
-          theme_color: '#1E3A8A',
-          background_color: '#0A2463',
+          theme_color: '#003366',
+          background_color: '#1A1F2C',
           display: 'standalone',
           orientation: 'portrait',
           icons: [
             {
-              src: '/logo.png',
-              sizes: '192x192',
-              type: 'image/png',
-              purpose: 'any'
-            },
-            {
-              src: '/logo.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable'
-            },
-            {
               src: '/favicon.ico',
               sizes: '64x64 32x32 24x24 16x16',
               type: 'image/x-icon'
+            },
+            {
+              src: '/og-image.png',
+              sizes: '512x512',
+              type: 'image/png',
+              purpose: 'any maskable'
             }
           ]
         },

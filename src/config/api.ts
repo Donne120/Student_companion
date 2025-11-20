@@ -8,7 +8,7 @@ export const getApiUrl = () => {
   }
   
   // For Hugging Face Space deployment
-  return 'https://ngum-alu-chatbot.hf.space';
+  return 'https://ngum-alu-student-companion.hf.space';
 };
 
 // Base URL for API requests

@@ -149,11 +149,13 @@ export default function Signup() {
               transition={{ duration: 0.6, delay: 0.2 }}
             >
               <div className="flex items-center space-x-3 mb-8">
-                <img 
-                  src="/logo.png" 
-                  alt="ALU Student Companion" 
-                  className="h-16 w-auto object-contain"
-                />
+                <div className="bg-white p-2 rounded-lg shadow-md">
+                  <img 
+                    src="https://www.alueducation.com/wp-content/uploads/2021/11/ALU-logo.png" 
+                    alt="ALU Logo" 
+                    className="h-8" 
+                  />
+                </div>
                 <h1 className="text-2xl font-bold text-white">Student Companion</h1>
               </div>
               

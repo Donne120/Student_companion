@@ -1,16 +1,16 @@
 import { useState } from "react";
-import type { ReactNode } from "react";
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { Copy, Check, Edit, Camera, ThumbsUp, ThumbsDown, MessageSquare } from "lucide-react";
+import { Copy, Check, ThumbsUp, ThumbsDown, Edit2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import html2canvas from "html2canvas";
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import { ChatCard } from "./ui/chat-card";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 interface ChatMessageProps {
   message: string;
@@ -23,6 +23,8 @@ interface ChatMessageProps {
   onEdit?: (newMessage: string) => void;
   onFeedback?: (type: 'positive' | 'negative', details?: string) => void;
 }
+
+import type { ReactNode } from "react";
 
 interface CodeProps {
   inline?: boolean;
@@ -66,17 +68,9 @@ export const ChatMessage = ({
   onFeedback
 }: ChatMessageProps) => {
   const [copied, setCopied] = useState(false);
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
-  const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackGiven, setFeedbackGiven] = useState(false);
-  const [feedbackDetails, setFeedbackDetails] = useState('');
-  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const timestamp = new Date().toLocaleString('en-US', {
-    hour: 'numeric',
-    minute: 'numeric',
-    hour12: true
-  });
 
   const cardData = tryParseCard(message);
 
@@ -84,171 +78,99 @@ export const ChatMessage = ({
     try {
       await navigator.clipboard.writeText(message);
       setCopied(true);
-      toast.success("Message copied to clipboard");
+      toast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      toast.error("Failed to copy message");
-    }
-  };
-  const handleEdit = () => {
-    if (isEditing) {
-      onEdit?.(editedMessage);
-      setIsEditing(false);
-    } else {
-      setIsEditing(true);
-    }
-  };
-  const handleScreenshot = async () => {
-    try {
-      const messageElement = document.getElementById(`message-${message.slice(0, 10)}`);
-      if (messageElement) {
-        const canvas = await html2canvas(messageElement);
-        const dataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = 'chat-screenshot.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        toast.success("Screenshot saved");
-      }
-    } catch (err) {
-      toast.error("Failed to take screenshot");
+      toast.error("Failed to copy");
     }
   };
 
-  const canShowFeedback = isAi && !feedbackGiven && localStorage.getItem('COLLECT_FEEDBACK') !== 'false';
+  const handleEdit = () => {
+    setIsEditing(true);
+    setEditedMessage(message);
+  };
+
+  const handleSaveEdit = () => {
+    if (editedMessage.trim() && editedMessage !== message) {
+      onEdit?.(editedMessage);
+      toast.success("Message updated");
+    }
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedMessage(message);
+  };
 
   const submitFeedback = (type: 'positive' | 'negative') => {
-    if (type === 'negative' && localStorage.getItem('DETAILED_NEGATIVE_FEEDBACK') !== 'false') {
-      setShowFeedbackForm(true);
-      return;
-    }
-
-    const feedback = JSON.parse(localStorage.getItem('FEEDBACK') || '[]');
-    feedback.push({
-      type,
-      message,
-      details: feedbackDetails,
-      timestamp: new Date().toISOString()
-    });
-    localStorage.setItem('FEEDBACK', JSON.stringify(feedback));
-
-    if (onFeedback) {
-      onFeedback(type, feedbackDetails);
-    }
-
+    onFeedback?.(type);
     setFeedbackGiven(true);
-    setShowFeedbackForm(false);
-  };
-
-  const renderFeedbackUI = () => {
-    if (!canShowFeedback) return null;
-
-    if (showFeedbackForm) {
-      return (
-        <div className="mt-3 p-3 rounded-lg bg-brand-blue/50 border border-brand-gold/20 backdrop-blur-sm">
-          <p className="text-sm text-gray-300 mb-2">What could be improved?</p>
-          <textarea
-            className="w-full p-2 rounded bg-brand-blue-dark border border-brand-gold/30 text-gray-200 text-sm mb-2 focus:border-brand-gold/50"
-            placeholder="Please tell us what was incorrect or unhelpful..."
-            value={feedbackDetails}
-            onChange={(e) => setFeedbackDetails(e.target.value)}
-            rows={3}
-          />
-          <div className="flex justify-end gap-2">
-            <button 
-              className="px-3 py-1 text-sm rounded bg-brand-blue hover:bg-brand-blue-light text-gray-300"
-              onClick={() => setShowFeedbackForm(false)}
-            >
-              Cancel
-            </button>
-            <button 
-              className="px-3 py-1 text-sm rounded bg-brand-gradient-gold text-brand-blue-dark hover:opacity-90"
-              onClick={() => submitFeedback('negative')}
-            >
-              Submit Feedback
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    if (showFeedback) {
-      return (
-        <div className="mt-2 flex space-x-2 items-center justify-end">
-          <span className="text-xs text-gray-400">Was this helpful?</span>
-          <button 
-            className="p-1 rounded hover:bg-green-500/20 text-green-400"
-            onClick={() => submitFeedback('positive')}
-          >
-            <ThumbsUp className="h-4 w-4" />
-          </button>
-          <button 
-            className="p-1 rounded hover:bg-red-500/20 text-red-400"
-            onClick={() => submitFeedback('negative')}
-          >
-            <ThumbsDown className="h-4 w-4" />
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div className="flex justify-end mt-1">
-        <button 
-          className="text-xs text-gray-400 flex items-center hover:text-gray-300"
-          onClick={() => setShowFeedback(true)}
-        >
-          <MessageSquare className="h-3 w-3 mr-1" />
-          Feedback
-        </button>
-      </div>
-    );
+    toast.success("Thank you for your feedback!");
   };
 
   return (
     <div 
       className={cn(
-        "py-6 px-6 md:px-12 lg:px-16 w-full animate-message-fade-in relative",
-        isAi ? "bg-transparent" : "bg-transparent"
-      )} 
-      id={`message-${message.slice(0, 10)}`}
+        "w-full py-8 px-4 group hover:bg-brand-blue-dark/30 transition-colors",
+        isAi ? "bg-transparent" : "bg-brand-blue-dark/20"
+      )}
     >
-      <div className="max-w-4xl mx-auto flex gap-4">
-        {isAi ? (
-          <div className="flex-shrink-0 mt-1">
-            <div className="w-10 h-10 rounded-full bg-brand-gradient-gold flex items-center justify-center p-1.5 shadow-lg">
+      <div className="max-w-3xl mx-auto flex gap-6 items-start">
+        {/* Avatar */}
+        <div className="flex-shrink-0 w-8 h-8">
+          {isAi ? (
+            <div className="w-8 h-8 rounded-sm bg-brand-gradient-gold flex items-center justify-center p-1.5">
               <img 
                 src="/logo.png" 
-                alt="Student Companion AI" 
+                alt="AI" 
                 className="w-full h-full object-contain"
               />
             </div>
-          </div>
-        ) : (
-          <div 
-            className="w-2 h-2 mt-2 rounded-full flex-shrink-0 bg-brand-gradient-blue-gold"
-          />
-        )}
+          ) : (
+            <div className="w-8 h-8 rounded-sm bg-brand-gradient-blue-gold flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            </div>
+          )}
+        </div>
 
-        <div className="flex-1 space-y-2">
-          <div 
-            className={cn(
-              "text-white transition-all duration-300",
-              "animate-scale-in"
-            )}
-          >
-            {isEditing ? (
-              <textarea
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-3">
+          {/* Message Content */}
+          {isEditing ? (
+            <div className="space-y-3">
+              <Textarea
                 value={editedMessage}
-                onChange={e => setEditedMessage(e.target.value)}
-                className="w-full bg-brand-blue-dark text-white rounded-lg p-3 min-h-[100px] border border-brand-gold/20"
+                onChange={(e) => setEditedMessage(e.target.value)}
+                className="min-h-[100px] bg-brand-blue border-brand-gold/30 text-white resize-none focus:border-brand-gold/50"
+                autoFocus
               />
-            ) : cardData ? (
-              <ChatCard {...cardData} />
-            ) : (
-              <ReactMarkdown
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveEdit}
+                  size="sm"
+                  className="bg-brand-gold hover:bg-brand-gold-light text-brand-blue-dark"
+                >
+                  Save & Submit
+                </Button>
+                <Button
+                  onClick={handleCancelEdit}
+                  size="sm"
+                  variant="outline"
+                  className="border-brand-gold/30 hover:bg-brand-blue"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-gray-100">
+              {cardData ? (
+                <ChatCard {...cardData} />
+              ) : (
+                <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex]}
                 components={{
@@ -259,157 +181,165 @@ export const ChatMessage = ({
                     ...props
                   }: CodeProps) => {
                     const match = /language-(\w+)/.exec(className || '');
-                    return !inline && match ? <div className="relative group my-6">
-                              <div className="absolute -inset-0.5 bg-gradient-to-r from-brand-gold to-brand-gold-light rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
-                              <div className="relative rounded-lg overflow-hidden">
-                                <div className="bg-brand-blue text-xs text-gray-400 px-4 py-1 flex justify-between items-center">
-                                  <span>{match[1].toUpperCase()}</span>
-                                  <button onClick={handleCopy} className="p-1 hover:bg-brand-blue-dark rounded">
-                                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                  </button>
-                                </div>
-                                <SyntaxHighlighter style={atomDark} language={match[1]} PreTag="div" customStyle={{
-                          margin: 0,
-                          background: '#0A2463',
-                          padding: '1rem',
-                          fontSize: '0.9rem',
-                          borderRadius: '0 0 0.5rem 0.5rem'
-                        }}>
-                                  {String(children).replace(/\n$/, '')}
-                                </SyntaxHighlighter>
-                              </div>
-                            </div> : <code {...props} className={cn(className, "bg-brand-blue px-1.5 py-0.5 rounded-md font-mono text-sm")}>
-                              {children}
-                            </code>;
+                    return !inline && match ? (
+                      <div className="my-4 rounded-lg overflow-hidden border border-brand-gold/20">
+                        <div className="bg-brand-blue px-4 py-2 flex justify-between items-center text-xs text-gray-400">
+                          <span>{match[1]}</span>
+                          <button 
+                            onClick={handleCopy} 
+                            className="hover:text-brand-gold transition-colors"
+                          >
+                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          </button>
+                        </div>
+                        <SyntaxHighlighter 
+                          style={atomDark} 
+                          language={match[1]} 
+                          PreTag="div" 
+                          customStyle={{
+                            margin: 0,
+                            background: '#0A2463',
+                            padding: '1rem',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          {String(children).replace(/\n$/, '')}
+                        </SyntaxHighlighter>
+                      </div>
+                    ) : (
+                      <code {...props} className="bg-brand-blue/50 px-1.5 py-0.5 rounded text-sm font-mono text-brand-gold-light">
+                        {children}
+                      </code>
+                    );
                   },
-                  p: ({
-                    children
-                  }) => <p className="mb-4 leading-7 text-justify">{children}</p>,
-                  ul: ({
-                    children
-                  }) => <ul className="mb-4 pl-6 list-disc space-y-2">{children}</ul>,
-                  ol: ({
-                    children
-                  }) => <ol className="mb-4 pl-6 list-decimal space-y-2">{children}</ol>,
-                  li: ({
-                    children
-                  }) => <li className="leading-7 text-justify">{children}</li>,
-                  h1: ({
-                    children
-                  }) => <h1 className="text-2xl font-bold mb-4 mt-6 bg-brand-gradient-gold bg-clip-text text-transparent">{children}</h1>,
-                  h2: ({
-                    children
-                  }) => <h2 className="text-xl font-bold mb-3 mt-5 bg-brand-gradient-gold bg-clip-text text-transparent">{children}</h2>,
-                  h3: ({
-                    children
-                  }) => <h3 className="text-lg font-bold mb-3 mt-5 bg-brand-gradient-gold bg-clip-text text-transparent">{children}</h3>,
-                  h4: ({
-                    children
-                  }) => <h4 className="text-base font-bold mb-2 mt-4 bg-brand-gradient-gold bg-clip-text text-transparent">{children}</h4>,
-                  blockquote: ({
-                    children
-                  }) => <blockquote className="border-l-4 border-brand-gold pl-4 italic my-4 text-gray-300 bg-brand-blue/50 py-2 rounded-r-md">
-                            {children}
-                          </blockquote>,
-                  a: ({
-                    href,
-                    children
-                  }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-brand-gold hover:underline font-medium">
-                            {children}
-                          </a>,
-                  table: ({
-                    children
-                  }) => <div className="overflow-x-auto my-6 rounded-lg border border-brand-gold/20">
-                            <table className="min-w-full rounded-lg overflow-hidden">
-                              {children}
-                            </table>
-                          </div>,
-                  thead: ({
-                    children
-                  }) => <thead className="bg-brand-blue">{children}</thead>,
-                  tbody: ({
-                    children
-                  }) => <tbody className="divide-y divide-brand-blue">{children}</tbody>,
-                  tr: ({
-                    children
-                  }) => <tr className="hover:bg-brand-blue/50 transition-colors">{children}</tr>,
-                  th: ({
-                    children
-                  }) => <th className="px-4 py-3 text-left font-semibold text-brand-gold">{children}</th>,
-                  td: ({
-                    children
-                  }) => <td className="px-4 py-3">{children}</td>,
-                  img: ({
-                    src,
-                    alt
-                  }) => <div className="my-4">
-                            <img src={src} alt={alt} className="rounded-lg max-w-full h-auto border border-brand-gold/20 shadow-lg" />
-                            {alt && <p className="text-center text-sm text-gray-400 mt-2">{alt}</p>}
-                          </div>
+                  p: ({ children }) => <p className="mb-4 leading-7 text-left">{children}</p>,
+                  ul: ({ children }) => <ul className="mb-4 pl-6 list-disc space-y-2 marker:text-brand-gold">{children}</ul>,
+                  ol: ({ children }) => <ol className="mb-4 pl-6 list-decimal space-y-2 marker:text-brand-gold">{children}</ol>,
+                  li: ({ children }) => <li className="leading-7">{children}</li>,
+                  h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 mt-6 text-white">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-xl font-bold mb-3 mt-5 text-white">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4 text-white">{children}</h3>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-brand-gold pl-4 py-2 my-4 text-gray-300 italic">
+                      {children}
+                    </blockquote>
+                  ),
+                  a: ({ href, children }) => (
+                    <a 
+                      href={href} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-brand-gold hover:text-brand-gold-light underline"
+                    >
+                      {children}
+                    </a>
+                  ),
+                  table: ({ children }) => (
+                    <div className="my-4 overflow-x-auto">
+                      <table className="min-w-full border border-brand-gold/20">
+                        {children}
+                      </table>
+                    </div>
+                  ),
+                  thead: ({ children }) => <thead className="bg-brand-blue">{children}</thead>,
+                  tbody: ({ children }) => <tbody className="divide-y divide-brand-gold/10">{children}</tbody>,
+                  tr: ({ children }) => <tr>{children}</tr>,
+                  th: ({ children }) => <th className="px-4 py-2 text-left font-semibold text-brand-gold">{children}</th>,
+                  td: ({ children }) => <td className="px-4 py-2">{children}</td>,
+                  img: ({ src, alt }) => (
+                    <div className="my-4">
+                      <img 
+                        src={src} 
+                        alt={alt} 
+                        className="rounded-lg max-w-full h-auto border border-brand-gold/20" 
+                      />
+                      {alt && <p className="text-center text-sm text-gray-400 mt-2">{alt}</p>}
+                    </div>
+                  )
                 }}
                 className="prose prose-invert max-w-none"
               >
                 {message}
               </ReactMarkdown>
-            )}
-          </div>
-          
-          {renderFeedbackUI()}
-          
-          <div className="text-xs text-gray-400 ml-1 flex items-center gap-2">
-            <span>{timestamp}</span>
-            <div className="h-1 w-1 rounded-full bg-gray-500"></div>
-            <span>{isAi ? 'AI Assistant' : 'You'}</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          {!isAi && (
-            <button
-              onClick={handleEdit}
-              className="p-2 rounded-lg hover:bg-brand-blue text-gray-400 hover:text-brand-gold transition-colors"
-            >
-              {isEditing ? <Check className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
-            </button>
+              )}
+            </div>
           )}
-          
-          <button
-            onClick={handleCopy}
-            className="p-2 rounded-lg hover:bg-brand-blue text-gray-400 hover:text-brand-gold transition-colors"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          </button>
+
+          {/* Attachments */}
+          {!isEditing && attachments && attachments.length > 0 && (
+            <div className="grid grid-cols-2 gap-2">
+              {attachments.map((attachment, index) =>
+                attachment && attachment.type === 'image' ? (
+                  <img 
+                    key={index}
+                    src={attachment.url} 
+                    alt={attachment.name} 
+                    className="rounded-lg w-full object-cover border border-brand-gold/10" 
+                  />
+                ) : attachment ? (
+                  <a 
+                    key={index} 
+                    href={attachment.url} 
+                    download={attachment.name}
+                    className="flex items-center gap-2 p-2 rounded-lg bg-brand-blue/50 hover:bg-brand-blue border border-brand-gold/10 text-sm"
+                  >
+                    📎 {attachment.name}
+                  </a>
+                ) : null
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons - Show on hover */}
+          {!isEditing && (
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              {/* Edit button for user messages */}
+              {!isAi && (
+                <button 
+                  onClick={handleEdit}
+                  className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
+                  title="Edit message"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+              )}
+              
+              {/* Copy button for all messages */}
+              <button 
+                onClick={handleCopy}
+                className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
+                title="Copy"
+              >
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </button>
+              
+              {/* Feedback buttons only for AI messages */}
+              {isAi && !feedbackGiven && (
+                <>
+                  <button 
+                    onClick={() => submitFeedback('positive')}
+                    className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-green-400 transition-colors"
+                    title="Good response"
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                  </button>
+                  <button 
+                    onClick={() => submitFeedback('negative')}
+                    className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-red-400 transition-colors"
+                    title="Bad response"
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                  </button>
+                </>
+              )}
+              
+              {isAi && feedbackGiven && (
+                <span className="text-xs text-gray-500">Thanks for your feedback</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-      {attachments && attachments.length > 0 && (
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {attachments.map((attachment, index) => 
-            attachment && attachment.type === 'image' ? (
-              <div key={index} className="relative group">
-                <div className="absolute -inset-0.5 bg-brand-gradient-gold rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity" />
-                <img 
-                  src={attachment.url} 
-                  alt={attachment.name} 
-                  className="relative rounded-lg max-h-64 object-cover w-full border border-brand-gold/10" 
-                />
-              </div>
-            ) : attachment ? (
-              <a 
-                key={index} 
-                href={attachment.url} 
-                download={attachment.name} 
-                className="relative group"
-              >
-                <div className="absolute -inset-0.5 bg-brand-gradient-gold rounded-lg blur opacity-20 group-hover:opacity-30 transition-opacity" />
-                <div className="relative flex items-center gap-2 p-3 rounded-lg bg-brand-blue hover:bg-brand-blue-light transition-colors border border-brand-gold/10">
-                  📎 {attachment.name}
-                </div>
-              </a>
-            ) : null
-          )}
-        </div>
-      )}
     </div>
   );
 };

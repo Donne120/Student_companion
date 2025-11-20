@@ -124,8 +124,8 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   }, [message]);
 
   return (
-    <div className="fixed bottom-0 left-16 right-0 md:left-64 lg:right-80 bg-brand-blue-dark/95 backdrop-blur-sm p-4 border-t border-brand-gold/20 z-10">
-      <div className="max-w-4xl mx-auto">
+    <div className="fixed bottom-0 left-16 right-0 md:left-64 lg:right-80 bg-brand-blue-dark/95 backdrop-blur-sm border-t border-brand-gold/20 z-10">
+      <div className="max-w-3xl mx-auto px-4 py-4">
         {attachments.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {attachments.map((file, index) => (
@@ -138,7 +138,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
                 </span>
                 <button
                   onClick={() => removeAttachment(index)}
-                  className="text-gray-400 hover:text-gray-200"
+                  className="text-gray-400 hover:text-brand-gold"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -146,7 +146,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
             ))}
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-3 items-end">
           <input
             type="file"
             ref={fileInputRef}
@@ -155,45 +155,53 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
             className="hidden"
             accept="image/*,.pdf,.doc,.docx,.txt"
           />
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            variant="ghost"
-            size="icon"
-            className="shrink-0"
-            disabled={disabled}
-          >
-            <Paperclip className="h-4 w-4" />
-          </Button>
-          <Button
-            onClick={toggleListening}
-            variant="ghost"
-            size="icon"
-            className={`shrink-0 ${isListening ? 'bg-red-500 hover:bg-red-600' : ''}`}
-            disabled={disabled}
-          >
-            {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          <Textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Send a message..."
-            className="resize-none bg-brand-blue border-brand-gold/30 text-white placeholder:text-gray-400 min-h-[44px] max-h-[200px] overflow-y-auto focus:border-brand-gold/50"
-            disabled={disabled}
-            rows={1}
-          />
-          <Button
-            onClick={handleSend}
-            disabled={(!message.trim() && attachments.length === 0) || disabled}
-            className="bg-brand-gradient-gold hover:opacity-90 text-brand-blue-dark shrink-0"
-          >
-            <SendHorizontal className="h-4 w-4" />
-          </Button>
+          <div className="flex-1 flex items-center gap-2 bg-brand-blue rounded-2xl border border-brand-gold/30 px-4 py-2 focus-within:border-brand-gold/50 transition-colors">
+            <Button
+              onClick={() => fileInputRef.current?.click()}
+              variant="ghost"
+              size="icon"
+              className="shrink-0 h-8 w-8 hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold"
+              disabled={disabled}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            
+            <Textarea
+              ref={textareaRef}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Message Student Companion..."
+              className="resize-none bg-transparent border-0 text-white placeholder:text-gray-500 min-h-[24px] max-h-[200px] overflow-y-auto focus:outline-none focus:ring-0 flex-1"
+              disabled={disabled}
+              rows={1}
+            />
+            
+            {message.trim() || attachments.length > 0 ? (
+              <Button
+                onClick={handleSend}
+                disabled={disabled}
+                size="icon"
+                className="shrink-0 h-8 w-8 bg-brand-gold hover:bg-brand-gold-light text-brand-blue-dark rounded-lg"
+              >
+                <SendHorizontal className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                onClick={toggleListening}
+                variant="ghost"
+                size="icon"
+                className={`shrink-0 h-8 w-8 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold'}`}
+                disabled={disabled}
+              >
+                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
-      <div className="text-center text-xs text-gray-400 mt-2">
-        Free Research Preview. ALU Student Companion may produce inaccurate information.
+        <div className="text-center text-xs text-gray-500 mt-2">
+          Student Companion AI can make mistakes. Check important info.
+        </div>
       </div>
     </div>
   );

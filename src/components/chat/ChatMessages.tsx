@@ -55,20 +55,20 @@ export const ChatMessages = ({ messages, isLoading, onEditMessage, activeModel =
         <div className="max-w-xl text-center space-y-6">
           <p className="text-lg text-gray-300">Welcome! How can I help you today?</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-md mx-auto">
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <h3 className="font-medium text-white mb-1">Academic Support</h3>
+            <div className="p-4 rounded-lg bg-brand-blue/50 border border-brand-gold/20 backdrop-blur-sm hover:bg-brand-blue transition-all">
+              <h3 className="font-medium text-brand-gold mb-1">Academic Support</h3>
               <p className="text-sm">Get help with assignments, courses, and learning resources</p>
             </div>
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <h3 className="font-medium text-white mb-1">Campus Services</h3>
+            <div className="p-4 rounded-lg bg-brand-blue/50 border border-brand-gold/20 backdrop-blur-sm hover:bg-brand-blue transition-all">
+              <h3 className="font-medium text-brand-gold mb-1">Campus Services</h3>
               <p className="text-sm">Connect with departments, schedule appointments</p>
             </div>
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <h3 className="font-medium text-white mb-1">Personal Growth</h3>
+            <div className="p-4 rounded-lg bg-brand-blue/50 border border-brand-gold/20 backdrop-blur-sm hover:bg-brand-blue transition-all">
+              <h3 className="font-medium text-brand-gold mb-1">Personal Growth</h3>
               <p className="text-sm">Career advice, skill development, and mentorship</p>
             </div>
-            <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-all">
-              <h3 className="font-medium text-white mb-1">Event Planning</h3>
+            <div className="p-4 rounded-lg bg-brand-blue/50 border border-brand-gold/20 backdrop-blur-sm hover:bg-brand-blue transition-all">
+              <h3 className="font-medium text-brand-gold mb-1">Event Planning</h3>
               <p className="text-sm">Stay updated on campus events and activities</p>
             </div>
           </div>
