@@ -5,7 +5,7 @@ import { Message } from "@/types/chat";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 // Update to match your Hugging Face API endpoint
-const CHAT_ENDPOINT = `${API_URL}/api/chat`;  // Changed from /chat to /api/chat
+const CHAT_ENDPOINT = `${API_URL}/chat`;  // Backend endpoint is /chat (no /api prefix)
 
 /**
  * Service for interacting with the AI backend
