@@ -125,7 +125,7 @@ export const aiService = {
       const customBackendUrl = localStorage.getItem('BACKEND_URL');
       const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
       const backendUrl = (useLocalBackend && customBackendUrl) ? customBackendUrl : API_URL;
-      const endpoint = `${backendUrl}/api/chat`;
+      const endpoint = `${backendUrl}/chat`; // Backend endpoint is /chat (no /api prefix)
       
       // Convert the conversation history to the format expected by the backend
       const history = conversationHistory.map((message) => ({

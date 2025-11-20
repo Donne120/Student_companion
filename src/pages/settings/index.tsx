@@ -374,7 +374,7 @@ export default function Settings() {
   const navigate = useNavigate();
 
   // Add these states and functions to your component
-  const [apiEndpoint, setApiEndpoint] = useState("/api/chat");
+  const [apiEndpoint, setApiEndpoint] = useState("/chat");
   const [apiMethod, setApiMethod] = useState("POST");
   const [apiPayload, setApiPayload] = useState(JSON.stringify({
     message: "Tell me about ALU's academic programs",
