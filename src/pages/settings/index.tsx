@@ -212,8 +212,8 @@ const isAdminUser = () => {
 export default function Settings() {
   // System settings
   const [geminiKey, setGeminiKey] = useState("");
-  const [useHuggingFaceModel, setUseHuggingFaceModel] = useState(false); // 🤗 NEW: HF Model toggle
-  const [hfModelName, setHfModelName] = useState("mistralai/Mistral-7B-Instruct-v0.2"); // 🤗 NEW: Model selection
+  const [useHuggingFaceModel, setUseHuggingFaceModel] = useState(false); // HF Model (disabled by default - API deprecated)
+  const [hfModelName, setHfModelName] = useState("mistralai/Mistral-7B-Instruct-v0.2");
   const [useLocalBackend, setUseLocalBackend] = useState(true);
   const [backendUrl, setBackendUrl] = useState("https://ngum-alu-student-companion.hf.space");
   const [theme, setTheme] = useState("system");
