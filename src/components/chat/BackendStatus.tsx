@@ -3,8 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Server } from "lucide-react";
 
-// Environment variable for local development
-const useLocalBackend = import.meta.env.DEV || false;
+/**
+ * PRODUCTION BACKEND URL - HARDCODED FOR ALL USERS
+ * This is the ONLY backend URL that will be used across all devices
+ */
+const BACKEND_URL = "https://ngum-alu-chatbot.hf.space";
 
 // Check if backend is available
 export const BackendStatus = () => {
@@ -12,17 +15,9 @@ export const BackendStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
 
-  // Get backend URL with efficient caching
+  // Get backend URL - always returns the hardcoded production URL
   const getBackendUrl = () => {
-    // Check if a BACKEND_URL is set in localStorage (for testing)
-    const storedBackendUrl = localStorage.getItem('BACKEND_URL');
-    if (storedBackendUrl) return storedBackendUrl;
-    
-    // Local development mode
-    if (useLocalBackend) return "http://localhost:8000";
-    
-    // Production deployment URL
-    return "https://ngum-alu-chatbot.hf.space";
+    return BACKEND_URL;
   };
 
   // Check backend availability

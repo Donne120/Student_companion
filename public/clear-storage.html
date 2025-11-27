@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Storage - ALU Chatbot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .cleared-items {
+            text-align: left;
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .cleared-items li {
+            padding: 0.25rem 0;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Browser Storage</h1>
+        <p>This will clear all cached settings and force the app to use fresh configuration.</p>
+        
+        <div id="status"></div>
+        
+        <button onclick="clearStorage()">Clear Storage Now</button>
+        <button onclick="goHome()">Go to Chatbot</button>
+    </div>
+
+    <script>
+        function clearStorage() {
+            const statusDiv = document.getElementById('status');
+            const clearedItems = [];
+            
+            // Get all localStorage keys before clearing
+            for (let i = 0; i < localStorage.length; i++) {
+                clearedItems.push(localStorage.key(i));
+            }
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear service workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(registrations => {
+                    registrations.forEach(registration => registration.unregister());
+                });
+            }
+            
+            // Show success message
+            statusDiv.innerHTML = `
+                <div class="status success">
+                    ✅ Storage cleared successfully!
+                    <div class="cleared-items">
+                        <strong>Removed items:</strong>
+                        <ul>
+                            ${clearedItems.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                <div class="status info">
+                    Now click "Go to Chatbot" or press Ctrl+Shift+R to hard refresh!
+                </div>
+            `;
+        }
+        
+        function goHome() {
+            window.location.href = '/';
+        }
+        
+        // Auto-clear on load if ?auto=true
+        if (window.location.search.includes('auto=true')) {
+            clearStorage();
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
+

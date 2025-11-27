@@ -2,33 +2,24 @@
 import { Message } from "@/types/chat";
 
 /**
- * Get the backend URL from localStorage or environment variable
- * Priority: localStorage > env variable > default
- * This function is called dynamically to always get the latest URL
+ * PRODUCTION BACKEND URL - HARDCODED FOR ALL USERS
+ * This is the ONLY backend URL that will be used.
+ * No user configuration, no localStorage, no environment variables.
+ */
+const BACKEND_URL = "https://ngum-alu-chatbot.hf.space";
+
+/**
+ * Get the backend URL - always returns the hardcoded production URL
+ * This ensures ALL users connect to the same backend without any configuration
  */
 function getBackendUrl(): string {
-  // Check localStorage first (set from Settings page)
-  const savedUrl = localStorage.getItem('BACKEND_URL');
-  if (savedUrl) {
-    return savedUrl;
-  }
-  
-  // Fallback to environment variable or default
-  const defaultUrl = import.meta.env.VITE_API_URL || "https://ngum-alu-chatbot.hf.space";
-  
-  // IMPORTANT: Set the default URL in localStorage so all users have it
-  // This ensures the URL persists across sessions
-  if (!savedUrl) {
-    localStorage.setItem('BACKEND_URL', defaultUrl);
-    console.log("✅ Set default backend URL in localStorage:", defaultUrl);
-  }
-  
-  return defaultUrl;
+  // Always return the hardcoded production URL
+  console.log("🔧 Using production backend:", BACKEND_URL);
+  return BACKEND_URL;
 }
 
-// Initialize backend URL and ensure it's saved
-const INITIAL_BACKEND_URL = getBackendUrl();
-console.log("🔧 Backend URL initialized:", INITIAL_BACKEND_URL);
+// Log the backend URL on initialization
+console.log("✅ Backend URL initialized:", BACKEND_URL);
 
 /**
  * Service for interacting with the AI backend
