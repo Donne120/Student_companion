@@ -8,6 +8,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import { ChatCard } from "./ui/chat-card";
+import { StructuredResponse } from "./chat/StructuredResponse";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,20 @@ const tryParseCard = (text: string) => {
     console.error('Error parsing card:', error);
     return null;
   }
+};
+
+/**
+ * Check if message is a structured response (has Quick Actions or Resources sections)
+ */
+const isStructuredResponse = (text: string): boolean => {
+  return (
+    text.includes('🔗 Quick Actions') ||
+    text.includes('**Quick Actions:**') ||
+    text.includes('📚 Resources') ||
+    text.includes('📞 Need Help') ||
+    text.includes('**📚 Resources & Links:**') ||
+    text.includes('**📞 Need Help? Contact Us:**')
+  );
 };
 
 export const ChatMessage = ({
@@ -112,7 +127,7 @@ export const ChatMessage = ({
   return (
     <div 
       className={cn(
-        "w-full py-8 px-4 group hover:bg-brand-blue-dark/30 transition-colors",
+        "w-full py-4 px-4 group hover:bg-brand-blue-dark/30 transition-colors",
         isAi ? "bg-transparent" : "bg-brand-blue-dark/20"
       )}
     >
@@ -170,6 +185,8 @@ export const ChatMessage = ({
             )}>
               {cardData ? (
                 <ChatCard {...cardData} />
+              ) : isAi && isStructuredResponse(message) ? (
+                <StructuredResponse content={message} />
               ) : (
                 <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
