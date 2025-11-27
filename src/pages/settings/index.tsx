@@ -835,73 +835,13 @@ export default function Settings() {
                 icon={<Globe className="h-5 w-5" />}
               >
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-base font-medium">Use ALU Knowledge Base</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Connect to local ALU knowledge base (recommended for most users)
-                      </p>
-                    </div>
-                    <Switch 
-                      checked={useLocalBackend} 
-                      onCheckedChange={toggleUseLocalBackend} 
-                    />
-                  </div>
-                  
-                  {useLocalBackend && (
-                    <div className="space-y-3">
-                      <Label htmlFor="backend-url">Backend URL</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          id="backend-url"
-                          placeholder="http://localhost:8000"
-                          value={backendUrl}
-                          onChange={(e) => setBackendUrl(e.target.value)}
-                          className="flex-1"
-                        />
-                        <Button 
-                          variant="outline" 
-                          onClick={testBackendConnection}
-                          disabled={isTestingBackend}
-                        >
-                          {isTestingBackend ? (
-                            <RefreshCw className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <span>Test Connection</span>
-                          )}
-                        </Button>
-                      </div>
-                      
-                      {backendTestResult !== null && (
-                        <Alert variant={backendTestResult ? "default" : "destructive"} className="mt-2">
-                          <AlertDescription>
-                            {backendTestResult 
-                              ? "Connection successful. ALU Knowledge Base is accessible."
-                              : "Connection failed. Please check the URL and ensure the backend server is running."
-                            }
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-                  )}
-
-                  {!useLocalBackend && (
-                    <div className="space-y-3">
-                      <Label htmlFor="gemini-key">Gemini API Key</Label>
-                      <div className="relative">
-                        <Input
-                          id="gemini-key"
-                          type="password"
-                          placeholder="Enter your Gemini API key"
-                          value={geminiKey}
-                          onChange={(e) => setGeminiKey(e.target.value)}
-                        />
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        You can get your API key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
-                      </p>
-                    </div>
-                  )}
+                  {/* Backend connection is automatic - no user configuration needed */}
+                  <Alert className="bg-green-50 border-green-200">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-700 text-sm">
+                      Connected to ALU Knowledge Base. The chatbot is ready to answer your questions about ALU programs, admissions, library resources, and more!
+                    </AlertDescription>
+                  </Alert>
                 </div>
                 
                 <Separator className="my-6" />
