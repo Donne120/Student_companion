@@ -75,22 +75,27 @@ function extractContact(text: string): { email?: string; phone?: string; locatio
 }
 
 /**
- * Determine label for a URL based on context
+ * Determine label for a URL based on context and query
  */
-function getLabelForUrl(url: string, context: string): string {
+function getLabelForUrl(url: string, context: string, fullText: string): string {
   const lowerUrl = url.toLowerCase();
   const lowerContext = context.toLowerCase();
+  const lowerFullText = fullText.toLowerCase();
   
-  // Library-specific
+  // Library-specific URLs (HIGHEST PRIORITY for library queries)
   if (lowerUrl.includes('library.alueducation.com')) {
     if (lowerContext.includes('manual') || lowerContext.includes('guide')) {
-      return 'Library User Guide';
+      return 'Download Library User Guide';
+    }
+    if (lowerUrl.includes('/manual')) {
+      return 'Library User Manual';
     }
     return 'Access ALU Library Portal';
   }
   
-  // General ALU website
+  // Specific ALU pages
   if (lowerUrl.includes('alueducation.com')) {
+    // Check URL path
     if (lowerUrl.includes('/programs')) {
       return 'View Academic Programs';
     }
@@ -100,11 +105,87 @@ function getLabelForUrl(url: string, context: string): string {
     if (lowerUrl.includes('/contact')) {
       return 'Contact ALU';
     }
+    if (lowerUrl.includes('/library')) {
+      return 'Library Resources';
+    }
+    if (lowerUrl.includes('/tuition') || lowerUrl.includes('/fees')) {
+      return 'Tuition & Fees Information';
+    }
+    if (lowerUrl.includes('/apply')) {
+      return 'Apply to ALU';
+    }
+    
+    // Check context for better labeling
+    if (lowerContext.includes('library') || lowerFullText.includes('library')) {
+      return 'Library Information';
+    }
+    if (lowerContext.includes('admission') || lowerFullText.includes('admission')) {
+      return 'Admissions Portal';
+    }
+    if (lowerContext.includes('program') || lowerFullText.includes('program')) {
+      return 'Academic Programs';
+    }
+    
+    // Generic ALU website (LOWEST PRIORITY)
     return 'Visit ALU Website';
+  }
+  
+  // Other domains
+  if (lowerUrl.includes('ebscohost')) {
+    return 'Access EBSCOHost Database';
+  }
+  if (lowerUrl.includes('buku')) {
+    return 'Access BUKU E-Textbooks';
+  }
+  if (lowerUrl.includes('librarika')) {
+    return 'Access LIBRARIKA Catalog';
   }
   
   // Default
   return 'Learn More';
+}
+
+/**
+ * Prioritize URLs based on relevance to the query
+ */
+function prioritizeUrls(urls: Array<{ url: string; context: string }>, fullText: string): Array<{ url: string; context: string }> {
+  const lowerFullText = fullText.toLowerCase();
+  
+  // Score each URL
+  const scored = urls.map(urlData => {
+    let score = 0;
+    const lowerUrl = urlData.url.toLowerCase();
+    
+    // Highest priority: Specific service URLs
+    if (lowerUrl.includes('library.alueducation.com')) score += 100;
+    if (lowerUrl.includes('ebscohost')) score += 90;
+    if (lowerUrl.includes('buku')) score += 90;
+    if (lowerUrl.includes('librarika')) score += 90;
+    
+    // Medium priority: Specific ALU pages
+    if (lowerUrl.includes('/programs')) score += 50;
+    if (lowerUrl.includes('/admissions')) score += 50;
+    if (lowerUrl.includes('/library')) score += 80;
+    if (lowerUrl.includes('/apply')) score += 50;
+    
+    // Context relevance
+    if (lowerFullText.includes('library') && lowerUrl.includes('library')) score += 50;
+    if (lowerFullText.includes('admission') && lowerUrl.includes('admission')) score += 50;
+    if (lowerFullText.includes('program') && lowerUrl.includes('program')) score += 50;
+    
+    // Lower priority: Generic ALU website
+    if (lowerUrl === 'https://www.alueducation.com' || lowerUrl === 'https://www.alueducation.com/') {
+      score -= 50; // Penalize generic homepage
+    }
+    
+    return { ...urlData, score };
+  });
+  
+  // Sort by score (highest first)
+  scored.sort((a, b) => b.score - a.score);
+  
+  // Return sorted URLs without scores
+  return scored.map(({ url, context }) => ({ url, context }));
 }
 
 /**
@@ -155,7 +236,12 @@ export function enhanceResponse(response: string): EnhancedResponse {
   }
   
   // Extract URLs
-  const urlData = extractUrls(response);
+  let urlData = extractUrls(response);
+  
+  // Prioritize URLs based on relevance
+  if (urlData.length > 1) {
+    urlData = prioritizeUrls(urlData, response);
+  }
   
   // Extract contact info
   result.contact = extractContact(response);
@@ -164,30 +250,42 @@ export function enhanceResponse(response: string): EnhancedResponse {
   if (urlData.length > 0) {
     result.hasStructure = true;
     
-    // Primary action (first URL)
+    // Primary action (most relevant URL)
     const primaryUrl = urlData[0];
     result.quickActions.push({
-      label: getLabelForUrl(primaryUrl.url, primaryUrl.context),
+      label: getLabelForUrl(primaryUrl.url, primaryUrl.context, response),
       url: primaryUrl.url,
       icon: '🔗'
     });
     
-    // Secondary actions (additional URLs)
+    // Secondary actions (additional relevant URLs)
     for (let i = 1; i < Math.min(urlData.length, 3); i++) {
       const urlInfo = urlData[i];
-      result.quickActions.push({
-        label: getLabelForUrl(urlInfo.url, urlInfo.context),
-        url: urlInfo.url,
-        icon: '📄'
-      });
+      const label = getLabelForUrl(urlInfo.url, urlInfo.context, response);
+      
+      // Skip if it's a duplicate label or generic website
+      if (label !== 'Visit ALU Website' || urlData.length === 1) {
+        result.quickActions.push({
+          label: label,
+          url: urlInfo.url,
+          icon: '📄'
+        });
+      }
     }
   }
   
-  // Create Resources from URLs
+  // Create Resources from URLs (prioritized)
   if (urlData.length > 0) {
     urlData.forEach((urlInfo, index) => {
+      const label = getLabelForUrl(urlInfo.url, urlInfo.context, response);
+      
+      // Skip generic website in resources if we have better options
+      if (label === 'Visit ALU Website' && urlData.length > 1 && index > 0) {
+        return; // Skip this URL
+      }
+      
       result.resources.push({
-        label: index === 0 ? 'Main Portal' : `Resource ${index + 1}`,
+        label: label,
         url: urlInfo.url
       });
     });
