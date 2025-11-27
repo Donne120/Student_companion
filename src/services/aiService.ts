@@ -1,11 +1,36 @@
 // This file contains the AI service that interacts with the backend
 import { Message } from "@/types/chat";
 
-// Make sure environment variable is set to Hugging Face URL
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+/**
+ * Get the backend URL from localStorage or environment variable
+ * Priority: localStorage > env variable > default
+ */
+function getBackendUrl(): string {
+  // Check localStorage first (set from Settings page)
+  const savedUrl = localStorage.getItem('BACKEND_URL');
+  if (savedUrl) {
+    console.log("🔧 Using backend URL from Settings:", savedUrl);
+    return savedUrl;
+  }
+  
+  // Fallback to environment variable or default
+  const defaultUrl = import.meta.env.VITE_API_URL || "https://ngum-alu-chatbot.hf.space";
+  console.log("🔧 Using default backend URL:", defaultUrl);
+  return defaultUrl;
+}
 
-// Update to match your Hugging Face API endpoint
-const CHAT_ENDPOINT = `${API_URL}/api/chat`;  // Backend endpoint is /api/chat
+// Base URL for the backend (NO /api/chat suffix!)
+const API_BASE_URL = getBackendUrl();
+
+// Legacy variable for compatibility
+const API_URL = API_BASE_URL;
+
+// Chat endpoint
+const CHAT_ENDPOINT = `${API_BASE_URL}/api/chat`;
+
+// Debug: Log the URLs
+console.log("🔧 API_BASE_URL:", API_BASE_URL);
+console.log("🔧 CHAT_ENDPOINT:", CHAT_ENDPOINT);
 
 /**
  * Service for interacting with the AI backend
@@ -63,9 +88,8 @@ export const aiService = {
     }
 
     try {
-      // Hugging Face spaces often don't have a /health endpoint
-      // Try a simple GET request to the root instead
-      const response = await fetch(`${API_URL}`, {
+      // Use /health endpoint for proper health checking
+      const response = await fetch(`${API_URL}/health`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +154,7 @@ export const aiService = {
       const customBackendUrl = localStorage.getItem('BACKEND_URL');
       const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
       const backendUrl = (useLocalBackend && customBackendUrl) ? customBackendUrl : API_URL;
-      const endpoint = `${backendUrl}/chat`; // Backend endpoint is /chat (no /api prefix)
+      const endpoint = `${backendUrl}/api/chat`; // Backend endpoint is /api/chat
       
       // Convert the conversation history to the format expected by the backend
       const history = conversationHistory.map((message) => ({

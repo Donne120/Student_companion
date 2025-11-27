@@ -215,7 +215,7 @@ export default function Settings() {
   const [useHuggingFaceModel, setUseHuggingFaceModel] = useState(false); // HF Model (disabled by default - API deprecated)
   const [hfModelName, setHfModelName] = useState("mistralai/Mistral-7B-Instruct-v0.2");
   const [useLocalBackend, setUseLocalBackend] = useState(true);
-  const [backendUrl, setBackendUrl] = useState("https://ngum-alu-student-companion.hf.space");
+  const [backendUrl, setBackendUrl] = useState("https://ngum-alu-chatbot.hf.space");
   const [theme, setTheme] = useState("system");
   const [userRole, setUserRole] = useState("student");
   const [performanceMetrics, setPerformanceMetrics] = useState({
