@@ -79,7 +79,7 @@ export const ChatContainer = () => {
         onDeleteConversation={handleDeleteConversation}
       />
       <div className="flex-1 pl-0 md:pl-16 lg:pl-64 transition-all duration-300 flex">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative" style={{ backgroundColor: '#1e3a8a' }}>
           <div className="absolute top-4 right-2 sm:right-4 z-10">
             <BackendStatus />
           </div>

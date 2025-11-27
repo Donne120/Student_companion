@@ -41,7 +41,7 @@ export const ChatMessages = ({ messages, isLoading, onEditMessage, activeModel =
 
   if (messages.length === 0) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center text-gray-300 px-4 bg-brand-blue-dark">
+      <div className="h-screen flex flex-col items-center justify-center text-gray-300 px-4" style={{ backgroundColor: '#1e3a8a' }}>
         <div className="flex items-center justify-center mb-8">
           <img 
             src="/logo.png" 
@@ -81,7 +81,7 @@ export const ChatMessages = ({ messages, isLoading, onEditMessage, activeModel =
   }
 
   return (
-    <div className="bg-brand-blue-dark min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: '#1e3a8a' }}>
       {messages.map((message) => (
         <ChatMessage
           key={message.id}
