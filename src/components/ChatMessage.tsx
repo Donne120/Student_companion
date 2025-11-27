@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { atomDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
@@ -12,6 +12,7 @@ import { StructuredResponse } from "./chat/StructuredResponse";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { enhanceResponse, formatEnhancedResponse } from "@/utils/enhanceResponse";
 
 interface ChatMessageProps {
   message: string;
@@ -88,6 +89,22 @@ export const ChatMessage = ({
   const [editedMessage, setEditedMessage] = useState(message);
 
   const cardData = tryParseCard(message);
+  
+  // Enhance AI responses to add structure
+  const enhancedMessage = useMemo(() => {
+    if (!isAi) return message;
+    
+    // Check if already structured
+    if (isStructuredResponse(message)) return message;
+    
+    // Enhance plain responses
+    const enhanced = enhanceResponse(message);
+    if (enhanced.hasStructure) {
+      return formatEnhancedResponse(enhanced);
+    }
+    
+    return message;
+  }, [message, isAi]);
 
   const handleCopy = async () => {
     try {
@@ -185,8 +202,8 @@ export const ChatMessage = ({
             )}>
               {cardData ? (
                 <ChatCard {...cardData} />
-              ) : isAi && isStructuredResponse(message) ? (
-                <StructuredResponse content={message} />
+              ) : isAi && isStructuredResponse(enhancedMessage) ? (
+                <StructuredResponse content={enhancedMessage} />
               ) : (
                 <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
@@ -277,7 +294,7 @@ export const ChatMessage = ({
                 }}
                 className="prose prose-invert max-w-none"
               >
-                {message}
+                {enhancedMessage}
               </ReactMarkdown>
               )}
             </div>
