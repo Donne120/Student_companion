@@ -842,6 +842,10 @@ export default function Settings() {
                       Connected to ALU Knowledge Base. The chatbot is ready to answer your questions about ALU programs, admissions, library resources, and more!
                     </AlertDescription>
                   </Alert>
+                  
+                  <p className="text-sm text-muted-foreground">
+                    Need to configure backend settings? Switch to the <strong>Advanced</strong> tab (admin access required).
+                  </p>
                 </div>
                 
                 <Separator className="my-6" />
@@ -1270,6 +1274,102 @@ export default function Settings() {
                 </Card>
               ) : (
                 <>
+                  <SettingsSection
+                    title="Backend Configuration"
+                    description="Configure backend API connection (Admin Only)"
+                    icon={<Server className="h-5 w-5" />}
+                  >
+                    <div className="space-y-6">
+                      <Alert className="bg-amber-50 border-amber-200">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-700 text-sm">
+                          <strong>Admin Only:</strong> Changing these settings may affect all users. Only modify if you know what you're doing.
+                        </AlertDescription>
+                      </Alert>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-base font-medium">Use ALU Knowledge Base</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Connect to ALU backend API (recommended)
+                          </p>
+                        </div>
+                        <Switch 
+                          checked={useLocalBackend} 
+                          onCheckedChange={toggleUseLocalBackend} 
+                        />
+                      </div>
+                      
+                      {useLocalBackend && (
+                        <div className="space-y-3">
+                          <Label htmlFor="backend-url">Backend API URL</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="backend-url"
+                              placeholder="https://ngum-alu-chatbot.hf.space"
+                              value={backendUrl}
+                              onChange={(e) => setBackendUrl(e.target.value)}
+                              className="flex-1 font-mono text-sm"
+                            />
+                            <Button 
+                              variant="outline" 
+                              onClick={testBackendConnection}
+                              disabled={isTestingBackend}
+                              className="gap-2"
+                            >
+                              {isTestingBackend ? (
+                                <RefreshCw className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <>
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Test</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          
+                          {backendTestResult !== null && (
+                            <Alert variant={backendTestResult ? "default" : "destructive"} className="mt-2">
+                              <AlertDescription>
+                                {backendTestResult 
+                                  ? "✅ Connection successful. Backend is accessible."
+                                  : "❌ Connection failed. Please check the URL and ensure the backend is running."
+                                }
+                              </AlertDescription>
+                            </Alert>
+                          )}
+                          
+                          <div className="bg-muted/50 p-3 rounded-md text-sm space-y-2">
+                            <p className="font-medium">Current Configuration:</p>
+                            <div className="space-y-1 font-mono text-xs">
+                              <p>• URL: <span className="text-[#0F4C81]">{backendUrl}</span></p>
+                              <p>• Status: <span className="text-green-600">Active</span></p>
+                              <p>• Saved: <span className="text-muted-foreground">localStorage</span></p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!useLocalBackend && (
+                        <div className="space-y-3">
+                          <Label htmlFor="gemini-key">Gemini API Key (Alternative)</Label>
+                          <div className="relative">
+                            <Input
+                              id="gemini-key"
+                              type="password"
+                              placeholder="Enter your Gemini API key"
+                              value={geminiKey}
+                              onChange={(e) => setGeminiKey(e.target.value)}
+                            />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            You can get your API key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a>
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </SettingsSection>
+                  
                   <SettingsSection
                     title="Developer Features"
                     description="Advanced configuration options for developers"
