@@ -124,29 +124,29 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   }, [message]);
 
   return (
-    <div className="fixed bottom-0 left-16 right-0 md:left-64 lg:right-80 bg-brand-blue-dark/95 backdrop-blur-sm border-t border-brand-gold/20 z-10">
-      <div className="max-w-3xl mx-auto px-4 py-4">
+    <div className="fixed bottom-0 left-0 right-0 md:left-16 lg:left-64 lg:right-80 bg-brand-blue-dark/95 backdrop-blur-sm border-t border-brand-gold/20 z-10">
+      <div className="max-w-3xl mx-auto px-2 sm:px-4 py-2 sm:py-4">
         {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
+          <div className="flex flex-wrap gap-1 sm:gap-2 mb-2">
             {attachments.map((file, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 bg-brand-blue rounded px-3 py-1 border border-brand-gold/20"
+                className="flex items-center gap-1 sm:gap-2 bg-brand-blue rounded px-2 sm:px-3 py-1 border border-brand-gold/20"
               >
-                <span className="text-sm text-gray-300 truncate max-w-[150px]">
+                <span className="text-xs sm:text-sm text-gray-300 truncate max-w-[100px] sm:max-w-[150px]">
                   {file.name}
                 </span>
                 <button
                   onClick={() => removeAttachment(index)}
                   className="text-gray-400 hover:text-brand-gold"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3 sm:h-4 sm:w-4" />
                 </button>
               </div>
             ))}
           </div>
         )}
-        <div className="flex gap-3 items-end">
+        <div className="flex gap-1 sm:gap-3 items-end">
           <input
             type="file"
             ref={fileInputRef}
@@ -155,15 +155,15 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
             className="hidden"
             accept="image/*,.pdf,.doc,.docx,.txt"
           />
-          <div className="flex-1 flex items-center gap-2 bg-brand-blue rounded-2xl border border-brand-gold/30 px-4 py-2 focus-within:border-brand-gold/50 transition-colors">
+          <div className="flex-1 flex items-center gap-1 sm:gap-2 bg-brand-blue rounded-2xl border border-brand-gold/30 px-2 sm:px-4 py-2 focus-within:border-brand-gold/50 transition-colors">
             <Button
               onClick={() => fileInputRef.current?.click()}
               variant="ghost"
               size="icon"
-              className="shrink-0 h-8 w-8 hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold"
+              className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold"
               disabled={disabled}
             >
-              <Paperclip className="h-4 w-4" />
+              <Paperclip className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
             
             <Textarea
@@ -172,7 +172,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Message Student Companion..."
-              className="resize-none bg-transparent border-0 text-white placeholder:text-gray-500 min-h-[24px] max-h-[200px] overflow-y-auto focus:outline-none focus:ring-0 flex-1"
+              className="resize-none bg-transparent border-0 text-white placeholder:text-gray-500 text-sm sm:text-base min-h-[24px] max-h-[150px] sm:max-h-[200px] overflow-y-auto focus:outline-none focus:ring-0 flex-1"
               disabled={disabled}
               rows={1}
             />
@@ -182,24 +182,24 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
                 onClick={handleSend}
                 disabled={disabled}
                 size="icon"
-                className="shrink-0 h-8 w-8 bg-brand-gold hover:bg-brand-gold-light text-brand-blue-dark rounded-lg"
+                className="shrink-0 h-7 w-7 sm:h-8 sm:w-8 bg-brand-gold hover:bg-brand-gold-light text-brand-blue-dark rounded-lg"
               >
-                <SendHorizontal className="h-4 w-4" />
+                <SendHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             ) : (
               <Button
                 onClick={toggleListening}
                 variant="ghost"
                 size="icon"
-                className={`shrink-0 h-8 w-8 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold'}`}
+                className={`shrink-0 h-7 w-7 sm:h-8 sm:w-8 ${isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'hover:bg-brand-blue-light text-gray-400 hover:text-brand-gold'}`}
                 disabled={disabled}
               >
-                {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                {isListening ? <MicOff className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Mic className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
               </Button>
             )}
           </div>
         </div>
-        <div className="text-center text-xs text-gray-500 mt-2">
+        <div className="text-center text-[10px] sm:text-xs text-gray-500 mt-1 sm:mt-2">
           Student Companion AI can make mistakes. Check important info.
         </div>
       </div>

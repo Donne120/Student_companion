@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { cn } from "@/lib/utils";
 
 interface QuickAction {
   label: string;
@@ -43,32 +44,33 @@ export const StructuredResponse = ({
   const sections = parseStructuredContent(content);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 sm:space-y-4">
       {/* Quick Actions Section */}
       {quickActions.length > 0 && (
         <Card className="bg-brand-blue/30 border-brand-gold/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-brand-gold">
-              <ExternalLink className="w-4 h-4" />
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-brand-gold">
+              <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Quick Actions</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex flex-wrap gap-2">
+          <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {quickActions.map((action, index) => (
                 <Button
                   key={index}
                   variant={action.type === 'primary' ? 'default' : 'outline'}
                   size="sm"
-                  className={
+                  className={cn(
+                    "text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3",
                     action.type === 'primary'
                       ? 'bg-brand-gold text-brand-blue hover:bg-brand-gold/90'
                       : 'border-brand-gold/30 text-brand-gold hover:bg-brand-gold/10'
-                  }
+                  )}
                   onClick={() => window.open(action.url, '_blank')}
                 >
-                  {action.icon && <span className="mr-2">{action.icon}</span>}
-                  {action.label}
+                  {action.icon && <span className="mr-1 sm:mr-2">{action.icon}</span>}
+                  <span className="truncate">{action.label}</span>
                 </Button>
               ))}
             </div>
@@ -77,9 +79,9 @@ export const StructuredResponse = ({
       )}
 
       {/* Main Content Section */}
-      <div className="prose prose-invert max-w-none">
+      <div className="prose prose-invert max-w-none text-sm sm:text-base">
         {sections.title && (
-          <h2 className="text-2xl font-bold text-brand-gold mb-4">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-gold mb-2 sm:mb-4">
             {sections.title}
           </h2>
         )}
@@ -88,24 +90,24 @@ export const StructuredResponse = ({
           remarkPlugins={[remarkGfm]}
           components={{
             h1: ({ children }) => (
-              <h1 className="text-2xl font-bold text-brand-gold mb-4">{children}</h1>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-brand-gold mb-2 sm:mb-4">{children}</h1>
             ),
             h2: ({ children }) => (
-              <h2 className="text-xl font-semibold text-brand-gold mb-3">{children}</h2>
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-brand-gold mb-2 sm:mb-3">{children}</h2>
             ),
             h3: ({ children }) => (
-              <h3 className="text-lg font-medium text-brand-gold mb-2">{children}</h3>
+              <h3 className="text-sm sm:text-base md:text-lg font-medium text-brand-gold mb-1.5 sm:mb-2">{children}</h3>
             ),
             p: ({ children }) => (
-              <p className="text-gray-200 mb-3 leading-relaxed">{children}</p>
+              <p className="text-gray-200 mb-2 sm:mb-3 leading-relaxed">{children}</p>
             ),
             ul: ({ children }) => (
-              <ul className="list-disc list-inside space-y-2 mb-4 text-gray-200">
+              <ul className="list-disc list-inside space-y-1 sm:space-y-2 mb-2 sm:mb-4 text-gray-200">
                 {children}
               </ul>
             ),
             ol: ({ children }) => (
-              <ol className="list-decimal list-inside space-y-2 mb-4 text-gray-200">
+              <ol className="list-decimal list-inside space-y-1 sm:space-y-2 mb-2 sm:mb-4 text-gray-200">
                 {children}
               </ol>
             ),
@@ -120,13 +122,13 @@ export const StructuredResponse = ({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-brand-gold hover:underline inline-flex items-center gap-1"
+                className="text-brand-gold hover:underline inline-flex items-center gap-0.5 sm:gap-1"
               >
                 {children}
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </a>
             ),
-            hr: () => <Separator className="my-4 bg-brand-gold/20" />,
+            hr: () => <Separator className="my-2 sm:my-4 bg-brand-gold/20" />,
           }}
         >
           {sections.mainContent}
@@ -136,25 +138,25 @@ export const StructuredResponse = ({
       {/* Resources Section */}
       {(resources.length > 0 || sections.resources.length > 0) && (
         <Card className="bg-brand-blue/30 border-brand-gold/20">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-brand-gold">
-              <BookOpen className="w-4 h-4" />
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-brand-gold">
+              <BookOpen className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Resources & Links</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
+          <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="space-y-1.5 sm:space-y-2">
               {[...resources, ...sections.resources].map((resource, index) => (
                 <a
                   key={index}
                   href={resource.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-gray-200 hover:text-brand-gold transition-colors group"
+                  className="flex items-center gap-1.5 sm:gap-2 text-gray-200 hover:text-brand-gold transition-colors group text-xs sm:text-sm"
                 >
-                  <FileText className="w-4 h-4 text-brand-gold/60 group-hover:text-brand-gold" />
-                  <span className="flex-1">{resource.label}</span>
-                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold/60 group-hover:text-brand-gold flex-shrink-0" />
+                  <span className="flex-1 truncate">{resource.label}</span>
+                  <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                 </a>
               ))}
             </div>
@@ -165,22 +167,22 @@ export const StructuredResponse = ({
       {/* Contact Panel */}
       {(contact || sections.contact) && (
         <Card className="bg-gradient-to-r from-brand-blue/40 to-brand-blue/20 border-brand-gold/30">
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-brand-gold">
-              <Phone className="w-4 h-4" />
+          <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 pt-3 sm:pt-6">
+            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-brand-gold">
+              <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Need Help? Contact Us</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-3">
+          <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="space-y-2 sm:space-y-3">
               {(contact?.email || sections.contact?.email) && (
-                <div className="flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-brand-gold" />
-                  <div>
-                    <div className="text-xs text-gray-400">Email</div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Mail className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] sm:text-xs text-gray-400">Email</div>
                     <a
                       href={`mailto:${contact?.email || sections.contact?.email}`}
-                      className="text-gray-200 hover:text-brand-gold transition-colors"
+                      className="text-xs sm:text-sm text-gray-200 hover:text-brand-gold transition-colors truncate block"
                     >
                       {contact?.email || sections.contact?.email}
                     </a>
@@ -189,13 +191,13 @@ export const StructuredResponse = ({
               )}
               
               {(contact?.phone || sections.contact?.phone) && (
-                <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-brand-gold" />
-                  <div>
-                    <div className="text-xs text-gray-400">Phone</div>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] sm:text-xs text-gray-400">Phone</div>
                     <a
                       href={`tel:${contact?.phone || sections.contact?.phone}`}
-                      className="text-gray-200 hover:text-brand-gold transition-colors"
+                      className="text-xs sm:text-sm text-gray-200 hover:text-brand-gold transition-colors"
                     >
                       {contact?.phone || sections.contact?.phone}
                     </a>
@@ -204,11 +206,11 @@ export const StructuredResponse = ({
               )}
               
               {(contact?.location || sections.contact?.location) && (
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-brand-gold" />
-                  <div>
-                    <div className="text-xs text-gray-400">Location</div>
-                    <div className="text-gray-200">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] sm:text-xs text-gray-400">Location</div>
+                    <div className="text-xs sm:text-sm text-gray-200">
                       {contact?.location || sections.contact?.location}
                     </div>
                   </div>

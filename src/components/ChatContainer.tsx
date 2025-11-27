@@ -78,12 +78,12 @@ export const ChatContainer = () => {
         onSelectConversation={setCurrentConversationId}
         onDeleteConversation={handleDeleteConversation}
       />
-      <div className="flex-1 pl-16 transition-all duration-300 md:pl-64 flex">
+      <div className="flex-1 pl-0 md:pl-16 lg:pl-64 transition-all duration-300 flex">
         <div className="flex-1 relative">
-          <div className="absolute top-4 right-4 z-10">
+          <div className="absolute top-4 right-2 sm:right-4 z-10">
             <BackendStatus />
           </div>
-          <div className="pb-32">
+          <div className="pb-24 sm:pb-28 md:pb-32 pt-16 md:pt-0">
             <ChatMessages
               messages={currentConversation?.messages || []}
               isLoading={isLoading}

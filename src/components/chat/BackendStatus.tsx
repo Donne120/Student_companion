@@ -84,7 +84,7 @@ export const BackendStatus = () => {
             <Badge 
               variant="outline" 
               className={`
-                flex items-center gap-1.5 py-1 ${
+                flex items-center gap-1 sm:gap-1.5 py-0.5 sm:py-1 px-1.5 sm:px-2.5 text-[10px] sm:text-xs ${
                   isLoading
                     ? "bg-gray-100 text-gray-700 border-gray-300" 
                     : isBackendAvailable
@@ -93,13 +93,23 @@ export const BackendStatus = () => {
                 }
               `}
             >
-              <Server className="h-3.5 w-3.5" />
-              {isLoading 
-                ? "Checking..." 
-                : isBackendAvailable 
-                  ? "Backend Connected" 
-                  : "Backend Offline"
-              }
+              <Server className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
+              <span className="hidden sm:inline">
+                {isLoading 
+                  ? "Checking..." 
+                  : isBackendAvailable 
+                    ? "Backend Connected" 
+                    : "Backend Offline"
+                }
+              </span>
+              <span className="sm:hidden">
+                {isLoading 
+                  ? "..." 
+                  : isBackendAvailable 
+                    ? "✓" 
+                    : "✗"
+                }
+              </span>
             </Badge>
           </div>
         </TooltipTrigger>

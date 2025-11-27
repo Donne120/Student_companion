@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Conversation } from "@/types/chat";
-import { ChevronLeft, Settings, Trash2, User, X, Database, HelpCircle, ExternalLink } from "lucide-react";
+import { ChevronLeft, Settings, Trash2, User, X, Database, HelpCircle, ExternalLink, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -24,6 +24,7 @@ export const ConversationSidebar = ({
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const currentConversation = conversations.find(conv => conv.id === currentConversationId);
   const handleClearChat = () => {
     const conversation = conversations.find(conv => conv.id === currentConversationId);
@@ -49,7 +50,30 @@ export const ConversationSidebar = ({
   };
   const sidebarWidth = isCollapsed ? "w-16" : "w-64";
 
-  return <div className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-brand-blue-dark p-2 border-r border-brand-gold/20 flex flex-col z-50 transition-all duration-300`}>
+  return (
+    <>
+      {/* Mobile Menu Button - Only visible on mobile */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsMobileOpen(!isMobileOpen)}
+        className="fixed top-4 left-4 z-50 md:hidden bg-brand-blue-dark hover:bg-brand-blue border border-brand-gold/20 rounded-lg"
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      {/* Mobile Overlay - Only visible when menu is open on mobile */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-brand-blue-dark p-2 border-r border-brand-gold/20 flex flex-col z-50 transition-all duration-300 ${
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
       
       <div className="absolute -right-4 top-2">
         <Button variant="ghost" size="icon" onClick={() => setIsCollapsed(!isCollapsed)} className="rounded-full bg-brand-blue-dark hover:bg-brand-blue w-8 h-8">
@@ -60,7 +84,13 @@ export const ConversationSidebar = ({
       <div className="flex-1 overflow-y-auto mb-2">
         {!isCollapsed}
         
-        <button onClick={onNewChat} className={`w-full p-3 mb-2 bg-brand-blue hover:bg-brand-blue-light rounded-lg text-left flex items-center gap-2 ${isCollapsed ? 'justify-center' : ''}`}>
+        <button 
+          onClick={() => {
+            onNewChat();
+            setIsMobileOpen(false);
+          }} 
+          className={`w-full p-3 mb-2 bg-brand-blue hover:bg-brand-blue-light rounded-lg text-left flex items-center gap-2 ${isCollapsed ? 'justify-center' : ''}`}
+        >
           {isCollapsed ? '+' : <span>+ New Chat</span>}
         </button>
         
@@ -100,7 +130,13 @@ export const ConversationSidebar = ({
 
         <div className="space-y-2">
           {conversations.map(conv => <div key={conv.id} className="group relative">
-              <button onClick={() => onSelectConversation(conv.id)} className={`w-full p-3 rounded-lg text-left truncate hover:bg-brand-blue ${conv.id === currentConversationId ? 'bg-brand-blue border border-brand-gold/30' : ''} ${isCollapsed ? 'justify-center' : ''}`}>
+              <button 
+                onClick={() => {
+                  onSelectConversation(conv.id);
+                  setIsMobileOpen(false);
+                }} 
+                className={`w-full p-3 rounded-lg text-left truncate hover:bg-brand-blue ${conv.id === currentConversationId ? 'bg-brand-blue border border-brand-gold/30' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+              >
                 {isCollapsed ? '💬' : getConversationTitle(conv)}
               </button>
               {!isCollapsed && <Button variant="ghost" size="icon" onClick={e => handleDeleteConversation(conv.id, e)} className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 hover:bg-brand-blue text-brand-gold">
@@ -112,14 +148,28 @@ export const ConversationSidebar = ({
       
       <div className="mt-auto border-t border-brand-gold/20 pt-2 sticky bottom-0 bg-brand-blue-dark">
         
-        <button onClick={() => navigate('/profile')} className={`w-full p-3 text-left hover:bg-brand-blue rounded-lg flex items-center gap-2 text-gray-300 ${isCollapsed ? 'justify-center' : ''}`}>
+        <button 
+          onClick={() => {
+            navigate('/profile');
+            setIsMobileOpen(false);
+          }} 
+          className={`w-full p-3 text-left hover:bg-brand-blue rounded-lg flex items-center gap-2 text-gray-300 ${isCollapsed ? 'justify-center' : ''}`}
+        >
           <User className="h-4 w-4" />
           {!isCollapsed && <span>{user?.name || 'Profile'}</span>}
         </button>
-        <button onClick={() => navigate('/settings')} className={`w-full p-3 text-left hover:bg-brand-blue rounded-lg flex items-center gap-2 text-gray-300 ${isCollapsed ? 'justify-center' : ''}`}>
+        <button 
+          onClick={() => {
+            navigate('/settings');
+            setIsMobileOpen(false);
+          }} 
+          className={`w-full p-3 text-left hover:bg-brand-blue rounded-lg flex items-center gap-2 text-gray-300 ${isCollapsed ? 'justify-center' : ''}`}
+        >
           <Settings className="h-4 w-4" />
           {!isCollapsed && <span>Settings</span>}
         </button>
       </div>
-    </div>;
+    </div>
+    </>
+  );
 };

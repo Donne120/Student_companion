@@ -144,12 +144,12 @@ export const ChatMessage = ({
   return (
     <div 
       className={cn(
-        "w-full py-4 px-4 group hover:bg-brand-blue-dark/30 transition-colors",
+        "w-full py-2 sm:py-4 px-2 sm:px-4 group hover:bg-brand-blue-dark/30 transition-colors",
         isAi ? "bg-transparent" : "bg-brand-blue-dark/20"
       )}
     >
       <div className={cn(
-        "max-w-3xl mx-auto flex gap-6 items-start",
+        "max-w-3xl mx-auto flex gap-2 sm:gap-4 md:gap-6 items-start",
         isAi ? "flex-row" : "flex-row-reverse" // User messages on right
       )}>
         {/* Avatar - Only show for AI messages */}
@@ -158,14 +158,14 @@ export const ChatMessage = ({
             <img 
               src="/logo.png" 
               alt="ALU AI" 
-              className="w-12 h-12 object-contain"
+              className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
             />
           </div>
         )}
 
         {/* Content */}
         <div className={cn(
-          "flex-1 min-w-0 space-y-3",
+          "flex-1 min-w-0 space-y-2 sm:space-y-3",
           !isAi && "text-right" // Align user text to right
         )}>
           {/* Message Content */}
@@ -217,14 +217,14 @@ export const ChatMessage = ({
                   }: CodeProps) => {
                     const match = /language-(\w+)/.exec(className || '');
                     return !inline && match ? (
-                      <div className="my-4 rounded-lg overflow-hidden border border-brand-gold/20">
-                        <div className="bg-brand-blue px-4 py-2 flex justify-between items-center text-xs text-gray-400">
+                      <div className="my-2 sm:my-4 rounded-lg overflow-hidden border border-brand-gold/20">
+                        <div className="bg-brand-blue px-2 sm:px-4 py-1.5 sm:py-2 flex justify-between items-center text-[10px] sm:text-xs text-gray-400">
                           <span>{match[1]}</span>
                           <button 
                             onClick={handleCopy} 
                             className="hover:text-brand-gold transition-colors"
                           >
-                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            {copied ? <Check className="h-3 w-3 sm:h-4 sm:w-4" /> : <Copy className="h-3 w-3 sm:h-4 sm:w-4" />}
                           </button>
                         </div>
                         <SyntaxHighlighter 
@@ -234,26 +234,26 @@ export const ChatMessage = ({
                           customStyle={{
                             margin: 0,
                             background: '#0A2463',
-                            padding: '1rem',
-                            fontSize: '0.875rem'
+                            padding: '0.75rem',
+                            fontSize: '0.75rem'
                           }}
                         >
                           {String(children).replace(/\n$/, '')}
                         </SyntaxHighlighter>
                       </div>
                     ) : (
-                      <code {...props} className="bg-brand-blue/50 px-1.5 py-0.5 rounded text-sm font-mono text-brand-gold-light">
+                      <code {...props} className="bg-brand-blue/50 px-1 sm:px-1.5 py-0.5 rounded text-xs sm:text-sm font-mono text-brand-gold-light">
                         {children}
                       </code>
                     );
                   },
-                  p: ({ children }) => <p className={cn("mb-4 leading-7", isAi ? "text-left" : "text-right")}>{children}</p>,
-                  ul: ({ children }) => <ul className={cn("mb-4 pl-6 list-disc space-y-2 marker:text-brand-gold", !isAi && "list-inside")}>{children}</ul>,
-                  ol: ({ children }) => <ol className={cn("mb-4 pl-6 list-decimal space-y-2 marker:text-brand-gold", !isAi && "list-inside")}>{children}</ol>,
-                  li: ({ children }) => <li className={cn("leading-7", !isAi && "text-right")}>{children}</li>,
-                  h1: ({ children }) => <h1 className="text-2xl font-bold mb-4 mt-6 text-white">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-xl font-bold mb-3 mt-5 text-white">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-lg font-semibold mb-2 mt-4 text-white">{children}</h3>,
+                  p: ({ children }) => <p className={cn("mb-2 sm:mb-4 leading-6 sm:leading-7 text-sm sm:text-base", isAi ? "text-left" : "text-right")}>{children}</p>,
+                  ul: ({ children }) => <ul className={cn("mb-2 sm:mb-4 pl-4 sm:pl-6 list-disc space-y-1 sm:space-y-2 marker:text-brand-gold text-sm sm:text-base", !isAi && "list-inside")}>{children}</ul>,
+                  ol: ({ children }) => <ol className={cn("mb-2 sm:mb-4 pl-4 sm:pl-6 list-decimal space-y-1 sm:space-y-2 marker:text-brand-gold text-sm sm:text-base", !isAi && "list-inside")}>{children}</ol>,
+                  li: ({ children }) => <li className={cn("leading-6 sm:leading-7", !isAi && "text-right")}>{children}</li>,
+                  h1: ({ children }) => <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-4 mt-4 sm:mt-6 text-white">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 mt-3 sm:mt-5 text-white">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm sm:text-base md:text-lg font-semibold mb-1.5 sm:mb-2 mt-2 sm:mt-4 text-white">{children}</h3>,
                   blockquote: ({ children }) => (
                     <blockquote className="border-l-4 border-brand-gold pl-4 py-2 my-4 text-gray-300 italic">
                       {children}
@@ -302,7 +302,7 @@ export const ChatMessage = ({
 
           {/* Attachments */}
           {!isEditing && attachments && attachments.length > 0 && (
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
               {attachments.map((attachment, index) =>
                 attachment && attachment.type === 'image' ? (
                   <img 
@@ -316,7 +316,7 @@ export const ChatMessage = ({
                     key={index} 
                     href={attachment.url} 
                     download={attachment.name}
-                    className="flex items-center gap-2 p-2 rounded-lg bg-brand-blue/50 hover:bg-brand-blue border border-brand-gold/10 text-sm"
+                    className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-brand-blue/50 hover:bg-brand-blue border border-brand-gold/10 text-xs sm:text-sm"
                   >
                     📎 {attachment.name}
                   </a>
@@ -325,27 +325,27 @@ export const ChatMessage = ({
             </div>
           )}
 
-          {/* Action Buttons - Show on hover */}
+          {/* Action Buttons - Show on hover (desktop) or always (mobile) */}
           {!isEditing && (
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
               {/* Edit button for user messages */}
               {!isAi && (
                 <button 
                   onClick={handleEdit}
-                  className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
+                  className="p-1 sm:p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
                   title="Edit message"
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 </button>
               )}
               
               {/* Copy button for all messages */}
               <button 
                 onClick={handleCopy}
-                className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
+                className="p-1 sm:p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-white transition-colors"
                 title="Copy"
               >
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
               </button>
               
               {/* Feedback buttons only for AI messages */}
@@ -353,23 +353,23 @@ export const ChatMessage = ({
                 <>
                   <button 
                     onClick={() => submitFeedback('positive')}
-                    className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-green-400 transition-colors"
+                    className="p-1 sm:p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-green-400 transition-colors"
                     title="Good response"
                   >
-                    <ThumbsUp className="h-4 w-4" />
+                    <ThumbsUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                   <button 
                     onClick={() => submitFeedback('negative')}
-                    className="p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-red-400 transition-colors"
+                    className="p-1 sm:p-1.5 rounded hover:bg-brand-blue/50 text-gray-400 hover:text-red-400 transition-colors"
                     title="Bad response"
                   >
-                    <ThumbsDown className="h-4 w-4" />
+                    <ThumbsDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </>
               )}
               
               {isAi && feedbackGiven && (
-                <span className="text-xs text-gray-500">Thanks for your feedback</span>
+                <span className="text-[10px] sm:text-xs text-gray-500">Thanks for your feedback</span>
               )}
             </div>
           )}
