@@ -4,33 +4,31 @@ import { Message } from "@/types/chat";
 /**
  * Get the backend URL from localStorage or environment variable
  * Priority: localStorage > env variable > default
+ * This function is called dynamically to always get the latest URL
  */
 function getBackendUrl(): string {
   // Check localStorage first (set from Settings page)
   const savedUrl = localStorage.getItem('BACKEND_URL');
   if (savedUrl) {
-    console.log("🔧 Using backend URL from Settings:", savedUrl);
     return savedUrl;
   }
   
   // Fallback to environment variable or default
   const defaultUrl = import.meta.env.VITE_API_URL || "https://ngum-alu-chatbot.hf.space";
-  console.log("🔧 Using default backend URL:", defaultUrl);
+  
+  // IMPORTANT: Set the default URL in localStorage so all users have it
+  // This ensures the URL persists across sessions
+  if (!savedUrl) {
+    localStorage.setItem('BACKEND_URL', defaultUrl);
+    console.log("✅ Set default backend URL in localStorage:", defaultUrl);
+  }
+  
   return defaultUrl;
 }
 
-// Base URL for the backend (NO /api/chat suffix!)
-const API_BASE_URL = getBackendUrl();
-
-// Legacy variable for compatibility
-const API_URL = API_BASE_URL;
-
-// Chat endpoint
-const CHAT_ENDPOINT = `${API_BASE_URL}/api/chat`;
-
-// Debug: Log the URLs
-console.log("🔧 API_BASE_URL:", API_BASE_URL);
-console.log("🔧 CHAT_ENDPOINT:", CHAT_ENDPOINT);
+// Initialize backend URL and ensure it's saved
+const INITIAL_BACKEND_URL = getBackendUrl();
+console.log("🔧 Backend URL initialized:", INITIAL_BACKEND_URL);
 
 /**
  * Service for interacting with the AI backend
@@ -89,7 +87,8 @@ export const aiService = {
 
     try {
       // Use /health endpoint for proper health checking
-      const response = await fetch(`${API_URL}/health`, {
+      const backendUrl = getBackendUrl();
+      const response = await fetch(`${backendUrl}/health`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -150,10 +149,8 @@ export const aiService = {
       const useHuggingFaceModel = localStorage.getItem('USE_HUGGINGFACE_MODEL') === 'true'; // Default: disabled
       const hfModelName = localStorage.getItem('HF_MODEL_NAME') || 'mistralai/Mistral-7B-Instruct-v0.2';
       
-      // Backend URL (check if custom backend is enabled)
-      const customBackendUrl = localStorage.getItem('BACKEND_URL');
-      const useLocalBackend = localStorage.getItem('USE_LOCAL_BACKEND') === 'true';
-      const backendUrl = (useLocalBackend && customBackendUrl) ? customBackendUrl : API_URL;
+      // Backend URL (always use the dynamic function to get latest URL)
+      const backendUrl = getBackendUrl();
       const endpoint = `${backendUrl}/api/chat`; // Backend endpoint is /api/chat
       
       // Convert the conversation history to the format expected by the backend
@@ -223,7 +220,8 @@ export const aiService = {
     };
   }> {
     try {
-      const response = await fetch(`${API_URL}/nyptho/status`, {
+      const backendUrl = getBackendUrl();
+      const response = await fetch(`${backendUrl}/nyptho/status`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

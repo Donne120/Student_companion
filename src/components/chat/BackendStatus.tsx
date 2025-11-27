@@ -22,23 +22,46 @@ export const BackendStatus = () => {
     if (useLocalBackend) return "http://localhost:8000";
     
     // Production deployment URL
-    return "https://ngum-alu-student-companion.hf.space";
+    return "https://ngum-alu-chatbot.hf.space";
   };
 
   // Check backend availability
   const checkBackendHealth = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Use a simple GET request for faster checking
-      const response = await fetch(`${getBackendUrl()}/`, {
+      const backendUrl = getBackendUrl();
+      console.log("🔍 Checking backend health at:", backendUrl);
+      
+      // Use /health endpoint for proper health checking
+      const response = await fetch(`${backendUrl}/health`, {
         method: "GET",
-        // Reduced timeout for faster response
-        signal: AbortSignal.timeout(5000)
+        // Increased timeout for slower connections
+        signal: AbortSignal.timeout(10000),
+        // Add headers to help with CORS
+        headers: {
+          'Accept': 'application/json',
+        },
+        // Important: include credentials if needed
+        mode: 'cors',
       });
       
-      setIsBackendAvailable(response.status === 200);
+      console.log("✅ Backend response status:", response.status);
+      
+      // Accept 2xx status codes as healthy
+      const isHealthy = response.ok;
+      setIsBackendAvailable(isHealthy);
+      
+      if (isHealthy) {
+        const data = await response.json();
+        console.log("✅ Backend health data:", data);
+      }
     } catch (error) {
-      console.error("Backend health check failed:", error);
+      console.error("❌ Backend health check failed:", error);
+      console.error("Error details:", {
+        name: error.name,
+        message: error.message,
+        url: getBackendUrl()
+      });
       setIsBackendAvailable(false);
     } finally {
       setIsLoading(false);
