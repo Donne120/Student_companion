@@ -1,0 +1,345 @@
+{
+  "last_updated": "2025-01-30",
+  "source": "https://www.alueducation.com/faculty/",
+  "faculty": [
+    {
+      "name": "Jeremiah Essuman",
+      "role": "Director of Undergraduate Programmes",
+      "department": "Academic Leadership",
+      "description": "Oversees ALU undergraduate programmes; ensures experiential learning, interdisciplinary curricula, and impactful real-world education.",
+      "category": "leadership"
+    },
+    {
+      "name": "Audrine Iradukunda",
+      "role": "Foundation Programme Manager",
+      "department": "Foundation Programme",
+      "description": "Manages the Foundation Programme: delivery, growth, improvement; designs programmes to equip learners with skills to tackle pressing African challenges.",
+      "category": "foundation"
+    },
+    {
+      "name": "Angelique Ishimwe",
+      "role": "Foundation Learning Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Acts as facilitator/trainer/learning coach — supports students' foundational learning, helps guide and mentor them.",
+      "category": "foundation"
+    },
+    {
+      "name": "Silas N. Gasasira",
+      "role": "Foundation Learning Coach Associate",
+      "department": "Foundation Programme",
+      "description": "Provides mentorship, supports curriculum delivery, helps create dynamic learning experiences, student engagement.",
+      "category": "foundation"
+    },
+    {
+      "name": "Seth Abimana",
+      "role": "Foundation Learning Coach Coordinator",
+      "department": "Foundation Programme",
+      "description": "Coordinates foundational learning coaches; supports academic growth, fosters ethical leadership, lifelong learning.",
+      "category": "foundation"
+    },
+    {
+      "name": "Mannoakgotla Medupe",
+      "role": "Self-Directed Learning Skills Lab Associate",
+      "department": "Foundation Programme",
+      "description": "Mentors students in self-directed learning, supports creative skills development (e.g. graphic design, video, sound), helps students explore impact.",
+      "category": "foundation"
+    },
+    {
+      "name": "Doris Maduka",
+      "role": "Foundation Coach Learning Coordinator",
+      "department": "Foundation Programme",
+      "description": "Supports foundational curriculum, student facilitation, mentoring — especially for first-year foundational stage students.",
+      "category": "foundation"
+    },
+    {
+      "name": "Callixte Kagabo",
+      "role": "Foundation Learning Coach Coordinator",
+      "department": "Foundation Programme",
+      "description": "Facilitates degree courses, supports program development, provides academic support in foundation education; fosters self-directed learning environment.",
+      "category": "foundation"
+    },
+    {
+      "name": "Rene Gitangaza",
+      "role": "Foundation Learning Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Leads a team of learning coaches; supports students in foundational courses; fosters student development and potential.",
+      "category": "foundation"
+    },
+    {
+      "name": "Innocent Mugenzi",
+      "role": "Foundations Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Designs business/management-related modules, competency-based assessments; organizes curricula; supports academic planning.",
+      "category": "foundation"
+    },
+    {
+      "name": "Raini Sydney",
+      "role": "Foundations Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Focus: Sustainable Development, Political Economy, Climate Change — guides students with interdisciplinary lens on social/environmental systems.",
+      "category": "foundation"
+    },
+    {
+      "name": "Aline Turinumukiza",
+      "role": "Foundation Learning Coach Coordinator",
+      "department": "Foundation Programme",
+      "description": "Mentorship, project management, communication, youth-development, ethical leadership; supports student growth and development.",
+      "category": "foundation"
+    },
+    {
+      "name": "Jennifer Umutoni",
+      "role": "Self-Directed Learning Skills Lab Coordinator",
+      "department": "Foundation Programme",
+      "description": "Guides students to develop essential tech-savvy skills, fosters collaborative learning environments, supports mental well-being and inclusivity.",
+      "category": "foundation"
+    },
+    {
+      "name": "Lizbeth Uwineza",
+      "role": "Foundations Learning Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Supports communications, learning assistance; helps students succeed academically and in personal growth.",
+      "category": "foundation"
+    },
+    {
+      "name": "Sylidio Masengesho",
+      "role": "Foundations Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Designs innovative curricula, facilitates learner-centred sessions, integrates blended/competency-based learning.",
+      "category": "foundation"
+    },
+    {
+      "name": "Ruth Bazing",
+      "role": "Foundations Coach Senior Associate",
+      "department": "Foundation Programme",
+      "description": "Combines academic teaching and media/communications background to deliver engaging, impactful learning — fosters critical thinking, creativity.",
+      "category": "foundation"
+    },
+    {
+      "name": "Arnaud Michel Nibaruta",
+      "role": "BEL Program Manager",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Manages the Bachelor in Entrepreneurial Leadership (BEL) program — oversees operations and development in entrepreneurship/leadership track.",
+      "category": "bel"
+    },
+    {
+      "name": "Ryan Johnson",
+      "role": "BEL Specialisation Lead",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Leads BEL curriculum design and delivery; brings economics & development background to shape leadership & entrepreneurship education.",
+      "category": "bel"
+    },
+    {
+      "name": "Dr. Chioma Joy Okonkwo",
+      "role": "BEL Specialisation Lead",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Focus on environmental science + leadership; guides students toward sustainable and ecological solutions — sustainable future focus.",
+      "category": "bel"
+    },
+    {
+      "name": "Mildred Kasaya Amugune",
+      "role": "Specialisation Learning Coach (Business, Strategy, and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Coaches students in business, finance, investment — also does research (e.g. financial inclusion of rural women in Africa).",
+      "category": "bel"
+    },
+    {
+      "name": "Claudine Ukubereyimfura",
+      "role": "Specialisation Learning Coach (Policy and Advocacy)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Teaches policy, advocacy — international relations & global studies background; supports students interested in politics, IR, advocacy.",
+      "category": "bel"
+    },
+    {
+      "name": "Nadia Kabanyana",
+      "role": "Specialisation Learning Coach (Business, Strategy, Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Facilitates business / entrepreneurship courses; co-founded a health clinic — bridges business + community welfare + education.",
+      "category": "bel"
+    },
+    {
+      "name": "Titus Lugero",
+      "role": "Specialisation Learning Coach (Business Strategy and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Educator, program leader, business incubator manager; mentors startups and guides course facilitation.",
+      "category": "bel"
+    },
+    {
+      "name": "Nicholas Ssekiziyivu",
+      "role": "Specialisation Learning Coach (Business Strategy and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Focuses on business management, entrepreneurship, finance; helps students with strategy, innovation, sustainable business practices.",
+      "category": "bel"
+    },
+    {
+      "name": "Celma Costa",
+      "role": "Specialisation Learning Coach (Policy and Advocacy)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Background in political science, media relations; teaches policy/advocacy, politics, climate change, gender issues.",
+      "category": "bel"
+    },
+    {
+      "name": "Dennis Ngobi",
+      "role": "Specialisation Learning Coach (Business, Strategy, Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Entrepreneur & educator; supports entrepreneurship & international business programs; involved in mentoring startups.",
+      "category": "bel"
+    },
+    {
+      "name": "Oreoluwa Akanni Rhoda",
+      "role": "Specialisation Learning Coach (Business Strategy and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Focus on digital education & adult learning; supports both physical & virtual teaching, micro-credentials, modern learning methods.",
+      "category": "bel"
+    },
+    {
+      "name": "Diane Akaliza",
+      "role": "Specialisation Learning Coach (Business Strategy and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Facilitates entrepreneurship leadership programme; focuses on inclusive learning experiences, academic advising, community learning.",
+      "category": "bel"
+    },
+    {
+      "name": "Isaro Marie Reine Kellia",
+      "role": "Specialisation Learning Coach (Business Strategy and Investment)",
+      "department": "BEL (Bachelor in Entrepreneurial Leadership)",
+      "description": "Passion for education, entrepreneurship, and agriculture. Helps students combine agribusiness, entrepreneurship and social impact.",
+      "category": "bel"
+    },
+    {
+      "name": "Benita Sandrine Mulungi",
+      "role": "Entrepreneurial Leaders Action Lab Senior Associate",
+      "department": "E-Lab (Entrepreneurial Leaders Action Lab)",
+      "description": "Oversees E-Lab program: entrepreneurship experiments & projects, student-led ventures, innovation labs.",
+      "category": "elab"
+    },
+    {
+      "name": "Christopher Joel Mensah Hackman",
+      "role": "Entrepreneurial Leaders Action Lab Associate",
+      "department": "E-Lab (Entrepreneurial Leaders Action Lab)",
+      "description": "Supports entrepreneurial education, helps students exploring self-directed learning and business ventures.",
+      "category": "elab"
+    },
+    {
+      "name": "Bonita Brigitte Umurungi",
+      "role": "Entrepreneurial Leaders Action Lab Coordinator",
+      "department": "E-Lab (Entrepreneurial Leaders Action Lab)",
+      "description": "Coordinates E-Lab activities; works on community-driven solutions, social impact projects, mentorship for young people.",
+      "category": "elab"
+    },
+    {
+      "name": "Fred Nkubito",
+      "role": "Mission Curator Lead (Urbanization and Infrastructure)",
+      "department": "Mission Curators",
+      "description": "Guides students who choose missions related to urban development & infrastructure; brings urban planning / real estate background; mentors mission development.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Brian Nicholas Neza",
+      "role": "Mission Curator (Agriculture)",
+      "department": "Mission Curators",
+      "description": "Focus on agriculture and food security — mentors students aiming at transforming Africa's food systems; uses background in animal production, sustainable food systems.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Sevika Varaden Reetoo",
+      "role": "Mission Curator (Climate Change)",
+      "department": "Mission Curators",
+      "description": "Works on climate change & environmental issues; previously worked on renewable power & reef restoration projects; supports climate-change missions.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Sibongile Musundwa",
+      "role": "Mission Curator (Arts, Culture & Design)",
+      "department": "Mission Curators",
+      "description": "Helps students with missions in arts, culture, design; background in cultural diplomacy, media, arts project management, creative industries.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Kartik Mehta",
+      "role": "Mission Curator (Job Creation and Entrepreneurship)",
+      "department": "Mission Curators",
+      "description": "Mentors students who aim to create businesses, jobs; has experience in entrepreneurship, performance management, business scaling; supports mission-based entrepreneurship.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Kagenza Sakufi Rumongi",
+      "role": "Mission Curator (Governance)",
+      "department": "Mission Curators",
+      "description": "Guides students interested in governance, politics, civil society; background includes working in diplomacy, UN missions, youth mentorship; mentors governance-related missions.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Elizabeth Wayua Ndinda",
+      "role": "Mission Curator (Education)",
+      "department": "Mission Curators",
+      "description": "Expert in education & vocational training; supports student missions in education, youth empowerment, curriculum development; experienced trainer & educator.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Bosede Funmi Akinbulusere",
+      "role": "Mission Curator (Gender Equality & Women Empowerment)",
+      "department": "Mission Curators",
+      "description": "Advocates for gender equality & women's empowerment; extensive experience in community development, health, environment, rights; mentors missions in gender & women's issues.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Carene Roxanne Umugwaneza",
+      "role": "Mission Curator (Healthcare)",
+      "department": "Mission Curators",
+      "description": "Guides students with missions in health; background in global health & healthcare management; mentors health-related projects, research, opportunities.",
+      "category": "mission_curators"
+    },
+    {
+      "name": "Binusha Balachandran",
+      "role": "Software Engineering (SE) Programme Manager",
+      "department": "BSE (Software Engineering)",
+      "description": "Manages the BSc Software Engineering program — ensures curriculum delivery, academic oversight, management of software-engineering education.",
+      "category": "software_engineering"
+    },
+    {
+      "name": "Marvin Ogore",
+      "role": "SE Specialisation Coach (Machine Learning)",
+      "department": "BSE (Software Engineering)",
+      "description": "Teaches ML courses, especially ML/AI for embedded systems, ML on resource-constrained devices, cloud ML deployment & reinforcement learning.",
+      "category": "software_engineering"
+    },
+    {
+      "name": "Pelin Mutanguha",
+      "role": "SE Specialisation Coach (Information Systems)",
+      "department": "BSE (Software Engineering)",
+      "description": "Delivers learning content for software engineering students; focuses on full-stack web development, instructional design, self-directed learning.",
+      "category": "software_engineering"
+    },
+    {
+      "name": "Wakuma Tekalign Debela",
+      "role": "SE Learning Coach",
+      "department": "BSE (Software Engineering)",
+      "description": "Web-stack teaching; helps students learn web development technologies & best practices; former DevOps engineer.",
+      "category": "software_engineering"
+    },
+    {
+      "name": "Herve Musangwa",
+      "role": "SE Learning Coach",
+      "department": "BSE (Software Engineering)",
+      "description": "Teaches Linux, version control, Python, databases, full-stack / DevOps fundamentals, system engineering; supports tech education and collaborative learning.",
+      "category": "software_engineering"
+    },
+    {
+      "name": "Neza David Tuyishimire",
+      "role": "SE Specialisation Coach",
+      "department": "BSE (Software Engineering)",
+      "description": "Experienced software engineer & data engineer; teaches software engineering, ML/AI, data engineering — supports advanced tech curriculum and research supervision.",
+      "category": "software_engineering"
+    }
+  ],
+  "departments": {
+    "foundation": "Foundation Programme - First-year foundational learning and self-directed learning skills",
+    "bel": "BEL - Bachelor in Entrepreneurial Leadership programme",
+    "elab": "E-Lab - Entrepreneurial Leaders Action Lab for hands-on entrepreneurship",
+    "mission_curators": "Mission Curators - Faculty who guide students in their chosen mission areas",
+    "software_engineering": "BSE - Bachelor of Science in Software Engineering programme",
+    "leadership": "Academic Leadership - Overall programme management and direction"
+  },
+  "total_faculty": 47
+}
+
