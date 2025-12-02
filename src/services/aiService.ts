@@ -1,5 +1,6 @@
 // This file contains the AI service that interacts with the backend
 import { Message } from "@/types/chat";
+import { searchHelpCenter, SearchResult } from "./helpCenterService";
 
 /**
  * PRODUCTION BACKEND URL - HARDCODED FOR ALL USERS
@@ -42,6 +43,7 @@ export const aiService = {
 
   /**
    * Generates a response from the AI
+   * ENHANCED: Now searches ALU Help Center FIRST for comprehensive answers
    */
   async generateResponse(
     query: string,
@@ -49,9 +51,45 @@ export const aiService = {
     options: { personality?: Personality } = {}
   ): Promise<string> {
     try {
-      // Check if backend is available
+      // ===== STEP 1: DEEP SEARCH IN ALU HELP CENTER =====
+      console.log("🔍 Searching ALU Help Center for:", query);
+      const helpCenterResults = searchHelpCenter(query);
+      
+      // If we found highly relevant results (score >= 70), use them
+      if (helpCenterResults.length > 0 && helpCenterResults[0].relevanceScore >= 70) {
+        console.log("✅ Found relevant help center article:", helpCenterResults[0].article.title);
+        return this.formatHelpCenterResponse(query, helpCenterResults);
+      }
+      
+      // If we found moderate results (score >= 40), include them with backend response
+      if (helpCenterResults.length > 0 && helpCenterResults[0].relevanceScore >= 40) {
+        console.log("📚 Found moderate help center matches, combining with AI response");
+        
+        // Try to get backend response with help center context
+        const isAvailable = await this.isBackendAvailable();
+        if (isAvailable) {
+          try {
+            const backendResponse = await this.getResponseFromBackend(query, conversationHistory, options);
+            // Append help center resources
+            return backendResponse + "\n\n" + this.formatHelpCenterResources(helpCenterResults.slice(0, 2));
+          } catch (error) {
+            // If backend fails, use help center results
+            return this.formatHelpCenterResponse(query, helpCenterResults);
+          }
+        } else {
+          // Backend unavailable, use help center
+          return this.formatHelpCenterResponse(query, helpCenterResults);
+        }
+      }
+
+      // ===== STEP 2: USE BACKEND IF NO HELP CENTER MATCH =====
       const isAvailable = await this.isBackendAvailable();
       if (!isAvailable) {
+        // Backend down, but no help center match either
+        if (helpCenterResults.length > 0) {
+          // Show any help center results we found
+          return this.formatHelpCenterResponse(query, helpCenterResults);
+        }
         throw new Error("Backend service is currently unavailable");
       }
 
@@ -59,8 +97,68 @@ export const aiService = {
       return await this.getResponseFromBackend(query, conversationHistory, options);
     } catch (error) {
       console.error("Error generating response:", error);
-      return "I'm sorry, I'm having trouble connecting to the ALU knowledge base right now. Please try again later.";
+      
+      // Last resort: try help center one more time
+      const helpCenterResults = searchHelpCenter(query);
+      if (helpCenterResults.length > 0) {
+        return this.formatHelpCenterResponse(query, helpCenterResults);
+      }
+      
+      return "I'm sorry, I'm having trouble connecting to the ALU knowledge base right now. Please try again later or visit https://help.alueducation.com for immediate assistance.";
     }
+  },
+
+  /**
+   * Format help center results into a comprehensive response
+   */
+  formatHelpCenterResponse(query: string, results: SearchResult[]): string {
+    if (results.length === 0) {
+      return "I couldn't find specific information about that in the ALU Help Center. Please visit https://help.alueducation.com or contact support for assistance.";
+    }
+
+    const topResult = results[0];
+    const article = topResult.article;
+
+    let response = `# ${article.title}\n\n`;
+    response += `**Category:** ${article.category}\n\n`;
+    
+    // Add the matched content or full content
+    if (topResult.matchedContent && topResult.matchedContent.length > 100) {
+      response += topResult.matchedContent + "\n\n";
+    } else {
+      // Show first 800 characters of content
+      const contentPreview = article.content.substring(0, 800);
+      response += contentPreview + (article.content.length > 800 ? "...\n\n" : "\n\n");
+    }
+
+    // Add link to full article
+    response += `📖 **[Read Full Article](${article.url})**\n\n`;
+
+    // Add related articles if available
+    if (results.length > 1) {
+      response += `### Related Resources:\n\n`;
+      for (let i = 1; i < Math.min(4, results.length); i++) {
+        const relatedArticle = results[i].article;
+        response += `- [${relatedArticle.title}](${relatedArticle.url}) (${relatedArticle.category})\n`;
+      }
+      response += `\n`;
+    }
+
+    // Add help center link
+    response += `\n---\n\n`;
+    response += `💡 **Need more help?** Visit the [ALU Help Center](https://help.alueducation.com) or contact:\n`;
+    response += `- 📧 Email: support@alueducation.com\n`;
+    response += `- 📞 Phone: +250 788 309 667 (Rwanda)\n`;
+
+    return response;
+  },
+
+  /**
+   * Format help center resources as additional context
+   */
+  formatHelpCenterResources(results: SearchResult[]): string {
+    // Disabled - don't show help center resources section
+    return "";
   },
 
   /**

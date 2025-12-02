@@ -3,6 +3,7 @@ import { useState, useCallback } from "react";
 import { Message } from "@/types/chat";
 import { toast } from "sonner";
 import { aiService } from "@/services/aiService";
+import { isUniversityAdminQuery, processUniversityAdminQuery } from "@/utils/universityAdminData";
 
 interface ChatMessageHandlerProps {
   currentConversationId: string;
@@ -48,18 +49,28 @@ export const useChatMessageHandler = ({
     setIsLoading(true);
 
     try {
-      // Use a more efficient toast
-      const toastId = toast.loading("Processing your query...");
+      // Check if this is a University Admin query first
+      let aiResponse: string;
       
-      // Get recent messages for context (limited to MAX_CONTEXT_MESSAGES)
-      const MAX_CONTEXT_MESSAGES = 10;
-      const recentMessages = messages.slice(-MAX_CONTEXT_MESSAGES);
-      
-      // Generate AI response
-      const aiResponse = await aiService.generateResponse(message, recentMessages);
-      
-      // Dismiss the loading toast
-      toast.dismiss(toastId);
+      if (isUniversityAdminQuery(message)) {
+        const adminResponse = processUniversityAdminQuery(message);
+        if (adminResponse) {
+          aiResponse = adminResponse;
+          toast.success("Retrieved from University Admin");
+        } else {
+          // Fall back to AI service if University Admin query didn't match
+          const MAX_CONTEXT_MESSAGES = 10;
+          const recentMessages = messages.slice(-MAX_CONTEXT_MESSAGES);
+          aiResponse = await aiService.generateResponse(message, recentMessages);
+        }
+      } else {
+        // Get recent messages for context (limited to MAX_CONTEXT_MESSAGES)
+        const MAX_CONTEXT_MESSAGES = 10;
+        const recentMessages = messages.slice(-MAX_CONTEXT_MESSAGES);
+        
+        // Generate AI response
+        aiResponse = await aiService.generateResponse(message, recentMessages);
+      }
       
       // Add AI message to conversation
       const aiMessage: Message = {

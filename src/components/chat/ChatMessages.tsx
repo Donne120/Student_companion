@@ -46,7 +46,7 @@ export const ChatMessages = ({ messages, isLoading, onEditMessage, activeModel =
           <img 
             src="/logo.png" 
             alt="Student Companion AI" 
-            className="h-24 w-auto object-contain animate-pulse"
+            className="h-32 w-auto object-contain animate-pulse"
           />
         </div>
         <h1 className="text-4xl font-bold mb-4 bg-brand-gradient-gold text-transparent bg-clip-text">
@@ -73,7 +73,7 @@ export const ChatMessages = ({ messages, isLoading, onEditMessage, activeModel =
             </div>
           </div>
           <p className="text-sm text-gray-400">
-            I remember our conversations and provide context-aware responses to better assist you through your ALU journey.
+            I remember our conversations and provide context-aware responses to better assist you through your academic journey.
           </p>
         </div>
       </div>

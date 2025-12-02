@@ -79,7 +79,7 @@ export default function ApiDocumentation() {
                   <pre className="text-sm overflow-x-auto">
                     {`// Response
 {
-  "response": "ALU has campuses in Rwanda (Kigali) and Mauritius (Beau Plan)...",
+  "response": "ALU Rwanda is located in Kigali, the capital city of Rwanda...",
   "source": "ALU Brain: Campus Life",
   "confidence": 0.95
 }`}

@@ -1,6 +1,6 @@
 
 // Types for the mini chatbot
-export type Department = "learning-coach" | "department" | "administration";
+export type Department = "learning-coach" | "department" | "administration" | "mission-curators" | "bel-program";
 export type Stage = "initial" | "department-selection" | "selection-list" | "booking" | "confirmation" | "human-chat" | "email-inquiry" | "human-chat-active" | "email-sent";
 export type EmailTemplate = "general" | "assignment" | "finance" | "technical" | "academic" | "custom";
 
@@ -19,6 +19,8 @@ export interface Person {
   department?: string;
   status?: string;
   email?: string;
+  missionArea?: string;
+  bio?: string;
 }
 
 export interface EmailTemplateItem {

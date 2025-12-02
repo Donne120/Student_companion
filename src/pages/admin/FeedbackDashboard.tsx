@@ -50,7 +50,7 @@ const mockFeedback: Feedback[] = [
     type: 'positive',
     message: 'The assistant provided accurate information about campus locations.',
     userQuery: 'Where is ALU located?',
-    aiResponse: 'ALU has campuses in Rwanda (Kigali) and Mauritius (Beau Plan)...',
+    aiResponse: 'ALU Rwanda is located in Kigali, the capital city of Rwanda...',
     timestamp: '2023-08-15T14:32:00Z',
     category: 'accuracy'
   },

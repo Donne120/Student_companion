@@ -207,10 +207,29 @@ export const MiniChatbotContent = () => {
     
     setIsLoading(true);
     
-    setTimeout(() => {
+    try {
+      // Create mailto link with proper encoding
+      const recipientEmail = selectedDepartment.email || selectedDepartment.contact || "info@alueducation.com";
+      const subject = encodeURIComponent(emailSubject);
+      const body = encodeURIComponent(emailBody);
+      const mailtoLink = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+      
+      // Open the user's default email client
+      window.location.href = mailtoLink;
+      
+      // Show success message
+      toast.success(`Email draft opened! Sending to ${selectedDepartment.name}`);
+      
+      // Move to success stage after a short delay
+      setTimeout(() => {
+        setIsLoading(false);
+        setStage("email-sent");
+      }, 1000);
+    } catch (error) {
+      console.error("Error opening email client:", error);
+      toast.error("Could not open email client. Please try again or contact support directly.");
       setIsLoading(false);
-      setStage("email-sent");
-    }, 1500);
+    }
   };
 
   return (

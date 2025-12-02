@@ -158,7 +158,7 @@ export const ChatMessage = ({
             <img 
               src="/logo.png" 
               alt="ALU AI" 
-              className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain"
             />
           </div>
         )}

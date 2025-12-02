@@ -4,7 +4,7 @@ import { useChatMessageHandler } from "./chat/ChatMessageHandler";
 import { ChatInput } from "./ChatInput";
 import { ConversationSidebar } from "./chat/ConversationSidebar";
 import { ChatMessages } from "./chat/ChatMessages";
-import { NewsUpdate } from "./news/NewsUpdate";
+import { OpportunitiesPanel } from "./news/OpportunitiesPanel";
 import { Conversation } from "@/types/chat";
 import { BackendStatus } from "./chat/BackendStatus";
 import { useEffect, useState } from "react";
@@ -94,7 +94,7 @@ export const ChatContainer = () => {
           <ChatInput onSend={handleSendMessage} disabled={isLoading} />
         </div>
         <div className="hidden lg:block w-80 h-screen sticky top-0">
-          <NewsUpdate />
+          <OpportunitiesPanel />
         </div>
       </div>
     </div>

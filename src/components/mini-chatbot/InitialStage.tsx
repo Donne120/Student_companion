@@ -15,11 +15,11 @@ export const InitialStage: React.FC<InitialStageProps> = ({
 }) => {
   return (
     <div className="space-y-4">
-      <p className="text-center text-sm">How can we assist you today?</p>
+      <p className="text-center text-sm text-white">How can we assist you today?</p>
       <div className="grid grid-cols-1 gap-2">
         <Button 
           variant="outline" 
-          className="flex justify-between"
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
           onClick={() => onDepartmentSelect("learning-coach")}
         >
           <span className="flex items-center gap-2">
@@ -30,7 +30,29 @@ export const InitialStage: React.FC<InitialStageProps> = ({
         </Button>
         <Button 
           variant="outline" 
-          className="flex justify-between"
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
+          onClick={() => onDepartmentSelect("mission-curators")}
+        >
+          <span className="flex items-center gap-2">
+            <School size={16} />
+            Mission Curators
+          </span>
+          <ArrowRight size={16} />
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
+          onClick={() => onDepartmentSelect("bel-program")}
+        >
+          <span className="flex items-center gap-2">
+            <Calendar size={16} />
+            BEL Program
+          </span>
+          <ArrowRight size={16} />
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
           onClick={() => onDepartmentSelect("department")}
         >
           <span className="flex items-center gap-2">
@@ -41,7 +63,7 @@ export const InitialStage: React.FC<InitialStageProps> = ({
         </Button>
         <Button 
           variant="outline" 
-          className="flex justify-between"
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
           onClick={() => onDepartmentSelect("administration")}
         >
           <span className="flex items-center gap-2">
@@ -52,18 +74,18 @@ export const InitialStage: React.FC<InitialStageProps> = ({
         </Button>
         <Button 
           variant="outline" 
-          className="flex justify-between"
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
           onClick={() => onStageChange("human-chat")}
         >
           <span className="flex items-center gap-2">
             <HeadsetIcon size={16} />
-            Chat with a Human
+            Get Human Assistant
           </span>
           <ArrowRight size={16} />
         </Button>
         <Button 
           variant="outline" 
-          className="flex justify-between"
+          className="flex justify-between hover:bg-white/10 border-white/20 text-white"
           onClick={() => onStageChange("email-inquiry")}
         >
           <span className="flex items-center gap-2">
