@@ -51,6 +51,23 @@ export const aiService = {
     options: { personality?: Personality } = {}
   ): Promise<string> {
     try {
+      // Skip help center search for simple greetings
+      const greetings = ['hi', 'hello', 'hey', 'good morning', 'good afternoon', 'good evening', 'howdy', 'hola', 'greetings'];
+      const isGreeting = greetings.some(g => query.toLowerCase().trim() === g || query.toLowerCase().trim().startsWith(g + ' ') || query.toLowerCase().trim().startsWith(g + '!'));
+      
+      if (isGreeting) {
+        // Try backend first for greetings
+        const isAvailable = await this.isBackendAvailable();
+        if (isAvailable) {
+          try {
+            return await this.getResponseFromBackend(query, conversationHistory, options);
+          } catch (error) {
+            return "Hello! 👋 Welcome to ALU Student Companion. I'm here to help you with information about admissions, programs, student life, and more. What would you like to know?";
+          }
+        }
+        return "Hello! 👋 Welcome to ALU Student Companion. I'm here to help you with information about admissions, programs, student life, and more. What would you like to know?";
+      }
+
       // ===== STEP 1: DEEP SEARCH IN ALU HELP CENTER =====
       console.log("🔍 Searching ALU Help Center for:", query);
       const helpCenterResults = searchHelpCenter(query);
@@ -119,7 +136,7 @@ export const aiService = {
     const topResult = results[0];
     const article = topResult.article;
 
-    let response = `# ${article.title}\n\n`;
+    let response = `## ${article.title}\n\n`;
     response += `**Category:** ${article.category}\n\n`;
     
     // Add the matched content or full content
@@ -131,24 +148,30 @@ export const aiService = {
       response += contentPreview + (article.content.length > 800 ? "...\n\n" : "\n\n");
     }
 
-    // Add link to full article
-    response += `📖 **[Read Full Article](${article.url})**\n\n`;
+    // Add link to full article - using plain URL for better compatibility
+    if (article.url) {
+      response += `📖 **Read Full Article:** ${article.url}\n\n`;
+    }
 
     // Add related articles if available
     if (results.length > 1) {
-      response += `### Related Resources:\n\n`;
+      response += `### Related Resources\n\n`;
       for (let i = 1; i < Math.min(4, results.length); i++) {
         const relatedArticle = results[i].article;
-        response += `- [${relatedArticle.title}](${relatedArticle.url}) (${relatedArticle.category})\n`;
+        if (relatedArticle.url) {
+          response += `• **${relatedArticle.title}** (${relatedArticle.category})\n`;
+          response += `  ${relatedArticle.url}\n\n`;
+        }
       }
-      response += `\n`;
     }
 
     // Add help center link
-    response += `\n---\n\n`;
-    response += `💡 **Need more help?** Visit the [ALU Help Center](https://help.alueducation.com) or contact:\n`;
-    response += `- 📧 Email: support@alueducation.com\n`;
-    response += `- 📞 Phone: +250 788 309 667 (Rwanda)\n`;
+    response += `---\n\n`;
+    response += `💡 **Need more help?**\n\n`;
+    response += `Visit the ALU Help Center: https://help.alueducation.com\n\n`;
+    response += `**Contact:**\n`;
+    response += `• 📧 Email: support@alueducation.com\n`;
+    response += `• 📞 Phone: +250 788 309 667 (Rwanda)\n`;
 
     return response;
   },

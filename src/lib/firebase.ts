@@ -4,12 +4,12 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAol6UJmKpY5S4fihD1veMR-x7NE-S4SfI",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "nypthoria.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "nypthoria",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "nypthoria.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "889533985009",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:889533985009:web:6ec9a3b735426ab2917950"
+  apiKey: "AIzaSyA74TfyN8Kblf9A0rr5RmnxpIQXAAnoWqg",
+  authDomain: "nypthoria.firebaseapp.com",
+  projectId: "nypthoria",
+  storageBucket: "nypthoria.firebasestorage.app",
+  messagingSenderId: "889533985009",
+  appId: "1:889533985009:web:5f5617d9a88dd809917950"
 };
 
 // Initialize Firebase
@@ -22,11 +22,11 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Ignore the Cross-Origin-Opener-Policy warnings - they're just browser safety mechanisms
+// Suppress Cross-Origin-Opener-Policy warnings
 console.warn = (originalWarn => {
   return function(...args) {
     if (typeof args[0] === 'string' && args[0].includes('Cross-Origin-Opener-Policy')) {
-      return; // Suppress these warnings
+      return;
     }
     originalWarn.apply(console, args);
   };

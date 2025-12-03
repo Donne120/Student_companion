@@ -146,19 +146,32 @@ export const StructuredResponse = ({
           </CardHeader>
           <CardContent className="pt-0 px-3 sm:px-6 pb-3 sm:pb-6">
             <div className="space-y-1.5 sm:space-y-2">
-              {[...resources, ...sections.resources].map((resource, index) => (
-                <a
-                  key={index}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 sm:gap-2 text-gray-200 hover:text-brand-gold transition-colors group text-xs sm:text-sm"
-                >
-                  <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold/60 group-hover:text-brand-gold flex-shrink-0" />
-                  <span className="flex-1 truncate">{resource.label}</span>
-                  <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                </a>
-              ))}
+              {/* Deduplicate resources by URL */}
+              {(() => {
+                const allResources = [...resources, ...sections.resources];
+                const seen = new Set<string>();
+                const uniqueResources = allResources.filter(r => {
+                  // Skip if no valid URL
+                  if (!r.url || !r.url.startsWith('http')) return false;
+                  // Skip duplicates
+                  if (seen.has(r.url)) return false;
+                  seen.add(r.url);
+                  return true;
+                });
+                return uniqueResources.map((resource, index) => (
+                  <a
+                    key={index}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 sm:gap-2 text-gray-200 hover:text-brand-gold transition-colors group text-xs sm:text-sm"
+                  >
+                    <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-brand-gold/60 group-hover:text-brand-gold flex-shrink-0" />
+                    <span className="flex-1 truncate">{resource.label}</span>
+                    <ExternalLink className="w-2.5 h-2.5 sm:w-3 sm:h-3 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                  </a>
+                ));
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -246,42 +259,65 @@ function parseStructuredContent(content: string) {
       continue;
     }
     
-    // Detect sections
-    if (line.includes('📚 Resources') || line.includes('Resources & Links')) {
+    // Detect sections - be more specific to avoid false matches
+    if (line.includes('📚 Resources') || line.match(/^\*?\*?Resources & Links/)) {
       currentSection = 'resources';
       continue;
     }
     
-    if (line.includes('📞 Need Help') || line.includes('Contact')) {
+    // Check for Related Resources section
+    if (line.includes('### Related Resources')) {
+      currentSection = 'resources';
+      continue;
+    }
+    
+    // Check for contact section - be more specific
+    if (line.includes('📞 Need Help') || line.match(/^\*?\*?Need Help\?/)) {
       currentSection = 'contact';
       continue;
     }
     
     // Skip horizontal rules
     if (line.trim() === '---') {
+      currentSection = 'main'; // Reset to main after separator
       continue;
     }
     
     // Parse based on current section
     if (currentSection === 'main') {
+      // Skip Quick Actions lines
+      if (line.includes('🔗 Quick Actions') || line.includes('**Quick Actions:**')) {
+        continue;
+      }
       mainContent.push(line);
     } else if (currentSection === 'resources') {
-      // Extract resource links
+      // Extract resource links - support both markdown links and plain URLs
       const linkMatch = line.match(/\[([^\]]+)\]\(([^)]+)\)/);
-      if (linkMatch) {
+      if (linkMatch && linkMatch[2] && linkMatch[2].startsWith('http')) {
         resources.push({
           label: linkMatch[1],
           url: linkMatch[2]
         });
+      } else {
+        // Check for plain URLs
+        const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+        if (urlMatch) {
+          // Try to extract label from line
+          const labelMatch = line.match(/\*\*([^*]+)\*\*/);
+          resources.push({
+            label: labelMatch ? labelMatch[1] : 'View Resource',
+            url: urlMatch[1]
+          });
+        }
       }
     } else if (currentSection === 'contact') {
       // Extract contact info
-      if (line.includes('📧') || line.toLowerCase().includes('email:')) {
+      if (line.includes('📧') || line.toLowerCase().includes('email:') || line.toLowerCase().includes('email')) {
         const emailMatch = line.match(/[\w\.-]+@[\w\.-]+\.\w+/);
         if (emailMatch) contact.email = emailMatch[0];
       }
-      if (line.includes('📱') || line.toLowerCase().includes('phone:')) {
-        const phoneMatch = line.match(/\+?\d{1,3}[\s-]?\d{3}[\s-]?\d{3}[\s-]?\d{3,4}/);
+      if (line.includes('📱') || line.includes('📞') || line.toLowerCase().includes('phone:') || line.toLowerCase().includes('phone')) {
+        const phoneMatch = line.match(/\+?\d{1,4}[\s-]?\d{2,4}[\s-]?\d{2,4}[\s-]?\d{2,4}/);
         if (phoneMatch) contact.phone = phoneMatch[0];
       }
       if (line.includes('📍') || line.toLowerCase().includes('location:')) {
@@ -291,9 +327,12 @@ function parseStructuredContent(content: string) {
     }
   }
   
+  // Clean up main content - remove empty lines at start and end
+  const cleanedContent = mainContent.join('\n').trim();
+  
   return {
     title,
-    mainContent: mainContent.join('\n').trim(),
+    mainContent: cleanedContent,
     resources,
     contact: Object.keys(contact).length > 0 ? contact : null
   };

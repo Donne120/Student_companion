@@ -82,6 +82,18 @@ function getLabelForUrl(url: string, context: string, fullText: string): string 
   const lowerContext = context.toLowerCase();
   const lowerFullText = fullText.toLowerCase();
   
+  // Help center articles - extract title from URL if possible
+  if (lowerUrl.includes('help.alueducation.com')) {
+    // Try to extract article name from URL
+    const articleMatch = url.match(/articles\/\d+-([^?#]+)/);
+    if (articleMatch) {
+      // Convert URL slug to readable title
+      const slug = articleMatch[1].replace(/-/g, ' ').replace(/_/g, ' ');
+      return slug.charAt(0).toUpperCase() + slug.slice(1);
+    }
+    return 'ALU Help Center Article';
+  }
+  
   // Library-specific URLs (HIGHEST PRIORITY for library queries)
   if (lowerUrl.includes('library.alueducation.com')) {
     if (lowerContext.includes('manual') || lowerContext.includes('guide')) {
@@ -95,7 +107,7 @@ function getLabelForUrl(url: string, context: string, fullText: string): string 
   
   // Specific ALU pages
   if (lowerUrl.includes('alueducation.com')) {
-    // Check URL path
+    // Check URL path for specific pages
     if (lowerUrl.includes('/programs')) {
       return 'View Academic Programs';
     }
@@ -114,16 +126,14 @@ function getLabelForUrl(url: string, context: string, fullText: string): string 
     if (lowerUrl.includes('/apply')) {
       return 'Apply to ALU';
     }
-    
-    // Check context for better labeling
-    if (lowerContext.includes('library') || lowerFullText.includes('library')) {
-      return 'Library Information';
+    if (lowerUrl.includes('/scholarships') || lowerUrl.includes('/financial-aid')) {
+      return 'Scholarships & Financial Aid';
     }
-    if (lowerContext.includes('admission') || lowerFullText.includes('admission')) {
-      return 'Admissions Portal';
+    if (lowerUrl.includes('/student-life')) {
+      return 'Student Life';
     }
-    if (lowerContext.includes('program') || lowerFullText.includes('program')) {
-      return 'Academic Programs';
+    if (lowerUrl.includes('/career')) {
+      return 'Career Services';
     }
     
     // Generic ALU website (LOWEST PRIORITY)
@@ -274,15 +284,27 @@ export function enhanceResponse(response: string): EnhancedResponse {
     }
   }
   
-  // Create Resources from URLs (prioritized)
+  // Create Resources from URLs (prioritized, deduplicated)
   if (urlData.length > 0) {
+    const seenUrls = new Set<string>();
+    const seenLabels = new Set<string>();
+    
     urlData.forEach((urlInfo, index) => {
+      // Skip if we've already seen this URL
+      if (seenUrls.has(urlInfo.url)) return;
+      
       const label = getLabelForUrl(urlInfo.url, urlInfo.context, response);
       
       // Skip generic website in resources if we have better options
       if (label === 'Visit ALU Website' && urlData.length > 1 && index > 0) {
         return; // Skip this URL
       }
+      
+      // Skip if we've seen this exact label (prevents duplicate "Admissions Portal" etc)
+      if (seenLabels.has(label)) return;
+      
+      seenUrls.add(urlInfo.url);
+      seenLabels.add(label);
       
       result.resources.push({
         label: label,
