@@ -1,208 +1,230 @@
-# Student Companion AI - AWS Backend
+# 🚀 Student Companion Backend
 
-## 🏗️ Production-Ready AWS Backend
+AWS-powered backend for the Student Companion AI chatbot, built with FastAPI and Amazon Bedrock (Claude 3.7).
 
-This is the complete AWS backend for the Student Companion AI chatbot, designed for scalability, security, and enterprise-grade performance.
+## 🐳 Quick Start with Docker
 
-## 📊 Architecture
+### Prerequisites
+- [Docker Desktop](https://docs.docker.com/desktop/) installed and running
+
+### One-Command Setup
+
+**Windows (PowerShell):**
+```powershell
+cd backend
+.\scripts\docker-start.ps1
+```
+
+**Linux/Mac:**
+```bash
+cd backend
+chmod +x scripts/docker-start.sh
+./scripts/docker-start.sh
+```
+
+This will:
+1. Create a `.env` file from the template
+2. Build the Docker image
+3. Start all services (API, DynamoDB Local, OpenSearch)
+
+### Access Points
+| Service | URL |
+|---------|-----|
+| **API** | http://localhost:8000 |
+| **Health Check** | http://localhost:8000/health |
+| **API Docs** | http://localhost:8000/docs |
+| **DynamoDB Local** | http://localhost:8001 |
+| **OpenSearch** | http://localhost:9200 |
+| **OpenSearch Dashboard** | http://localhost:5601 |
+
+---
+
+## 📦 Docker Commands
+
+### Development Mode (with local AWS services)
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+
+# Rebuild after code changes
+docker-compose up --build -d
+```
+
+### Production Mode (connects to AWS)
+```bash
+# Start production server
+docker-compose -f docker-compose.prod.yml up -d
+
+# View logs
+docker-compose -f docker-compose.prod.yml logs -f
+
+# Stop
+docker-compose -f docker-compose.prod.yml down
+```
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Copy `env.example` to `.env` and configure:
+
+```bash
+cp env.example .env
+```
+
+**Required for AWS:**
+```env
+AWS_REGION=eu-north-1
+AWS_ACCESS_KEY_ID=your_key
+AWS_SECRET_ACCESS_KEY=your_secret
+```
+
+**Required for AI:**
+```env
+BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+```
+
+See `env.example` for all available options.
+
+---
+
+## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                         AWS CLOUD (eu-north-1)                               │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                │
-│  │  CloudFront  │────▶│      S3      │     │   Route 53   │                │
-│  │    (CDN)     │     │  (Frontend)  │     │    (DNS)     │                │
-│  └──────────────┘     └──────────────┘     └──────────────┘                │
-│                                                                              │
-│  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                │
-│  │     API      │────▶│    Lambda    │────▶│   Bedrock    │                │
-│  │   Gateway    │     │  (Handlers)  │     │  (Claude 3)  │                │
-│  └──────────────┘     └─────┬────────┘     └──────────────┘                │
-│                             │                                               │
-│         ┌───────────────────┼───────────────────┐                          │
-│         ▼                   ▼                   ▼                           │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐                  │
-│  │   DynamoDB   │    │  OpenSearch  │    │      S3      │                  │
-│  │   (Users &   │    │    (RAG)     │    │  (Documents) │                  │
-│  │   History)   │    │              │    │              │                  │
-│  └──────────────┘    └──────────────┘    └──────────────┘                  │
-│                                                                              │
-│  Supporting: IAM | KMS | Secrets Manager | CloudWatch | CloudTrail         │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Docker Container                      │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│   FastAPI Application (Port 8000)                       │
+│   ├── /health          - Health check                   │
+│   ├── /api/chat        - Chat endpoint                  │
+│   ├── /api/documents   - Document management            │
+│   ├── /api/users       - User management                │
+│   └── /api/feedback    - Feedback collection            │
+│                                                          │
+│   Services:                                              │
+│   ├── Bedrock Service  - Claude 3.7 AI                  │
+│   ├── DynamoDB Service - Data storage                   │
+│   ├── OpenSearch       - RAG/Vector search              │
+│   └── S3 Service       - Document storage               │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
 ```
+
+---
 
 ## 📁 Project Structure
 
 ```
 backend/
 ├── src/
-│   ├── handlers/              # Lambda function handlers
-│   │   ├── chat.py            # Chat endpoint handler
-│   │   ├── documents.py       # Document upload/processing
-│   │   ├── users.py           # User management
-│   │   ├── health.py          # Health check endpoint
-│   │   └── admin.py           # Admin operations
-│   │
-│   ├── services/              # Business logic services
-│   │   ├── bedrock_service.py # Claude 3 integration
-│   │   ├── opensearch_service.py # RAG search
-│   │   ├── dynamo_service.py  # Database operations
-│   │   ├── s3_service.py      # File storage
-│   │   └── document_processor.py # PDF/DOCX extraction
-│   │
-│   ├── models/                # Data models
-│   │   ├── user.py            # User model
-│   │   ├── conversation.py    # Chat history model
-│   │   ├── document.py        # Document model
-│   │   └── feedback.py        # Feedback model
-│   │
-│   ├── utils/                 # Utilities
-│   │   ├── config.py          # Configuration
-│   │   ├── logger.py          # Logging
-│   │   ├── validators.py      # Input validation
-│   │   └── exceptions.py      # Custom exceptions
-│   │
-│   └── knowledge_base/        # ALU Knowledge Base
-│       ├── admissions.py      # Admissions data
-│       ├── wellness.py        # Wellness & health data
-│       ├── academics.py       # Academic programs
-│       ├── campus.py          # Campus services
-│       └── policies.py        # Policies & procedures
-│
-├── infrastructure/            # Infrastructure as Code
-│   ├── template.yaml          # SAM/CloudFormation template
-│   ├── api-gateway.yaml       # API Gateway config
-│   └── opensearch.yaml        # OpenSearch config
-│
-├── scripts/                   # Deployment scripts
-│   ├── deploy.sh              # Main deployment script
-│   ├── setup_opensearch.py    # OpenSearch index setup
-│   ├── seed_knowledge_base.py # Seed initial data
-│   └── migrate_from_hf.py     # Migrate from Hugging Face
-│
-├── tests/                     # Unit & integration tests
-│   ├── test_chat.py
-│   ├── test_documents.py
-│   └── test_search.py
-│
-├── requirements.txt           # Python dependencies
-├── samconfig.toml             # SAM deployment config
-└── README.md                  # This file
+│   ├── handlers/           # API endpoints
+│   │   ├── chat.py         # Chat logic
+│   │   ├── documents.py    # Document upload
+│   │   ├── users.py        # User management
+│   │   └── feedback.py     # Feedback collection
+│   ├── services/           # AWS integrations
+│   │   ├── bedrock_service.py    # Claude 3.7 AI
+│   │   ├── dynamo_service.py     # DynamoDB
+│   │   ├── opensearch_service.py # Vector search
+│   │   └── s3_service.py         # File storage
+│   ├── models/             # Data models
+│   ├── knowledge_base/     # ALU knowledge
+│   └── utils/              # Utilities
+├── infrastructure/         # AWS SAM templates
+├── scripts/                # Deployment scripts
+├── Dockerfile              # Container definition
+├── docker-compose.yml      # Dev environment
+├── docker-compose.prod.yml # Production
+├── requirements.txt        # Python dependencies
+└── env.example             # Environment template
 ```
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- AWS CLI configured with credentials
-- Python 3.11+
-- AWS SAM CLI
-- Docker (for local testing)
-
-### Local Development
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run locally with SAM
-sam local start-api
-
-# Test endpoints
-curl http://localhost:3000/health
-curl -X POST http://localhost:3000/chat -d '{"message": "Hello"}'
-```
-
-### Deploy to AWS
-
-```bash
-# Build
-sam build
-
-# Deploy (guided first time)
-sam deploy --guided
-
-# Subsequent deployments
-sam deploy
-```
-
-## 🔑 Environment Variables
-
-Set these in AWS Secrets Manager or Lambda environment:
-
-```
-OPENSEARCH_ENDPOINT=https://your-domain.eu-north-1.es.amazonaws.com
-DYNAMODB_TABLE_USERS=student-companion-users
-DYNAMODB_TABLE_CONVERSATIONS=student-companion-conversations
-DYNAMODB_TABLE_DOCUMENTS=student-companion-documents
-S3_BUCKET_DOCUMENTS=student-companion-documents
-BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
-```
-
-## 📡 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Health check |
-| POST | `/chat` | Send message, get AI response |
-| GET | `/conversations` | Get user's conversations |
-| GET | `/conversations/{id}` | Get specific conversation |
-| DELETE | `/conversations/{id}` | Delete conversation |
-| POST | `/documents/upload` | Upload document |
-| GET | `/documents` | List documents |
-| DELETE | `/documents/{id}` | Delete document |
-| GET | `/user/profile` | Get user profile |
-| PUT | `/user/profile` | Update user profile |
-| POST | `/feedback` | Submit feedback |
-
-## 🔒 Security
-
-- All data encrypted at rest (KMS)
-- All traffic encrypted in transit (TLS 1.3)
-- IAM roles with least privilege
-- API Gateway with rate limiting
-- CloudTrail audit logging
-- Secrets in AWS Secrets Manager
-
-## 📊 Monitoring
-
-- CloudWatch Logs for all Lambda functions
-- CloudWatch Metrics for performance
-- X-Ray tracing for debugging
-- CloudWatch Alarms for errors
-
-## 💰 Cost Optimization
-
-- Lambda: Pay per request
-- DynamoDB: On-demand pricing
-- OpenSearch: t3.small.search (~$25/mo)
-- S3: Standard storage (~$0.023/GB)
-- Bedrock: Pay per token
-
-Estimated: $70-150/month for ~1000 users
-
-## 🔄 Migration from Hugging Face
-
-The system includes a migration script to transition from the current HF backend:
-
-```bash
-python scripts/migrate_from_hf.py
-```
-
-This will:
-1. Keep HF as fallback during migration
-2. Gradually route traffic to AWS
-3. Full cutover when stable
-
-## 📞 Support
-
-- Email: studentcompanionai@gmail.com
-- CloudPlexo Partner Support
 
 ---
 
-Built with ❤️ for ALU Students
+## 🧪 Testing the API
 
+### Health Check
+```bash
+curl http://localhost:8000/health
+```
+
+### Chat Request
+```bash
+curl -X POST http://localhost:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What are ALU admission requirements?"}'
+```
+
+### Interactive API Docs
+Open http://localhost:8000/docs in your browser.
+
+---
+
+## 🚀 Deployment Options
+
+### Option 1: AWS Lambda (Serverless)
+```bash
+cd infrastructure
+sam build
+sam deploy --guided
+```
+
+### Option 2: AWS ECS/Fargate (Containers)
+```bash
+# Build and push to ECR
+aws ecr get-login-password | docker login --username AWS --password-stdin <account>.dkr.ecr.eu-north-1.amazonaws.com
+docker build -t student-companion-backend .
+docker tag student-companion-backend:latest <account>.dkr.ecr.eu-north-1.amazonaws.com/student-companion:latest
+docker push <account>.dkr.ecr.eu-north-1.amazonaws.com/student-companion:latest
+```
+
+### Option 3: Any Docker Host
+```bash
+# Build image
+docker build -t student-companion-backend .
+
+# Run anywhere
+docker run -p 8000:8000 --env-file .env student-companion-backend
+```
+
+---
+
+## 🔧 Development
+
+### Without Docker
+```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or venv\Scripts\activate on Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run locally
+uvicorn src.main:app --reload --port 8000
+```
+
+### With Hot Reload
+The docker-compose.yml mounts the code directory, so changes are reflected automatically.
+
+---
+
+## 📞 Support
+
+- **Email:** studentcompanionai@gmail.com
+- **GitHub:** https://github.com/Donne120/Student_companion
+
+---
+
+## 📄 License
+
+MIT License - See LICENSE file for details.
