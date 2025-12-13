@@ -16,7 +16,6 @@ import FeedbackDashboard from "./pages/admin/FeedbackDashboard";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import LandingPage from "./pages/LandingPage";
 import "./App.css";
-import "./utils/resetBackendUrl"; // Auto-fix wrong backend URL
 
 function App() {
   return (
