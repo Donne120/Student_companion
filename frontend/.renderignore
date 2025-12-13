@@ -1,0 +1,7 @@
+__pycache__
+node_modules
+.env
+compat_venv/
+backend/render.yaml
+.git/
+dist/
