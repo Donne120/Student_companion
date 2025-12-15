@@ -7,7 +7,7 @@ import os
 from functools import lru_cache
 from typing import Optional
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import Field, field_validator
 
 
 class Settings(BaseSettings):
@@ -17,7 +17,17 @@ class Settings(BaseSettings):
     app_name: str = "Student Companion AI"
     app_version: str = "1.0.0"
     environment: str = Field(default="development", alias="ENVIRONMENT")
-    debug: bool = Field(default=False, alias="DEBUG")
+    debug: bool = Field(default=False, alias="SC_DEBUG")  # Use SC_ prefix to avoid conflicts
+    
+    @field_validator('debug', mode='before')
+    @classmethod
+    def parse_debug(cls, v):
+        """Parse debug value - handles various formats"""
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ('true', '1', 'yes', 'on')
+        return bool(v)
     
     # AWS Region
     aws_region: str = Field(default="eu-north-1", alias="AWS_REGION")

@@ -1,9 +1,32 @@
 """Data models module"""
 
 from .user import User, UserCreate, UserUpdate, UserProfile
-from .conversation import Conversation, Message, ConversationCreate, MessageCreate
-from .document import Document, DocumentCreate, DocumentChunk
-from .feedback import Feedback, FeedbackCreate
+from .conversation import (
+    Conversation,
+    Message,
+    ConversationCreate,
+    MessageCreate,
+    MessageRole,
+    MessageSource,
+    MessageMetadata,
+    ConversationSummary,
+)
+from .document import (
+    Document,
+    DocumentCreate,
+    DocumentChunk,
+    DocumentStatus,
+    DocumentCategory,
+    DocumentStats,
+    DocumentSummary,
+)
+from .feedback import (
+    Feedback,
+    FeedbackCreate,
+    FeedbackType,
+    FeedbackCategory,
+    FeedbackStats,
+)
 
 __all__ = [
     # User
@@ -16,12 +39,23 @@ __all__ = [
     "Message",
     "ConversationCreate",
     "MessageCreate",
+    "MessageRole",
+    "MessageSource",
+    "MessageMetadata",
+    "ConversationSummary",
     # Document
     "Document",
     "DocumentCreate",
     "DocumentChunk",
+    "DocumentStatus",
+    "DocumentCategory",
+    "DocumentStats",
+    "DocumentSummary",
     # Feedback
     "Feedback",
     "FeedbackCreate",
+    "FeedbackType",
+    "FeedbackCategory",
+    "FeedbackStats",
 ]
 
