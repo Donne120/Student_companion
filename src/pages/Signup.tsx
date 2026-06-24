@@ -98,9 +98,11 @@ export default function Signup() {
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full max-w-md">
             <div className="flex items-center gap-2 mb-10">
-              <div className="w-8 h-8 rounded-md bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-sm">
-                A
-              </div>
+              <img
+                src="/logo.png"
+                alt="ALU Student Companion"
+                className="w-8 h-8 rounded-md object-contain"
+              />
               <span className="font-semibold tracking-tight text-[#1A1A1A]">
                 ALU Student Companion
               </span>

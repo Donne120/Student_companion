@@ -68,9 +68,11 @@ export default function Login() {
         <div className="flex-1 flex items-center justify-center">
           <div className="relative w-full max-w-md animate-rise">
             <div className="flex items-center gap-2.5 mb-10">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#F4D773] to-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-sm shadow-gold">
-                A
-              </div>
+              <img
+                src="/logo.png"
+                alt="ALU Student Companion"
+                className="w-9 h-9 rounded-xl object-contain shadow-gold"
+              />
               <span className="font-semibold tracking-tight text-[#1A1A1A]">
                 ALU Student Companion
               </span>

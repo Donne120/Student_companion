@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 // these against the deployment root, so they work both locally and on Vercel.
 // Filenames with spaces are URL-encoded so the browser fetches them correctly.
 const HERO_IMAGE = "/study.png";
-const COMPANION_LOGO = "/logo%20(3).png";
+const COMPANION_LOGO = "/logo.png";
 
 const STUDY_IMAGE = "/study.png";
 const CAMPUS_IMAGE = "/campus.png";
@@ -301,9 +301,7 @@ export default function LandingPage() {
       <footer className="border-t border-[#E8DDB0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
-            <div className="w-6 h-6 rounded bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-xs">
-              A
-            </div>
+            <img src={COMPANION_LOGO} alt="ALU Student Companion" className="w-6 h-6 rounded object-contain" />
             <span>African Leadership University Student Companion</span>
           </div>
           <div className="flex items-center gap-6">

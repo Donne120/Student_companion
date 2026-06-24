@@ -196,9 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
         {/* Brand mark */}
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F4D773] to-[#D4AF37] flex items-center justify-center shadow-lg">
-          <span className="text-[#1A1A1A] font-bold text-lg select-none">A</span>
-        </div>
+        <img src="/logo.png" alt="ALU Student Companion" className="w-12 h-12 rounded-2xl object-contain" />
         {/* Spinner */}
         <svg
           className="h-6 w-6 animate-spin text-[#D4AF37]"

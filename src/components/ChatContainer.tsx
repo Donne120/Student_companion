@@ -84,9 +84,7 @@ export const ChatContainer = () => {
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="w-7 h-7 rounded-md bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-xs">
-                A
-              </div>
+              <img src="/logo.png" alt="ALU Companion" className="w-7 h-7 rounded-md object-contain" />
               <span className="text-[15px] font-semibold tracking-tight text-[#1A1A1A] truncate">
                 {currentConversation?.title || "Companion"}
               </span>
@@ -106,9 +104,7 @@ export const ChatContainer = () => {
         <div className="hidden md:block sticky top-0 z-10 bg-white/85 backdrop-blur border-b border-[#E8DDB0]">
           <div className="h-14 px-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-xs">
-                A
-              </div>
+              <img src="/logo.png" alt="ALU Companion" className="w-6 h-6 rounded object-contain" />
               <span className="text-sm font-medium text-[#1A1A1A]">
                 {currentConversation?.title || "New chat"}
               </span>
