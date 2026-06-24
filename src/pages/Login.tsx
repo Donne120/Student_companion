@@ -71,7 +71,7 @@ export default function Login() {
               <img
                 src="/logo.png"
                 alt="ALU Student Companion"
-                className="w-9 h-9 rounded-xl object-contain shadow-gold"
+                className="w-12 h-12 rounded-2xl object-cover flex-shrink-0"
               />
               <span className="font-semibold tracking-tight text-[#1A1A1A]">
                 ALU Student Companion

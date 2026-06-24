@@ -101,7 +101,7 @@ export default function Signup() {
               <img
                 src="/logo.png"
                 alt="ALU Student Companion"
-                className="w-8 h-8 rounded-md object-contain"
+                className="w-12 h-12 rounded-2xl object-cover flex-shrink-0"
               />
               <span className="font-semibold tracking-tight text-[#1A1A1A]">
                 ALU Student Companion
