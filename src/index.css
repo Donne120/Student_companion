@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand colors
+       Gold:  #D4AF37  ->  hsl(46 65% 52%)
+       White: #FFFFFF
+       Text:  #1A1A1A  ->  hsl(0 0% 10%)
+    */
+    --alu-gold: 46 65% 52%;
+    --alu-gold-strong: 42 65% 42%;
+    --alu-gold-soft: 46 78% 92%;
+    --alu-ink: 0 0% 10%;
+
+    --background: 0 0% 100%;
+    --foreground: var(--alu-ink);
+
+    --card: 0 0% 100%;
+    --card-foreground: var(--alu-ink);
+
+    --popover: 0 0% 100%;
+    --popover-foreground: var(--alu-ink);
+
+    --primary: var(--alu-gold);
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: var(--alu-gold-soft);
+    --secondary-foreground: var(--alu-ink);
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: var(--alu-gold-soft);
+    --accent-foreground: var(--alu-ink);
+
+    --destructive: 0 75% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: var(--alu-gold);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 99%;
+    --sidebar-foreground: var(--alu-ink);
+    --sidebar-primary: var(--alu-gold);
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: var(--alu-gold-soft);
+    --sidebar-accent-foreground: var(--alu-ink);
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: var(--alu-gold);
+  }
+
+  .dark {
+    /* Optional dark mode kept for users who toggle next-themes.
+       Charcoal surfaces, gold accents, white text. */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: var(--alu-gold);
+    --primary-foreground: 0 0% 10%;
+
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 0 0% 16%;
+    --accent-foreground: var(--alu-gold);
+
+    --destructive: 0 70% 45%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: var(--alu-gold);
+
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: var(--alu-gold);
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: var(--alu-gold);
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: var(--alu-gold);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    overscroll-behavior-y: none;
+    /* respect device notch / home indicator */
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Larger touch targets on mobile */
+  @media (max-width: 768px) {
+    button, a, [role="button"] {
+      min-height: 40px;
+    }
+  }
+
+  /* Hide native scrollbars on horizontally-scrolling rails (mobile tabs/news rail) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* KaTeX */
+.katex-display {
+  @apply my-4 overflow-x-auto;
+}
+
+/* Tables in prose */
+.prose table {
+  @apply w-full border-collapse;
+}
+
+.prose thead {
+  @apply bg-[#FAF6E8];
+}
+
+.prose th {
+  @apply px-4 py-2 text-left border border-[#E8DDB0] text-[#1A1A1A];
+}
+
+.prose td {
+  @apply px-4 py-2 border border-[#E8DDB0] text-[#1A1A1A];
+}
+
+.prose tr:nth-child(even) {
+  @apply bg-[#FBF7E9]/40;
+}
+
+.prose tr:hover {
+  @apply bg-[#FBF7E9];
+}
+
+@layer utilities {
+  .safe-top { padding-top: env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-x { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+  .pb-safe-tabbar { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+  .bottom-safe { bottom: env(safe-area-inset-bottom); }
+
+  .alu-gradient-primary {
+    @apply bg-gradient-to-r from-[#D4AF37] to-[#B8941F];
+  }
+
+  .alu-gradient-accent {
+    @apply bg-gradient-to-r from-[#F4D773] to-[#D4AF37];
+  }
+
+  .alu-card {
+    @apply bg-white border border-[#D4AF37]/30 shadow-sm rounded-lg overflow-hidden;
+  }
+
+  .alu-button-primary {
+    @apply bg-[#D4AF37] hover:bg-[#B8941F] text-[#1A1A1A] font-medium px-4 py-2 rounded transition-colors;
+  }
+
+  .alu-button-secondary {
+    @apply bg-white hover:bg-[#FBF7E9] text-[#1A1A1A] border border-[#D4AF37] font-medium px-4 py-2 rounded transition-colors;
+  }
+}

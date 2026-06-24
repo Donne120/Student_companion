@@ -1,0 +1,6 @@
+/* Intentionally minimal.
+ * Global styles live in index.css. App-level layout is handled by Tailwind classes
+ * on the components themselves. Do not add `text-align`, background, or color
+ * rules here — they bleed into every page including the chat, where they break
+ * reading-friendly typography.
+ */

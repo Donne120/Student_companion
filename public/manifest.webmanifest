@@ -1,0 +1,50 @@
+{
+  "name": "ALU Student Companion",
+  "short_name": "ALU Companion",
+  "description": "Your AI companion for academics, campus life, opportunities, and more at ALU.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#D4AF37",
+  "categories": ["education", "productivity", "lifestyle"],
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/logo%20(3).png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo%20(3).png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo%20(3).png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Open Chat",
+      "short_name": "Chat",
+      "description": "Open the AI Companion chat",
+      "url": "/chat?source=shortcut",
+      "icons": [{ "src": "/logo%20(3).png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Opportunities",
+      "short_name": "Opportunities",
+      "url": "/opportunities?source=shortcut",
+      "icons": [{ "src": "/logo%20(3).png", "sizes": "192x192" }]
+    }
+  ]
+}
