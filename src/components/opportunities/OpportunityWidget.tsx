@@ -1,9 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight, ExternalLink, Sparkles } from "lucide-react";
 import { opportunitiesService, type Opportunity } from "@/services/opportunitiesService";
 
 const ROTATE_MS = 8000;
 const VISIBLE_COUNT = 3;
+
+type Category = Opportunity["category"] | "All";
+
+const FILTERS: Category[] = [
+  "All",
+  "Scholarship",
+  "Internship",
+  "Fellowship",
+  "Competition",
+  "Program",
+  "Job",
+  "Grant",
+];
 
 interface OpportunityWidgetProps {
   compact?: boolean;
@@ -26,7 +39,9 @@ const OpportunityCard = ({ opportunity, compact }: OpportunityCardProps) => (
         {opportunity.category}
       </span>
       {opportunity.location && (
-        <span className="text-[10px] text-[#1A1A1A]/50">{opportunity.location}</span>
+        <span className="text-[10px] text-[#1A1A1A]/50 truncate max-w-[100px]">
+          {opportunity.location}
+        </span>
       )}
     </div>
     <h3
@@ -70,7 +85,8 @@ const SkeletonCard = () => (
 );
 
 export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) => {
-  const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
+  const [allOpportunities, setAllOpportunities] = useState<Opportunity[]>([]);
+  const [activeFilter, setActiveFilter] = useState<Category>("All");
   const [startIndex, setStartIndex] = useState(0);
   const [isFading, setIsFading] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -78,38 +94,60 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
   useEffect(() => {
     let cancelled = false;
     opportunitiesService.getOpportunities().then((list) => {
-      if (!cancelled) setOpportunities(list);
+      if (!cancelled) setAllOpportunities(list);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
+  // Derive available filters from loaded data (only show categories that exist)
+  const availableFilters = useMemo(() => {
+    const present = new Set(allOpportunities.map((o) => o.category));
+    return FILTERS.filter((f) => f === "All" || present.has(f as Opportunity["category"]));
+  }, [allOpportunities]);
+
+  // Apply active filter
+  const filtered = useMemo(() => {
+    if (activeFilter === "All") return allOpportunities;
+    return allOpportunities.filter((o) => o.category === activeFilter);
+  }, [allOpportunities, activeFilter]);
+
+  // Reset to first page when filter changes
+  const handleFilter = (cat: Category) => {
+    setIsFading(true);
+    setTimeout(() => {
+      setActiveFilter(cat);
+      setStartIndex(0);
+      setIsFading(false);
+    }, 150);
+  };
+
+  // Auto-rotate within the filtered list
   useEffect(() => {
-    if (paused || opportunities.length <= VISIBLE_COUNT) return;
+    if (paused || filtered.length <= VISIBLE_COUNT) return;
     const id = setInterval(() => {
       setIsFading(true);
       setTimeout(() => {
-        setStartIndex((i) => (i + VISIBLE_COUNT) % opportunities.length);
+        setStartIndex((i) => (i + VISIBLE_COUNT) % filtered.length);
         setIsFading(false);
       }, 240);
     }, ROTATE_MS);
     return () => clearInterval(id);
-  }, [paused, opportunities.length]);
+  }, [paused, filtered.length, activeFilter]);
 
   const advance = (direction: 1 | -1) => {
-    if (opportunities.length === 0) return;
+    if (filtered.length === 0) return;
     setIsFading(true);
     setTimeout(() => {
       setStartIndex((i) => {
-        const len = opportunities.length;
+        const len = filtered.length;
         return ((i + direction * VISIBLE_COUNT) % len + len) % len;
       });
       setIsFading(false);
     }, 200);
   };
 
-  if (opportunities.length === 0) {
+  // Loading state
+  if (allOpportunities.length === 0) {
     return (
       <div className="space-y-3">
         <SkeletonCard />
@@ -119,13 +157,13 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
     );
   }
 
-  // Pick VISIBLE_COUNT items, wrapping around the end if needed.
+  // Visible slice from filtered list
   const visible: Opportunity[] = [];
-  for (let i = 0; i < Math.min(VISIBLE_COUNT, opportunities.length); i++) {
-    visible.push(opportunities[(startIndex + i) % opportunities.length]);
+  for (let i = 0; i < Math.min(VISIBLE_COUNT, filtered.length); i++) {
+    visible.push(filtered[(startIndex + i) % filtered.length]);
   }
 
-  const totalPages = Math.max(1, Math.ceil(opportunities.length / VISIBLE_COUNT));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / VISIBLE_COUNT));
   const currentPage = Math.floor(startIndex / VISIBLE_COUNT) % totalPages;
 
   return (
@@ -134,6 +172,7 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
@@ -167,18 +206,55 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
         </div>
       </div>
 
-      <div
-        className={`space-y-3 transition-opacity duration-200 ${
-          isFading ? "opacity-0" : "opacity-100"
-        }`}
-        key={startIndex}
-      >
-        {visible.map((opp) => (
-          <OpportunityCard key={opp.id} opportunity={opp} compact={compact} />
+      {/* Filter pills */}
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {availableFilters.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => handleFilter(cat)}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+              activeFilter === cat
+                ? "bg-[#D4AF37] border-[#D4AF37] text-[#1A1A1A]"
+                : "bg-white border-[#E8DDB0] text-[#1A1A1A]/60 hover:border-[#D4AF37] hover:text-[#B8941F]"
+            }`}
+          >
+            {cat}
+            {cat !== "All" && (
+              <span className="ml-1 opacity-60">
+                ({allOpportunities.filter((o) => o.category === cat).length})
+              </span>
+            )}
+          </button>
         ))}
       </div>
 
-      {totalPages > 1 && (
+      {/* Cards */}
+      {filtered.length === 0 ? (
+        <div className="rounded-xl border border-[#E8DDB0] bg-[#FBF7E9]/50 p-6 text-center">
+          <p className="text-sm text-[#1A1A1A]/50">
+            No {activeFilter.toLowerCase()} opportunities right now.
+          </p>
+          <button
+            onClick={() => handleFilter("All")}
+            className="mt-2 text-xs text-[#B8941F] hover:underline"
+          >
+            Show all
+          </button>
+        </div>
+      ) : (
+        <div
+          className={`space-y-3 transition-opacity duration-200 ${
+            isFading ? "opacity-0" : "opacity-100"
+          }`}
+        >
+          {visible.map((opp) => (
+            <OpportunityCard key={opp.id} opportunity={opp} compact={compact} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination dots */}
+      {totalPages > 1 && filtered.length > 0 && (
         <div className="flex items-center justify-center gap-1 mt-4">
           {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => (
             <span
@@ -191,6 +267,7 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
         </div>
       )}
 
+      {/* Footer link */}
       <a
         href="https://career.studentcompanionai.rw"
         target="_blank"
