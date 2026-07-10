@@ -21,7 +21,7 @@ export const useConversations = () => {
       updatedAt: now,
       messages: [{
         id: "welcome",
-        text: `# Welcome to ALU Student Companion\n\nI'm here to help! I'll remember our conversation and provide relevant context-aware responses. Feel free to ask any questions!`,
+        text: `# Welcome to Student Companion AI 👋\n\nI'm here to help with anything at ALU — academics, campus life, deadlines, opportunities, and more.\n\nFeel free to say **hi**, ask a question, or pick one of the suggestions below to get started!`,
         isAi: true,
         timestamp: Date.now()
       }]

@@ -51,7 +51,7 @@ export default function Signup() {
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.brand}>
           <Image source={require("@/assets/icon.png")} style={styles.logo} />
-          <Text style={styles.brandText}>ALU Student Companion</Text>
+          <Text style={styles.brandText}>Student Companion AI</Text>
         </View>
 
         <Text style={styles.heading}>Create your account</Text>

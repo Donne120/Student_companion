@@ -351,8 +351,8 @@ export default function LandingPage() {
       <footer className="border-t border-[#E8DDB0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
-            <img src={COMPANION_LOGO} alt="ALU Student Companion" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
-            <span>African Leadership University Student Companion</span>
+            <img src={COMPANION_LOGO} alt="Student Companion AI" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
+            <span>Student Companion AI</span>
           </div>
           <div className="flex items-center gap-6">
             <a
@@ -364,7 +364,7 @@ export default function LandingPage() {
               Doc
             </a>
             <p className="text-xs text-[#1A1A1A]/50">
-              © {new Date().getFullYear()} ALU. Built for students.
+              © {new Date().getFullYear()} Student Companion AI. Built for students.
             </p>
           </div>
         </div>

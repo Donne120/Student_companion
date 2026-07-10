@@ -32,7 +32,7 @@ export default function ForgotPassword() {
       <View style={styles.container}>
         <View style={styles.brand}>
           <Image source={require("@/assets/icon.png")} style={styles.logo} />
-          <Text style={styles.brandText}>ALU Student Companion</Text>
+          <Text style={styles.brandText}>Student Companion AI</Text>
         </View>
 
         {sent ? (

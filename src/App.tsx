@@ -34,20 +34,20 @@ const SuggestionsDashboard = lazy(() => import("./pages/admin/SuggestionsDashboa
 
 // ── Page title map ────────────────────────────────────────────────────────────
 const TITLE_MAP: Record<string, string> = {
-  "/":                   "ALU Student Companion",
-  "/login":              "Sign in — ALU Student Companion",
-  "/signup":             "Create account — ALU Student Companion",
-  "/forgot-password":    "Reset password — ALU Student Companion",
-  "/chat":               "Chat — ALU Student Companion",
-  "/news":               "News — ALU Student Companion",
-  "/opportunities":      "Opportunities — ALU Student Companion",
-  "/documents":          "Documents — ALU Student Companion",
-  "/profile":            "Profile — ALU Student Companion",
-  "/settings":           "Settings — ALU Student Companion",
-  "/admin/analytics":    "Analytics — ALU Admin",
-  "/admin/api-docs":     "API Docs — ALU Admin",
-  "/admin/feedback":     "Feedback — ALU Admin",
-  "/admin/suggestions":  "Suggestions — ALU Admin",
+  "/":                   "Student Companion AI",
+  "/login":              "Sign in — Student Companion AI",
+  "/signup":             "Create account — Student Companion AI",
+  "/forgot-password":    "Reset password — Student Companion AI",
+  "/chat":               "Chat — Student Companion AI",
+  "/news":               "News — Student Companion AI",
+  "/opportunities":      "Opportunities — Student Companion AI",
+  "/documents":          "Documents — Student Companion AI",
+  "/profile":            "Profile — Student Companion AI",
+  "/settings":           "Settings — Student Companion AI",
+  "/admin/analytics":    "Analytics — SCA Admin",
+  "/admin/api-docs":     "API Docs — SCA Admin",
+  "/admin/feedback":     "Feedback — SCA Admin",
+  "/admin/suggestions":  "Suggestions — SCA Admin",
 };
 
 // ── Thin fallback spinner shown while a lazy chunk loads ──────────────────────
@@ -75,7 +75,7 @@ const Chrome = () => {
   const titleKey = Object.keys(TITLE_MAP)
     .sort((a, b) => b.length - a.length) // most specific first
     .find((k) => pathname === k || pathname.startsWith(k + "/"));
-  document.title = titleKey ? TITLE_MAP[titleKey] : "ALU Student Companion";
+  document.title = titleKey ? TITLE_MAP[titleKey] : "Student Companion AI";
 
   const showTabs = APP_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
   const onChatPage = pathname === "/chat" || pathname.startsWith("/chat/");
