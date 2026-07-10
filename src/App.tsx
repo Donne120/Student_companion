@@ -30,6 +30,7 @@ const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
+const SuggestionsDashboard = lazy(() => import("./pages/admin/SuggestionsDashboard"));
 
 // ── Page title map ────────────────────────────────────────────────────────────
 const TITLE_MAP: Record<string, string> = {
@@ -46,6 +47,7 @@ const TITLE_MAP: Record<string, string> = {
   "/admin/analytics":    "Analytics — ALU Admin",
   "/admin/api-docs":     "API Docs — ALU Admin",
   "/admin/feedback":     "Feedback — ALU Admin",
+  "/admin/suggestions":  "Suggestions — ALU Admin",
 };
 
 // ── Thin fallback spinner shown while a lazy chunk loads ──────────────────────
@@ -114,6 +116,7 @@ function App() {
               <Route path="/admin/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />
               <Route path="/admin/api-docs"  element={<ProtectedRoute><ApiDocumentation /></ProtectedRoute>} />
               <Route path="/admin/feedback"  element={<ProtectedRoute><FeedbackDashboard /></ProtectedRoute>} />
+              <Route path="/admin/suggestions" element={<ProtectedRoute><SuggestionsDashboard /></ProtectedRoute>} />
             </Routes>
           </Suspense>
           <Chrome />

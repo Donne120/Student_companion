@@ -156,7 +156,7 @@ export const useConversations = () => {
     convId: string,
     messageId: string,
     newText: string,
-    options: { silent?: boolean; sources?: Message["sources"] } = {}
+    options: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[] } = {}
   ) => {
     setConversations(prev => prev.map(conv => {
       if (conv.id === convId) {
@@ -169,6 +169,7 @@ export const useConversations = () => {
                   text: newText,
                   timestamp: Date.now(),
                   ...(options.sources !== undefined ? { sources: options.sources } : {}),
+                  ...(options.relatedTopics !== undefined ? { relatedTopics: options.relatedTopics } : {}),
                 }
               : msg
           ),
@@ -177,7 +178,6 @@ export const useConversations = () => {
       }
       return conv;
     }));
-    // Streaming calls this many times per second; only toast on manual edits.
     if (!options.silent) {
       toast.success("Message updated successfully");
     }

@@ -17,6 +17,8 @@ export interface Message {
   }>;
   /** Citations for AI answers: knowledge-base links or Gmail deep links. */
   sources?: MessageSource[];
+  /** Related topic chips shown below an AI response. */
+  relatedTopics?: string[];
 }
 
 export interface Conversation {
