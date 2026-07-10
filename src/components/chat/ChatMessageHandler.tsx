@@ -33,7 +33,52 @@ export const isUnknownResponse = (text: string): boolean => {
   );
 };
 
-/** Fetch 3-4 related topic suggestions from the backend. Silent on failure. */
+/** Client-side fallback: extract key noun phrases from the question + response. */
+const deriveTopicsLocally = (question: string, response: string): string[] => {
+  // Common ALU-specific topic seeds paired with trigger keywords
+  const seedMap: [RegExp, string][] = [
+    [/grading|grade|gpa|score|mark/i, "ALU grading policy"],
+    [/scholarship|funding|financial aid|bursary/i, "Scholarship opportunities"],
+    [/internship|placement|work experience/i, "Internship programs"],
+    [/deadline|due date|registration|enroll/i, "Upcoming deadlines"],
+    [/housing|accommodation|dormitory|hostel/i, "Student housing at ALU"],
+    [/graduation|degree|transcript|certificate/i, "Graduation requirements"],
+    [/course|module|class|credit/i, "Course registration"],
+    [/fee|tuition|payment|invoice/i, "Tuition and fees"],
+    [/library|resource|research|journal/i, "Library and research resources"],
+    [/career|job|employ|cv|resume/i, "Career services"],
+    [/health|wellness|counseling|mental/i, "Student wellness resources"],
+    [/club|society|event|activity/i, "Student clubs and activities"],
+    [/visa|travel|international|passport/i, "International student support"],
+    [/exam|test|assessment|quiz/i, "Exam schedules and policies"],
+    [/wifi|internet|campus|facility/i, "Campus facilities"],
+  ];
+
+  const combined = `${question} ${response}`;
+  const matched: string[] = [];
+  for (const [pattern, label] of seedMap) {
+    if (pattern.test(combined) && !matched.includes(label)) {
+      matched.push(label);
+      if (matched.length === 4) break;
+    }
+  }
+
+  // If fewer than 3 matched, pad with generic ALU follow-ups
+  const fallbacks = [
+    "ALU academic calendar",
+    "Student support services",
+    "Campus life at ALU",
+    "Opportunities for ALU students",
+  ];
+  for (const f of fallbacks) {
+    if (matched.length >= 3) break;
+    if (!matched.includes(f)) matched.push(f);
+  }
+
+  return matched.slice(0, 4);
+};
+
+/** Fetch 3–4 related topic suggestions. Tries backend first, falls back to local derivation. */
 const fetchRelatedTopics = async (
   question: string,
   response: string
@@ -48,11 +93,14 @@ const fetchRelatedTopics = async (
       },
       5000
     );
-    if (!res.ok) return [];
+    if (!res.ok) return deriveTopicsLocally(question, response);
     const data = await res.json();
-    if (Array.isArray(data)) return data.slice(0, 4);
-    if (Array.isArray(data.topics)) return data.topics.slice(0, 4);
-    return [];
+    if (Array.isArray(data) && data.length > 0) return data.slice(0, 4);
+    if (Array.isArray(data.topics) && data.topics.length > 0) return data.topics.slice(0, 4);
+    return deriveTopicsLocally(question, response);
+  } catch {
+    return deriveTopicsLocally(question, response);
+  }
   } catch {
     return [];
   }
