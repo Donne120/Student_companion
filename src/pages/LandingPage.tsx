@@ -16,7 +16,7 @@ const HERO_IMAGE = "/hero-student.jpg";
 const COMPANION_LOGO = "/logo.png";
 
 const STUDY_IMAGE = "/study.png";
-const CAMPUS_IMAGE = "/campus.png";
+const CAMPUS_IMAGE = "/cta-classroom.jpg";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -310,7 +310,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 opacity-20">
             <img
               src={CAMPUS_IMAGE}
-              alt=""
+              alt="ALU students working together in classroom"
               className="w-full h-full object-cover"
               loading="lazy"
             />
