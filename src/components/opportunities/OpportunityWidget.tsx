@@ -46,6 +46,11 @@ const OpportunityCard = ({ opportunity, compact }: OpportunityCardProps) => (
     >
       {opportunity.description}
     </p>
+    {opportunity.deadline && (
+      <p className="mt-1.5 text-[10px] text-[#B8941F] font-medium">
+        Deadline: {opportunity.deadline}
+      </p>
+    )}
     <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#B8941F]">
       Learn more
       <ExternalLink className="h-3 w-3" />
@@ -136,7 +141,15 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
             For students
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <a
+            href="https://career.studentcompanionai.rw"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] text-[#B8941F] hover:underline font-medium flex items-center gap-0.5"
+          >
+            SCA Careers <ExternalLink className="h-2.5 w-2.5" />
+          </a>
           <button
             onClick={() => advance(-1)}
             className="p-1 rounded hover:bg-[#FBF7E9] text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors"
@@ -177,6 +190,16 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
           ))}
         </div>
       )}
+
+      <a
+        href="https://career.studentcompanionai.rw"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-4 flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-[#E8DDB0] text-xs text-[#B8941F] font-medium hover:bg-[#FBF7E9] hover:border-[#D4AF37] transition-all"
+      >
+        Browse all on SCA Careers
+        <ExternalLink className="h-3 w-3" />
+      </a>
     </div>
   );
 };

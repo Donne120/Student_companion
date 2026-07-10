@@ -4,7 +4,7 @@ export type Opportunity = {
   id: string;
   title: string;
   organization?: string;
-  category: "Scholarship" | "Internship" | "Fellowship" | "Competition" | "Program" | "Grant";
+  category: "Scholarship" | "Internship" | "Fellowship" | "Competition" | "Program" | "Grant" | "Job";
   description: string;
   url: string;
   deadline?: string;
@@ -12,12 +12,47 @@ export type Opportunity = {
 };
 
 const OPPORTUNITIES_ENDPOINT = `${API_URL}/api/opportunities`;
+const CAREER_SITE_URL = "https://career.studentcompanionai.rw/opportunities.json";
 const CACHE_KEY = "ALU_OPPORTUNITIES_CACHE";
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-// Curated fallback list — real, verifiable programs for African / ALU students.
-// Phase 2: backend at /api/opportunities will call Tavily web-search and return
-// fresh results. Until then, this list seeds the widget.
+// ─── Career-site category → widget category mapping ───────────────────────
+const CATEGORY_MAP: Record<string, Opportunity["category"]> = {
+  Scholarships: "Scholarship",
+  Fellowships: "Fellowship",
+  Internships: "Internship",
+  Jobs: "Job",
+  Competitions: "Competition",
+  Programs: "Program",
+  Grants: "Grant",
+};
+
+// Shape of a raw entry from career.studentcompanionai.rw/opportunities.json
+interface CareerSiteEntry {
+  id: string;
+  title: string;
+  organization?: string;
+  category: string;
+  description: string;
+  apply_link: string;
+  deadline?: string;
+  location?: string;
+  status?: string;
+}
+
+/** Normalise a career-site entry to the widget's Opportunity type */
+const normaliseCareer = (e: CareerSiteEntry): Opportunity => ({
+  id: e.id,
+  title: e.title,
+  organization: e.organization,
+  category: CATEGORY_MAP[e.category] ?? "Program",
+  description: e.description,
+  url: e.apply_link,
+  deadline: e.deadline,
+  location: e.location,
+});
+
+// Curated fallback list — shown only when both the career site and backend are unreachable.
 const FALLBACK: Opportunity[] = [
   {
     id: "mastercard-foundation-scholars",
@@ -69,34 +104,6 @@ const FALLBACK: Opportunity[] = [
     location: "UK",
   },
   {
-    id: "daad-in-country",
-    title: "DAAD In-Country/In-Region Scholarships",
-    organization: "DAAD (Germany)",
-    category: "Scholarship",
-    description:
-      "Master's and PhD scholarships for sub-Saharan African students at African universities.",
-    url: "https://www.daad.de/en/study-and-research-in-germany/scholarships/",
-  },
-  {
-    id: "yali-rlc",
-    title: "YALI Regional Leadership Center",
-    organization: "USAID",
-    category: "Program",
-    description:
-      "Free in-person and online leadership training for young Africans aged 18–35.",
-    url: "https://yali.state.gov/rlc/",
-  },
-  {
-    id: "anzisha-prize",
-    title: "Anzisha Prize",
-    organization: "African Leadership Academy",
-    category: "Competition",
-    description:
-      "Africa's largest award for young entrepreneurs aged 15–22. Up to $25,000 in prizes.",
-    url: "https://www.anzishaprize.org/",
-    location: "Africa",
-  },
-  {
     id: "tony-elumelu",
     title: "Tony Elumelu Foundation Entrepreneurship Programme",
     organization: "Tony Elumelu Foundation",
@@ -115,15 +122,6 @@ const FALLBACK: Opportunity[] = [
     url: "https://andela.com/",
   },
   {
-    id: "obama-foundation-leaders",
-    title: "Obama Foundation Leaders: Africa",
-    organization: "Obama Foundation",
-    category: "Fellowship",
-    description:
-      "Six-month leadership development program for emerging African civic leaders.",
-    url: "https://www.obama.org/programs/leaders-africa/",
-  },
-  {
     id: "world-bank-internship",
     title: "World Bank Internship Program",
     organization: "World Bank",
@@ -131,172 +129,6 @@ const FALLBACK: Opportunity[] = [
     description:
       "Paid summer and winter internships for graduate students at World Bank offices worldwide.",
     url: "https://www.worldbank.org/en/about/careers/programs-and-internships/internship",
-  },
-  {
-    id: "unicef-internship",
-    title: "UNICEF Internship Programme",
-    organization: "UNICEF",
-    category: "Internship",
-    description:
-      "Internships in 190+ countries for students and recent graduates supporting children worldwide.",
-    url: "https://www.unicef.org/careers/internships",
-  },
-  {
-    id: "un-young-professionals",
-    title: "UN Young Professionals Programme",
-    organization: "United Nations",
-    category: "Program",
-    description:
-      "Recruitment programme for talented young professionals to start a career in the UN Secretariat.",
-    url: "https://careers.un.org/lbw/home.aspx?viewtype=NCE",
-  },
-  {
-    id: "afdb-young-professionals",
-    title: "AfDB Young Professionals Program",
-    organization: "African Development Bank",
-    category: "Program",
-    description:
-      "Three-year rotational program for African professionals under 32 with a master's degree.",
-    url: "https://www.afdb.org/en/about-us/careers/young-professionals-program",
-  },
-  {
-    id: "ashinaga-africa",
-    title: "Ashinaga Africa Initiative",
-    organization: "Ashinaga",
-    category: "Scholarship",
-    description:
-      "Full undergraduate scholarships abroad for orphaned students from sub-Saharan Africa.",
-    url: "https://www.ashinaga.org/en/africa/",
-  },
-  {
-    id: "carnegie-mellon-africa",
-    title: "Carnegie Mellon University Africa Scholarships",
-    organization: "CMU-Africa",
-    category: "Scholarship",
-    description:
-      "Master's scholarships at CMU-Africa in Kigali, Rwanda for engineering and IT.",
-    url: "https://www.africa.engineering.cmu.edu/admissions/financial-aid/",
-    location: "Kigali, Rwanda",
-  },
-  {
-    id: "ashoka-africa",
-    title: "Ashoka Young Changemakers",
-    organization: "Ashoka",
-    category: "Fellowship",
-    description:
-      "Network and support for young people leading positive change in their communities.",
-    url: "https://www.ashoka.org/en/program/ashoka-young-changemakers",
-  },
-  {
-    id: "echoing-green",
-    title: "Echoing Green Fellowship",
-    organization: "Echoing Green",
-    category: "Fellowship",
-    description:
-      "Seed funding and leadership development for early-stage social entrepreneurs worldwide.",
-    url: "https://echoinggreen.org/fellowship/",
-  },
-  {
-    id: "ibm-skillsbuild",
-    title: "IBM SkillsBuild for Africa",
-    organization: "IBM",
-    category: "Program",
-    description:
-      "Free digital skills training and credentials in AI, cybersecurity, and cloud computing.",
-    url: "https://skillsbuild.org/",
-  },
-  {
-    id: "queen-elizabeth-academic",
-    title: "Queen Elizabeth Commonwealth Scholarships",
-    organization: "Commonwealth Scholarship Commission",
-    category: "Scholarship",
-    description:
-      "Master's scholarships for students from low and middle income Commonwealth countries.",
-    url: "https://cscuk.fcdo.gov.uk/scholarships/",
-  },
-  {
-    id: "schwarzman-scholars",
-    title: "Schwarzman Scholars",
-    organization: "Tsinghua University",
-    category: "Scholarship",
-    description:
-      "Fully funded one-year master's in global affairs at Tsinghua University in Beijing.",
-    url: "https://www.schwarzmanscholars.org/",
-    location: "Beijing, China",
-  },
-  {
-    id: "gates-cambridge",
-    title: "Gates Cambridge Scholarship",
-    organization: "Gates Cambridge Trust",
-    category: "Scholarship",
-    description:
-      "Full-cost postgraduate scholarships at the University of Cambridge for outstanding applicants.",
-    url: "https://www.gatescambridge.org/",
-    location: "Cambridge, UK",
-  },
-  {
-    id: "yali-online",
-    title: "YALI Network Online Courses",
-    organization: "YALI Network",
-    category: "Program",
-    description:
-      "Free online courses and certificates on leadership, business, and civic engagement.",
-    url: "https://yali.state.gov/courses/",
-  },
-  {
-    id: "mozilla-fellowship",
-    title: "Mozilla Fellowship",
-    organization: "Mozilla Foundation",
-    category: "Fellowship",
-    description:
-      "Funded fellowships for technologists, activists and scientists working on internet health.",
-    url: "https://foundation.mozilla.org/en/fellowships/",
-  },
-  {
-    id: "africa-no-filter",
-    title: "Africa No Filter Storytellers Grant",
-    organization: "Africa No Filter",
-    category: "Grant",
-    description:
-      "Grants for African storytellers, journalists, and creatives to shift narratives about Africa.",
-    url: "https://africanofilter.org/grants",
-  },
-  {
-    id: "westerwelle-young-founders",
-    title: "Westerwelle Young Founders Programme",
-    organization: "Westerwelle Foundation",
-    category: "Program",
-    description:
-      "Six-month support programme for outstanding young entrepreneurs from emerging countries.",
-    url: "https://westerwelle-foundation.com/programs/young-founders-program/",
-  },
-  {
-    id: "alx-fellowship",
-    title: "ALX Africa Tech Programs",
-    organization: "ALX Africa",
-    category: "Program",
-    description:
-      "Free tech training in software engineering, data science, and Salesforce for young Africans.",
-    url: "https://www.alxafrica.com/",
-    location: "Pan-African",
-  },
-  {
-    id: "world-economic-forum-global-shapers",
-    title: "Global Shapers Community",
-    organization: "World Economic Forum",
-    category: "Fellowship",
-    description:
-      "Network of young people aged 20–30 driving dialogue, action, and change in their cities.",
-    url: "https://www.globalshapers.org/",
-  },
-  {
-    id: "open-society-fellowship",
-    title: "Open Society Youth Fellowship",
-    organization: "Open Society Foundations",
-    category: "Fellowship",
-    description:
-      "Supports young leaders working on issues of justice, equality, and democratic governance.",
-    url: "https://www.opensocietyfoundations.org/grants/youth-fellowship",
   },
 ];
 
@@ -333,17 +165,41 @@ const writeCache = (opportunities: Opportunity[]) => {
 };
 
 /**
+ * Fetch live opportunities from career.studentcompanionai.rw.
+ * Returns null if the fetch fails or returns no data.
+ */
+const fetchFromCareerSite = async (): Promise<Opportunity[] | null> => {
+  try {
+    const res = await fetchWithTimeout(CAREER_SITE_URL, {}, 5000);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { opportunities?: CareerSiteEntry[] };
+    const entries = data.opportunities;
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+    const live = entries.filter((e) => !e.status || e.status === "live");
+    return live.map(normaliseCareer);
+  } catch {
+    return null;
+  }
+};
+
+/**
  * Returns a shuffled list of opportunities.
  *
  * Source priority:
- *  1. Backend at GET /api/opportunities (Tavily-powered, when phase-2 ships).
- *  2. localStorage cache from a recent backend call (within 30 min).
- *  3. Curated FALLBACK list bundled with the app.
- *
- * The shuffle is per-call, so different sessions / tabs see a different order
- * even when reading from the same source.
+ *  1. career.studentcompanionai.rw/opportunities.json — live SCA career site data
+ *  2. Backend at GET /api/opportunities (Tavily-powered)
+ *  3. localStorage cache from a recent fetch (within 30 min)
+ *  4. Curated FALLBACK list bundled with the app
  */
 export const getOpportunities = async (): Promise<Opportunity[]> => {
+  // 1. Try career site first (primary live source)
+  const careerData = await fetchFromCareerSite();
+  if (careerData && careerData.length > 0) {
+    writeCache(careerData);
+    return shuffle(careerData);
+  }
+
+  // 2. Try backend
   try {
     const res = await fetchWithTimeout(
       OPPORTUNITIES_ENDPOINT,
@@ -361,9 +217,11 @@ export const getOpportunities = async (): Promise<Opportunity[]> => {
     // Backend unavailable — fall through.
   }
 
+  // 3. Cache
   const cached = readCache();
   if (cached && cached.length > 0) return shuffle(cached);
 
+  // 4. Built-in fallback
   return shuffle(FALLBACK);
 };
 
