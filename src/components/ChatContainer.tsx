@@ -5,6 +5,7 @@ import { ChatInput } from "./ChatInput";
 import { ConversationSidebar } from "./chat/ConversationSidebar";
 import { ChatMessages } from "./chat/ChatMessages";
 import { BackendStatus } from "./chat/BackendStatus";
+import { EmailBriefingGreeting } from "./chat/EmailBriefingGreeting";
 import { OpportunityWidget } from "./opportunities/OpportunityWidget";
 import { Menu, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
@@ -112,6 +113,9 @@ export const ChatContainer = () => {
             <BackendStatus />
           </div>
         </div>
+
+        {/* Spoken email briefing — appears once per session when connected */}
+        <EmailBriefingGreeting />
 
         {/* Messages */}
         <div className="pb-[180px] md:pb-44">

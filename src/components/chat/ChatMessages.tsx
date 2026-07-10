@@ -112,6 +112,7 @@ export const ChatMessages = ({
           message={message.text}
           isAi={message.isAi}
           attachments={message.attachments}
+          sources={message.sources}
           onEdit={(newText) => onEditMessage(message.id, newText)}
           onFeedback={(type, details) => handleFeedback(message.id, type, details)}
         />
