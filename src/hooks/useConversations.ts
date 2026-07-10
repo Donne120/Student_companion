@@ -156,7 +156,7 @@ export const useConversations = () => {
     convId: string,
     messageId: string,
     newText: string,
-    options: { silent?: boolean } = {}
+    options: { silent?: boolean; sources?: Message["sources"] } = {}
   ) => {
     setConversations(prev => prev.map(conv => {
       if (conv.id === convId) {
@@ -164,7 +164,12 @@ export const useConversations = () => {
           ...conv,
           messages: conv.messages.map(msg =>
             msg.id === messageId
-              ? { ...msg, text: newText, timestamp: Date.now() }
+              ? {
+                  ...msg,
+                  text: newText,
+                  timestamp: Date.now(),
+                  ...(options.sources !== undefined ? { sources: options.sources } : {}),
+                }
               : msg
           ),
           updatedAt: new Date()

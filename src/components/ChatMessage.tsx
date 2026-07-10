@@ -2,8 +2,9 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { Check, Copy, Edit, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, Copy, Edit, ExternalLink, Mail, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
+import type { MessageSource } from "@/types/chat";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
@@ -14,6 +15,7 @@ interface ChatMessageProps {
   message: string;
   isAi?: boolean;
   attachments?: Array<{ type: "image" | "file"; url: string; name: string }>;
+  sources?: MessageSource[];
   onEdit?: (newMessage: string) => void;
   onFeedback?: (type: "positive" | "negative", details?: string) => void;
 }
@@ -29,6 +31,7 @@ export const ChatMessage = ({
   message,
   isAi = false,
   attachments = [],
+  sources = [],
   onEdit,
   onFeedback,
 }: ChatMessageProps) => {
@@ -243,6 +246,37 @@ export const ChatMessage = ({
                   </a>
                 )
               )}
+            </div>
+          )}
+
+          {/* Sources: knowledge-base citations or "open in Gmail" links */}
+          {isAi && sources.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {sources.map((src, i) => {
+                const isGmail = (src.url || "").startsWith("https://mail.google.com/");
+                const Icon = isGmail ? Mail : ExternalLink;
+                const label = src.title || src.source || "Source";
+                return src.url ? (
+                  <a
+                    key={i}
+                    href={src.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 max-w-full px-3 py-1.5 rounded-md bg-[#FBF7E9] border border-[#E8DDB0] text-xs text-[#1A1A1A] hover:bg-[#F4ECCC] transition-colors"
+                    title={src.source ? `${src.source} — ${label}` : label}
+                  >
+                    <Icon className="h-3.5 w-3.5 text-[#B8941F] flex-shrink-0" />
+                    <span className="truncate">{isGmail ? `Open in Gmail: ${label}` : label}</span>
+                  </a>
+                ) : (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 max-w-full px-3 py-1.5 rounded-md bg-[#FBF7E9] border border-[#E8DDB0] text-xs text-[#1A1A1A]/70"
+                  >
+                    <span className="truncate">{label}</span>
+                  </span>
+                );
+              })}
             </div>
           )}
 

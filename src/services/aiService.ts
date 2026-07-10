@@ -1,4 +1,4 @@
-import { Message } from "@/types/chat";
+import { Message, MessageSource } from "@/types/chat";
 import { API_URL, fetchWithTimeout, authHeader } from "@/config/api";
 
 // Phase 2: hits the Claude + RAG endpoint on the HF backend.
@@ -9,7 +9,7 @@ const HEALTH_CACHE_MS = 30_000;
 
 export type StreamCallbacks = {
   onChunk: (text: string) => void;
-  onSources?: (sources: Array<{ title: string; source: string }>) => void;
+  onSources?: (sources: MessageSource[]) => void;
   onDone?: () => void;
   onError?: (message: string) => void;
 };
@@ -45,7 +45,7 @@ const getResponseFromBackend = async (
   query: string,
   conversationHistory: Message[],
   options: { personality?: Personality } = {}
-): Promise<string> => {
+): Promise<{ text: string; sources: MessageSource[] }> => {
   const history = conversationHistory.map((message) => ({
     role: message.isAi ? "assistant" : "user",
     content: message.text,
@@ -66,7 +66,10 @@ const getResponseFromBackend = async (
   }
 
   const data = await res.json();
-  return data.response || "No response from backend";
+  return {
+    text: data.response || "No response from backend",
+    sources: Array.isArray(data.sources) ? data.sources : [],
+  };
 };
 
 /**
@@ -158,7 +161,7 @@ export const aiService = {
       throw new Error("Backend service is currently unavailable");
     }
     try {
-      return await getResponseFromBackend(query, conversationHistory, options);
+      return (await getResponseFromBackend(query, conversationHistory, options)).text;
     } catch (error) {
       console.error("Error generating response:", error);
       return "I'm sorry, I'm having trouble connecting to the ALU knowledge base right now. Please try again later.";
@@ -184,9 +187,10 @@ export const aiService = {
       console.warn("Stream failed, falling back to non-streaming:", error);
       try {
         const full = await getResponseFromBackend(query, conversationHistory);
-        callbacks.onChunk(full);
+        if (full.sources.length) callbacks.onSources?.(full.sources);
+        callbacks.onChunk(full.text);
         callbacks.onDone?.();
-        return full;
+        return full.text;
       } catch (fallbackError) {
         const message =
           fallbackError instanceof Error

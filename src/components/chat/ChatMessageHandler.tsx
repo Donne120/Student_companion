@@ -49,6 +49,13 @@ export const useChatMessageHandler = ({
               accumulated += text;
               onUpdateMessage(currentConversationId, aiMessageId, accumulated, { silent: true });
             },
+            onSources: (sources) => {
+              // Attach citations (KB links or Gmail deep links) to the message.
+              onUpdateMessage(currentConversationId, aiMessageId, accumulated, {
+                silent: true,
+                sources,
+              });
+            },
             onError: (message) => {
               toast.error(message);
               if (!accumulated) {
