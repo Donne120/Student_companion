@@ -52,8 +52,11 @@ export default function Signup() {
     setIsLoading(true);
     try {
       await signup(email, password, name);
-      toast.success("Account created");
-      navigate("/chat");
+      toast.success("Account created", {
+        description: "We emailed you a verification link — click it to unlock the Companion.",
+      });
+      navigate("/chat"); // ProtectedRoute shows the verify screen until the link is clicked
+
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create account");
     } finally {
