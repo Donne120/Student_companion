@@ -70,11 +70,11 @@ export default function Login() {
             <div className="flex items-center gap-2.5 mb-10">
               <img
                 src="/logo.png"
-                alt="ALU Student Companion"
+                alt="Student Companion AI"
                 className="w-12 h-12 rounded-2xl object-cover flex-shrink-0"
               />
               <span className="font-semibold tracking-tight text-[#1A1A1A]">
-                ALU Student Companion
+                Student Companion AI
               </span>
             </div>
 

@@ -12,24 +12,33 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-// Real ALU assets served from /public. The leading slash makes Vite resolve
-// these against the deployment root, so they work both locally and on Vercel.
-// Filenames with spaces are URL-encoded so the browser fetches them correctly.
-const HERO_IMAGE = "/study.png";
+const HERO_IMAGE = "/hero-student.jpg";
 const COMPANION_LOGO = "/logo.png";
 
 const STUDY_IMAGE = "/study.png";
-const CAMPUS_IMAGE = "/campus.png";
+const CAMPUS_IMAGE = "/cta-classroom.jpg";
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const [welcomeVisible, setWelcomeVisible] = useState(true);
+  const [welcomeFading, setWelcomeFading] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Welcome animation: show for 2.4s then fade out
+  useEffect(() => {
+    const fadeTimer = setTimeout(() => setWelcomeFading(true), 2400);
+    const hideTimer = setTimeout(() => setWelcomeVisible(false), 3000);
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+    };
   }, []);
 
   if (currentUser) {
@@ -38,6 +47,47 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white text-[#1A1A1A]">
+
+      {/* Welcome splash animation */}
+      {welcomeVisible && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1A1A1A]"
+          style={{
+            transition: "opacity 0.6s ease",
+            opacity: welcomeFading ? 0 : 1,
+            pointerEvents: welcomeFading ? "none" : "auto",
+          }}
+        >
+          <img
+            src={COMPANION_LOGO}
+            alt="Student Companion AI"
+            className="w-20 h-20 rounded-2xl object-cover mb-6"
+            style={{
+              animation: "welcomeLogo 0.6s ease forwards",
+            }}
+          />
+          <p
+            className="text-white font-serif text-2xl md:text-3xl tracking-wide"
+            style={{
+              animation: "welcomeText 0.8s ease 0.3s both",
+            }}
+          >
+            Welcome to{" "}
+            <span className="text-[#D4AF37]">Student Companion AI</span>
+          </p>
+          <style>{`
+            @keyframes welcomeLogo {
+              from { opacity: 0; transform: scale(0.7); }
+              to   { opacity: 1; transform: scale(1); }
+            }
+            @keyframes welcomeText {
+              from { opacity: 0; transform: translateY(12px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+
       {/* Top nav */}
       <header
         className={`sticky top-0 z-40 transition-all ${
@@ -51,11 +101,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 min-w-0">
             <img
               src={COMPANION_LOGO}
-              alt="ALU Student Companion logo"
+              alt="Student Companion AI logo"
               className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-cover flex-shrink-0"
             />
             <span className="font-semibold tracking-tight text-sm md:text-base truncate">
-              <span className="hidden sm:inline">ALU Student </span>Companion
+              Student Companion AI
             </span>
           </div>
           <div className="flex items-center gap-2 md:gap-3">
@@ -124,7 +174,7 @@ export default function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl aspect-[4/5] shadow-2xl">
               <img
                 src={HERO_IMAGE}
-                alt="Two ALU students studying together with a phone"
+                alt="ALU student working on laptop in campus lab"
                 className="w-full h-full object-cover"
                 loading="eager"
               />
@@ -260,7 +310,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 opacity-20">
             <img
               src={CAMPUS_IMAGE}
-              alt=""
+              alt="ALU students working together in classroom"
               className="w-full h-full object-cover"
               loading="lazy"
             />
@@ -301,8 +351,8 @@ export default function LandingPage() {
       <footer className="border-t border-[#E8DDB0]">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
-            <img src={COMPANION_LOGO} alt="ALU Student Companion" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
-            <span>African Leadership University Student Companion</span>
+            <img src={COMPANION_LOGO} alt="Student Companion AI" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
+            <span>Student Companion AI</span>
           </div>
           <div className="flex items-center gap-6">
             <a
@@ -314,7 +364,7 @@ export default function LandingPage() {
               Doc
             </a>
             <p className="text-xs text-[#1A1A1A]/50">
-              © {new Date().getFullYear()} ALU. Built for students.
+              © {new Date().getFullYear()} Student Companion AI. Built for students.
             </p>
           </div>
         </div>

@@ -55,7 +55,7 @@ export default function ProfileScreen() {
   const MENU_ITEMS = [
     { icon: "chatbubble-outline" as const, label: "Chat history", sub: "Your conversations are saved locally", onPress: () => {} },
     { icon: "shield-checkmark-outline" as const, label: "Privacy", sub: "Your data stays within ALU systems", onPress: () => {} },
-    { icon: "information-circle-outline" as const, label: "About", sub: "ALU Student Companion v1.0", onPress: () => {} },
+    { icon: "information-circle-outline" as const, label: "About", sub: "Student Companion AI v1.0", onPress: () => {} },
   ];
 
   return (

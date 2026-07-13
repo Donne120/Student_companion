@@ -21,7 +21,7 @@ export const useConversations = () => {
       updatedAt: now,
       messages: [{
         id: "welcome",
-        text: `# Welcome to ALU Student Companion\n\nI'm here to help! I'll remember our conversation and provide relevant context-aware responses. Feel free to ask any questions!`,
+        text: `# Welcome to Student Companion AI 👋\n\nI'm here to help with anything at ALU — academics, campus life, deadlines, opportunities, and more.\n\nFeel free to say **hi**, ask a question, or pick one of the suggestions below to get started!`,
         isAi: true,
         timestamp: Date.now()
       }]
@@ -156,7 +156,7 @@ export const useConversations = () => {
     convId: string,
     messageId: string,
     newText: string,
-    options: { silent?: boolean; sources?: Message["sources"] } = {}
+    options: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[] } = {}
   ) => {
     setConversations(prev => prev.map(conv => {
       if (conv.id === convId) {
@@ -169,6 +169,7 @@ export const useConversations = () => {
                   text: newText,
                   timestamp: Date.now(),
                   ...(options.sources !== undefined ? { sources: options.sources } : {}),
+                  ...(options.relatedTopics !== undefined ? { relatedTopics: options.relatedTopics } : {}),
                 }
               : msg
           ),
@@ -177,7 +178,6 @@ export const useConversations = () => {
       }
       return conv;
     }));
-    // Streaming calls this many times per second; only toast on manual edits.
     if (!options.silent) {
       toast.success("Message updated successfully");
     }

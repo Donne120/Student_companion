@@ -15,7 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 const STORAGE_KEY = "alu_mobile_messages";
 const WELCOME: Message = {
   id: "welcome",
-  text: "# Welcome to ALU Student Companion\n\nI'm your AI-powered peer assistant. Ask me anything about academics, campus life, policies, or opportunities at ALU.",
+  text: "# Welcome to Student Companion AI 👋\n\nI'm your AI-powered peer assistant. Ask me anything about academics, campus life, policies, or opportunities at ALU. Or just say hi!",
   isAi: true,
   timestamp: Date.now(),
 };

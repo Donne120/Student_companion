@@ -63,9 +63,11 @@ export const ConversationSidebar = ({
           onClick={() => navigate("/")}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <div className="w-7 h-7 rounded bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-xs flex-shrink-0">
-            A
-          </div>
+          <img
+            src="/logo.png"
+            alt="Student Companion AI"
+            className="w-7 h-7 rounded-lg object-cover flex-shrink-0"
+          />
           {!isCollapsed && (
             <span className="font-semibold tracking-tight text-[#1A1A1A] text-sm">
               Companion

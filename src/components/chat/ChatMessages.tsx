@@ -1,16 +1,20 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "../ChatMessage";
-import { BookOpen, Calendar, Compass, Loader, Sparkles } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { BookOpen, Calendar, Compass, Loader, Sparkles, TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { isUnknownResponse } from "./ChatMessageHandler";
+import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
+import { trendingService } from "@/services/trendingService";
 
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
   onEditMessage: (messageId: string, newText: string) => void;
+  onSuggestPrompt?: (prompt: string) => void;
   activeModel?: string;
 }
 
-const SUGGESTIONS = [
+const STATIC_SUGGESTIONS = [
   {
     icon: BookOpen,
     title: "Academic policies",
@@ -33,16 +37,29 @@ const SUGGESTIONS = [
   },
 ];
 
+/** Fire the companion:suggest event (populates ChatInput). */
+const firePrompt = (prompt: string) => {
+  window.dispatchEvent(new CustomEvent("companion:suggest", { detail: prompt }));
+};
+
 export const ChatMessages = ({
   messages,
   isLoading,
   onEditMessage,
 }: ChatMessagesProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Load trending topics once when in empty state
+  useEffect(() => {
+    if (messages.length === 0) {
+      trendingService.getTrendingTopics(6).then(setTrendingTopics);
+    }
+  }, [messages.length]);
 
   const handleFeedback = (
     messageId: string,
@@ -67,7 +84,10 @@ export const ChatMessages = ({
     localStorage.setItem("FEEDBACK", JSON.stringify(feedback));
   };
 
+  // ── Empty state ───────────────────────────────────────────────────────────
   if (messages.length === 0) {
+    const showTrending = trendingTopics.length >= 3;
+
     return (
       <div className="min-h-[calc(100dvh-260px)] md:min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-4 py-8 md:py-12 bg-white">
         <div className="max-w-2xl w-full text-center">
@@ -77,20 +97,16 @@ export const ChatMessages = ({
           <h1 className="font-serif text-[28px] md:text-5xl text-[#1A1A1A] tracking-tight mb-2 md:mb-3 leading-tight">
             How can I help you today?
           </h1>
-          <p className="text-sm md:text-base text-[#1A1A1A]/60 mb-6 md:mb-10 px-2">
+          <p className="text-sm md:text-base text-[#1A1A1A]/60 mb-6 md:mb-8 px-2">
             Ask anything about ALU — academics, campus life, policies, or events.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto">
-            {SUGGESTIONS.map(({ icon: Icon, title, prompt }) => (
+          {/* Static suggestion cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto mb-6">
+            {STATIC_SUGGESTIONS.map(({ icon: Icon, title, prompt }) => (
               <button
                 key={title}
-                onClick={() => {
-                  const event = new CustomEvent("companion:suggest", {
-                    detail: prompt,
-                  });
-                  window.dispatchEvent(event);
-                }}
+                onClick={() => firePrompt(prompt)}
                 className="group text-left p-4 rounded-xl border border-[#E8DDB0] bg-white hover:border-[#D4AF37] hover:bg-[#FBF7E9]/40 transition-all"
               >
                 <Icon className="h-4 w-4 text-[#B8941F] mb-2" />
@@ -99,24 +115,89 @@ export const ChatMessages = ({
               </button>
             ))}
           </div>
+
+          {/* Trending topics */}
+          {showTrending && (
+            <div className="max-w-xl mx-auto">
+              <div className="flex items-center justify-center gap-1.5 mb-3">
+                <TrendingUp className="h-3.5 w-3.5 text-[#B8941F]" />
+                <span className="text-xs font-medium text-[#1A1A1A]/50 uppercase tracking-wider">
+                  Trending this week
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {trendingTopics.map((topic) => (
+                  <button
+                    key={topic}
+                    onClick={() => firePrompt(topic)}
+                    className="px-3 py-1.5 rounded-full border border-[#E8DDB0] bg-white text-xs text-[#1A1A1A]/70 hover:border-[#D4AF37] hover:text-[#B8941F] hover:bg-[#FBF7E9]/40 transition-all"
+                  >
+                    {topic.length > 50 ? topic.slice(0, 50) + "…" : topic}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // ── Message list ──────────────────────────────────────────────────────────
   return (
     <div className="bg-white min-h-screen overflow-x-hidden">
-      {messages.map((message) => (
-        <ChatMessage
-          key={message.id}
-          message={message.text}
-          isAi={message.isAi}
-          attachments={message.attachments}
-          sources={message.sources}
-          onEdit={(newText) => onEditMessage(message.id, newText)}
-          onFeedback={(type, details) => handleFeedback(message.id, type, details)}
-        />
-      ))}
+      {messages.map((message, idx) => {
+        // Find the user question that preceded this AI message
+        const precedingUserMsg =
+          message.isAi && idx > 0 && !messages[idx - 1].isAi
+            ? messages[idx - 1].text
+            : null;
+
+        return (
+          <div key={message.id}>
+            <ChatMessage
+              message={message.text}
+              isAi={message.isAi}
+              attachments={message.attachments}
+              sources={message.sources}
+              onEdit={(newText) => onEditMessage(message.id, newText)}
+              onFeedback={(type, details) => handleFeedback(message.id, type, details)}
+            />
+
+            {/* Related topic chips — shown below finished AI messages */}
+            {message.isAi &&
+              message.relatedTopics &&
+              message.relatedTopics.length > 0 && (
+                <div className="px-4 md:px-8 pb-2 max-w-5xl mx-auto">
+                  <p className="text-[10px] uppercase tracking-wider text-[#1A1A1A]/40 mb-2">
+                    Related topics
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {message.relatedTopics.map((topic) => (
+                      <button
+                        key={topic}
+                        onClick={() => firePrompt(topic)}
+                        className="px-3 py-1.5 rounded-full border border-[#E8DDB0] bg-white text-xs text-[#1A1A1A]/70 hover:border-[#D4AF37] hover:text-[#B8941F] hover:bg-[#FBF7E9]/40 transition-all"
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* Suggest-an-answer form — shown when bot doesn't know */}
+            {message.isAi &&
+              isUnknownResponse(message.text) &&
+              precedingUserMsg && (
+                <div className="px-4 md:px-8 pb-4 max-w-5xl mx-auto">
+                  <AnswerSuggestionForm questionText={precedingUserMsg} />
+                </div>
+              )}
+          </div>
+        );
+      })}
+
       {isLoading && (
         <div className="py-6 px-4 md:px-8 bg-white">
           <div className="max-w-5xl mx-auto flex gap-4 items-start">
