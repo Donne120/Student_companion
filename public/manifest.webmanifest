@@ -1,13 +1,13 @@
 {
-  "name": "ALU Student Companion",
-  "short_name": "ALU Companion",
-  "description": "Your AI companion for academics, campus life, opportunities, and more at ALU.",
+  "name": "Student Companion AI",
+  "short_name": "SCA",
+  "description": "Your AI assistant for smarter learning — academics, campus life, opportunities, and more.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FFFFFF",
+  "background_color": "#1A1A1A",
   "theme_color": "#D4AF37",
   "categories": ["education", "productivity", "lifestyle"],
   "lang": "en",
@@ -36,7 +36,7 @@
     {
       "name": "Open Chat",
       "short_name": "Chat",
-      "description": "Open the AI Companion chat",
+      "description": "Start a conversation with Student Companion AI",
       "url": "/chat?source=shortcut",
       "icons": [{ "src": "/logo.png", "sizes": "192x192" }]
     },

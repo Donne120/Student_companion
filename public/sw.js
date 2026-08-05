@@ -1,6 +1,6 @@
-// ALU Student Companion — minimal offline shell service worker.
-const CACHE = 'alu-companion-v1';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo%20(3).png'];
+// Student Companion AI — minimal offline shell service worker.
+const CACHE = 'sca-v1';
+const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

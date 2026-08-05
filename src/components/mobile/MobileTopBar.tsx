@@ -23,9 +23,11 @@ export const MobileTopBar = ({ title, subtitle, back, right }: MobileTopBarProps
             <ChevronLeft className="h-5 w-5" />
           </button>
         ) : (
-          <div className="w-7 h-7 rounded-md bg-[#D4AF37] flex items-center justify-center text-[#1A1A1A] font-bold text-xs">
-            A
-          </div>
+          <img
+            src="/logo.png"
+            alt="Student Companion AI"
+            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+          />
         )}
         <div className="min-w-0 flex-1">
           <div className="text-[15px] font-semibold tracking-tight text-[#1A1A1A] truncate leading-tight">

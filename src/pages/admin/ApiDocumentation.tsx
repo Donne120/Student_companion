@@ -15,7 +15,7 @@ export default function ApiDocumentation() {
       </div>
       
       <p className="text-[#1A1A1A]/50 mb-6">
-        Complete documentation for the ALU Student Companion API endpoints.
+        Complete documentation for the Student Companion AI API endpoints.
       </p>
 
       <Tabs defaultValue="chat">

@@ -164,7 +164,7 @@ export const aiService = {
       return (await getResponseFromBackend(query, conversationHistory, options)).text;
     } catch (error) {
       console.error("Error generating response:", error);
-      return "I'm sorry, I'm having trouble connecting to the ALU knowledge base right now. Please try again later.";
+      return "I'm sorry, I'm having trouble connecting to the knowledge base right now. Please try again later.";
     }
   },
 
