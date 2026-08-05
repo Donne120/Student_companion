@@ -5,6 +5,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  sendEmailVerification,
   User,
   signInWithPopup,
   GoogleAuthProvider,
@@ -23,6 +24,8 @@ type AuthContextType = {
   logout: () => Promise<void>;
   updateProfile: (updates: ProfileUpdate) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  resendVerification: () => Promise<void>;
+  refreshUser: () => Promise<boolean>;
   isAuthReady: boolean;
 };
 
@@ -97,6 +100,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (name) {
         await updateProfile(user, { displayName: name });
       }
+      // Prove the ALU address is real, not just well-formed. ProtectedRoute
+      // holds password accounts at the verify screen until the link is clicked.
+      sendEmailVerification(user).catch((err) =>
+        console.error("[auth] sendEmailVerification failed:", err)
+      );
       // Persist to Firestore — non-blocking; errors are logged but don't fail auth
       upsertUserProfile({
         uid: user.uid,
@@ -173,6 +181,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /** Re-send the signup verification link to the signed-in user */
+  async function resendVerification(): Promise<void> {
+    if (!auth.currentUser) throw new Error("Not signed in");
+    try {
+      await sendEmailVerification(auth.currentUser);
+    } catch (error) {
+      throw friendlyAuthError(error);
+    }
+  }
+
+  /** Re-fetch the user from Firebase (picks up a just-clicked verification
+   *  link) and return whether the email is now verified. */
+  async function refreshUser(): Promise<boolean> {
+    if (!auth.currentUser) return false;
+    await auth.currentUser.reload();
+    setCurrentUser({ ...auth.currentUser });
+    return auth.currentUser.emailVerified;
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -189,6 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     updateProfile: updateUserProfile,
     sendPasswordReset,
+    resendVerification,
+    refreshUser,
     isAuthReady,
   };
 
