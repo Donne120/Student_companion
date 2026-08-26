@@ -2,7 +2,7 @@ import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/cjs/styles/prism";
-import { Check, Copy, Edit, ExternalLink, Mail, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, Copy, Edit, ExternalLink, Mail, ThumbsDown, ThumbsUp, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import type { MessageSource } from "@/types/chat";
 import remarkGfm from "remark-gfm";
@@ -10,6 +10,7 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { speak, stopSpeaking, isSpeaking } from "@/utils/speech";
 
 interface ChatMessageProps {
   message: string;
@@ -39,6 +40,32 @@ export const ChatMessage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedMessage, setEditedMessage] = useState(message);
   const [feedbackGiven, setFeedbackGiven] = useState<"positive" | "negative" | null>(null);
+  const [speaking, setSpeaking] = useState(false);
+
+  const handleSpeak = () => {
+    if (speaking || isSpeaking()) {
+      stopSpeaking();
+      setSpeaking(false);
+    } else {
+      // Strip markdown symbols for cleaner speech
+      const plainText = message
+        .replace(/#{1,6}\s/g, "")
+        .replace(/\*\*(.+?)\*\*/g, "$1")
+        .replace(/\*(.+?)\*/g, "$1")
+        .replace(/`{1,3}[^`]*`{1,3}/g, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+        .replace(/>\s/g, "")
+        .trim();
+      setSpeaking(true);
+      speak(plainText, {
+        onEnd: () => setSpeaking(false),
+        onBlocked: () => {
+          setSpeaking(false);
+          toast.error("Could not play audio — try clicking elsewhere first");
+        },
+      });
+    }
+  };
 
   const handleCopy = async () => {
     try {
@@ -303,6 +330,23 @@ export const ChatMessage = ({
               )}
               {isAi && (
                 <>
+                  <button
+                    onClick={handleSpeak}
+                    className={cn(
+                      "p-1.5 rounded hover:bg-[#FBF7E9] transition-colors",
+                      speaking
+                        ? "text-[#B8941F] bg-[#FBF7E9]"
+                        : "text-[#1A1A1A]/50 hover:text-[#1A1A1A]"
+                    )}
+                    aria-label={speaking ? "Stop reading" : "Read aloud"}
+                    title={speaking ? "Stop reading" : "Read aloud"}
+                  >
+                    {speaking ? (
+                      <VolumeX className="h-3.5 w-3.5" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
                   <button
                     onClick={() => handleFeedback("positive")}
                     className={cn(
