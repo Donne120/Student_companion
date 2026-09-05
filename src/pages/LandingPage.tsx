@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const HERO_IMAGE = "/hero-student.jpg";
+const HERO_IMAGE = "/news-tech.png";
 const COMPANION_LOGO = "/logo.png";
 
 const STUDY_IMAGE = "/study.png";
@@ -174,7 +174,7 @@ export default function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl aspect-[4/5] shadow-2xl">
               <img
                 src={HERO_IMAGE}
-                alt="ALU student working on laptop in campus lab"
+                alt="ALU students collaborating in a study group"
                 className="w-full h-full object-cover"
                 loading="eager"
               />
