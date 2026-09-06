@@ -25,12 +25,14 @@ import {
   Mail,
   Accessibility,
   LineChart,
+  CalendarClock,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAdmin as isAdminUser, grantAdminSession, getAdminEmail, clearAdminSession } from "@/utils/adminAuth";
 import { API_URL, checkBackendHealth } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailBriefingSettings } from "@/components/settings/EmailBriefingSettings";
+import { OfficeHoursSettings } from "@/components/settings/OfficeHoursSettings";
 
 // Settings section props
 type SettingsSectionProps = {
@@ -338,6 +340,14 @@ export default function Settings() {
               icon={<Mail className="h-5 w-5" />}
             >
               <EmailBriefingSettings />
+            </SettingsSection>
+
+            <SettingsSection
+              title="Office Hours"
+              description="Book time with your university's Mission Curators and staff"
+              icon={<CalendarClock className="h-5 w-5" />}
+            >
+              <OfficeHoursSettings />
             </SettingsSection>
 
             <SettingsSection
