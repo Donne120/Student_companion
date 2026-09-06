@@ -3,6 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Mail, RefreshCw } from "lucide-react";
 import { getCurators, type Curator } from "@/services/curatorService";
 
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 /**
  * "Office Hours" card for the Settings page: the student's own university's
  * bookable staff, each linking out to their real calendar (Calendly, Google
@@ -64,29 +74,39 @@ export const OfficeHoursSettings = () => {
   }
 
   return (
-    <div className="divide-y divide-[#E8DDB0]">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {curators.map((c) => (
-        <div key={c.id} className="flex items-center justify-between gap-4 py-4 first:pt-0 last:pb-0">
-          <div className="min-w-0">
+        <div
+          key={c.id}
+          className="flex items-center gap-3 rounded-lg border border-[#E8DDB0] bg-white p-4"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FBF7E9] font-serif text-sm font-semibold text-[#B8941F]">
+            {initials(c.name)}
+          </div>
+
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-[#1A1A1A]">{c.name}</p>
             <p className="truncate text-xs text-[#1A1A1A]/60">
               {c.role_title ?? c.mission_area ?? "Office hours"}
             </p>
           </div>
+
           {c.calendar_link ? (
-            <Button asChild size="sm" variant="outline" className="shrink-0">
+            <Button asChild size="sm" variant="outline" className="shrink-0 border-[#E8DDB0]">
               <a href={c.calendar_link} target="_blank" rel="noreferrer">
                 Book time
               </a>
             </Button>
           ) : c.email ? (
-            <Button asChild size="sm" variant="outline" className="shrink-0">
+            <Button asChild size="sm" variant="outline" className="shrink-0 border-[#E8DDB0]">
               <a href={`mailto:${c.email}`}>
                 <Mail className="mr-1.5 h-3.5 w-3.5" />
                 Email
               </a>
             </Button>
-          ) : null}
+          ) : (
+            <span className="shrink-0 text-xs text-[#1A1A1A]/40">Coming soon</span>
+          )}
         </div>
       ))}
     </div>
