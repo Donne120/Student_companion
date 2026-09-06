@@ -23,6 +23,7 @@ const Signup           = lazy(() => import("./pages/Signup"));
 const ForgotPassword   = lazy(() => import("./pages/ForgotPassword"));
 const Profile          = lazy(() => import("./pages/Profile"));
 const Settings         = lazy(() => import("./pages/settings"));
+const OfficeHours      = lazy(() => import("./pages/office-hours"));
 const Documents        = lazy(() => import("./pages/documents"));
 const News             = lazy(() => import("./pages/News"));
 const Opportunities    = lazy(() => import("./pages/Opportunities"));
@@ -44,6 +45,7 @@ const TITLE_MAP: Record<string, string> = {
   "/documents":          "Documents — Student Companion AI",
   "/profile":            "Profile — Student Companion AI",
   "/settings":           "Settings — Student Companion AI",
+  "/office-hours":       "Office Hours — Student Companion AI",
   "/admin/analytics":    "Analytics — SCA Admin",
   "/admin/api-docs":     "API Docs — SCA Admin",
   "/admin/feedback":     "Feedback — SCA Admin",
@@ -66,7 +68,7 @@ const PageSpinner = () => (
 );
 
 // ── Per-route chrome (tab bar, floating chatbot, page title) ──────────────────
-const APP_ROUTES = ["/chat", "/news", "/opportunities", "/documents", "/profile", "/settings"];
+const APP_ROUTES = ["/chat", "/news", "/opportunities", "/documents", "/profile", "/settings", "/office-hours"];
 
 const Chrome = () => {
   const { pathname } = useLocation();
@@ -110,6 +112,7 @@ function App() {
               <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
               <Route path="/profile"       element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings"      element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/office-hours"  element={<ProtectedRoute><OfficeHours /></ProtectedRoute>} />
               <Route path="/documents"     element={<ProtectedRoute><Documents /></ProtectedRoute>} />
 
               {/* Admin */}

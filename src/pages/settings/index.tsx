@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   ArrowLeft,
   Server,
@@ -26,13 +27,14 @@ import {
   Accessibility,
   LineChart,
   CalendarClock,
+  ChevronDown,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAdmin as isAdminUser, grantAdminSession, getAdminEmail, clearAdminSession } from "@/utils/adminAuth";
 import { API_URL, checkBackendHealth } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailBriefingSettings } from "@/components/settings/EmailBriefingSettings";
-import { OfficeHoursSettings } from "@/components/settings/OfficeHoursSettings";
+import { OfficeHoursSummary } from "@/components/settings/OfficeHoursSummary";
 
 // Settings section props
 type SettingsSectionProps = {
@@ -40,21 +42,71 @@ type SettingsSectionProps = {
   description: string;
   children: React.ReactNode;
   icon?: React.ReactNode;
+  // When set, the card starts collapsed and expands in place on click —
+  // `summary` renders in the header (collapsed or not) as a quick status
+  // line, e.g. "Connected" or "8 curators available", so the page stays
+  // scannable without every section fully expanded by default.
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  summary?: React.ReactNode;
 };
 
 // Settings section component
-const SettingsSection = ({ title, description, children, icon }: SettingsSectionProps) => (
-  <Card className="mb-6 border-[#E8DDB0] shadow-none">
+const SettingsSection = ({
+  title,
+  description,
+  children,
+  icon,
+  collapsible = false,
+  defaultOpen = false,
+  summary,
+}: SettingsSectionProps) => {
+  const [open, setOpen] = useState(defaultOpen);
+
+  const header = (
     <CardHeader className="space-y-0 pb-4 border-b border-[#E8DDB0]">
-      <CardTitle className="text-lg font-semibold flex items-center gap-2 text-[#1A1A1A]">
-        {icon && <span className="text-[#B8941F]">{icon}</span>}
-        {title}
-      </CardTitle>
-      <CardDescription className="mt-1.5 text-[#1A1A1A]/60">{description}</CardDescription>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2 text-[#1A1A1A]">
+            {icon && <span className="text-[#B8941F]">{icon}</span>}
+            {title}
+          </CardTitle>
+          <CardDescription className="mt-1.5 text-[#1A1A1A]/60">{description}</CardDescription>
+        </div>
+        {collapsible && (
+          <div className="flex shrink-0 items-center gap-2 text-sm text-[#1A1A1A]/60">
+            {summary}
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+            />
+          </div>
+        )}
+      </div>
     </CardHeader>
-    <CardContent className="pt-6">{children}</CardContent>
-  </Card>
-);
+  );
+
+  if (!collapsible) {
+    return (
+      <Card className="mb-6 border-[#E8DDB0] shadow-none">
+        {header}
+        <CardContent className="pt-6">{children}</CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="mb-6 border-[#E8DDB0] shadow-none">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="w-full text-left" aria-label={`Toggle ${typeof title === "string" ? title : "section"}`}>
+          {header}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="pt-6">{children}</CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
+};
 
 // Admin authentication is centralised in @/utils/adminAuth.
 // The admin allowlist lives server-side (backend ADMIN_EMAILS secret) and is
@@ -336,8 +388,9 @@ export default function Settings() {
                   </Badge>
                 </div>
               }
-              description="Connect your ALU email and let the Companion greet you with what's new — assignments, congratulations, upcoming classes and more"
+              description="Connect your ALU email and let the Companion greet you with what's new"
               icon={<Mail className="h-5 w-5" />}
+              collapsible
             >
               <EmailBriefingSettings />
             </SettingsSection>
@@ -346,14 +399,17 @@ export default function Settings() {
               title="Office Hours"
               description="Book time with your university's Mission Curators and staff"
               icon={<CalendarClock className="h-5 w-5" />}
+              collapsible
+              defaultOpen
             >
-              <OfficeHoursSettings />
+              <OfficeHoursSummary />
             </SettingsSection>
 
             <SettingsSection
               title="Chat Preferences"
               description="How the chat looks and what it asks you"
               icon={<MessageSquare className="h-5 w-5" />}
+              collapsible
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between border rounded-md p-3">
