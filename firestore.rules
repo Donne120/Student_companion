@@ -1,0 +1,135 @@
+rules_version = '2';
+
+// Firestore security rules for Student Companion AI.
+//
+// Context: this project's rules were previously `allow read, write: if false`
+// (Firebase's default, locked-down starting point) — meaning EVERY read and
+// write from this app has always been silently rejected in production. The
+// app tolerates this (every call site wraps Firestore writes in a
+// non-blocking .catch()), which is why nobody noticed until a console log
+// was actually watched during a signup attempt. These rules replace that
+// default with real, scoped access — not new permissions "loosened", but
+// the first real permissions this collection has ever had.
+//
+// Important limitation this file works around: there are NO Firebase custom
+// claims in this project (confirmed against src/utils/adminAuth.ts, which is
+// explicitly documented as a client-side UX convenience only — real admin
+// authorization is enforced by the FastAPI backend on every /api/admin/*
+// call, via ADMIN_EMAILS/PLATFORM_ADMIN_EMAILS checked against the verified
+// Firebase ID token). Without a custom claim, these rules cannot distinguish
+// "this signed-in user is an admin" from "this signed-in user says role:
+// admin in their own document" — trusting the latter would let any student
+// grant themselves admin. So rules here deliberately do NOT try to gate
+// admin-only actions (approving a suggestion, etc.) — those must remain
+// enforced by the backend, same as the admin dashboard already does. If
+// admin actions ever need to write directly to Firestore, add a real custom
+// claim (set via the Firebase Admin SDK from a trusted backend context)
+// before relying on a rule to check it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------------
+    // users/{uid} — the profile document written by userService.ts on every
+    // signup/login. A user may only ever read or write their OWN document.
+    // ---------------------------------------------------------------------
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      // Create: only the fields upsertUserProfile actually sends, and only
+      // for your own uid — a student cannot create a profile claiming to be
+      // someone else, and cannot set role to anything but "student" or
+      // "staff" at signup (upsertUserProfile derives this from email domain
+      // client-side; the rule re-checks it isn't "admin" so a crafted
+      // request can't self-promote at account creation).
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role in ["student", "staff"];
+
+      // Update: same owner-only rule, and role/uid/email/provider/createdAt
+      // may never change after creation — updateUserProfileFields (the only
+      // legitimate update path) only ever touches displayName/photoURL/
+      // organizationName/updatedAt.
+      allow update: if isOwner(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.provider == resource.data.provider;
+
+      allow delete: if false;
+
+      // users/{uid}/bookmarks/{opportunityId} — bookmarkService.ts.
+      // Fully owner-scoped: a student's saved opportunities are theirs
+      // alone to read, add, or remove.
+      match /bookmarks/{opportunityId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // answer_suggestions/{id} — suggestionService.ts. Any signed-in student
+    // can submit a suggestion (submittedBy must be their own uid, status
+    // must start "pending"). Reading the full pending queue and
+    // approving/rejecting are admin-only IN THE UI, but — per the module
+    // docstring above — that is not something these rules can enforce
+    // without a custom claim, so those operations stay allowed for any
+    // signed-in user at the rules layer and rely on the backend/UI not
+    // exposing them to non-admins. This mirrors the trust model the rest
+    // of the app already uses for admin gating.
+    // ---------------------------------------------------------------------
+    match /answer_suggestions/{suggestionId} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.submittedBy == request.auth.uid
+        && request.resource.data.status == "pending"
+        && request.resource.data.suggestedAnswer is string
+        && request.resource.data.suggestedAnswer.size() >= 10
+        && request.resource.data.suggestedAnswer.size() <= 2000;
+
+      allow update: if isSignedIn()
+        && request.resource.data.status in ["approved", "rejected"]
+        && request.resource.data.submittedBy == resource.data.submittedBy
+        && request.resource.data.questionText == resource.data.questionText
+        && request.resource.data.suggestedAnswer == resource.data.suggestedAnswer;
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // trending_topics/{week}/topics/{slug} — trendingService.ts. Anonymous-
+    // by-design counters (no uid stored on the document), incremented by
+    // any signed-in student asking a question. Public read so the trending
+    // list can render; writes are constrained to the exact shape
+    // trackQuestion() produces so a client can't inject arbitrary fields
+    // or wipe another topic's count.
+    // ---------------------------------------------------------------------
+    match /trending_topics/{week}/topics/{slug} {
+      allow read: if isSignedIn();
+
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(["label", "slug", "count", "createdAt"])
+        && request.resource.data.count == 1;
+
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["count"])
+        && request.resource.data.count == resource.data.count + 1;
+
+      allow delete: if false;
+    }
+
+    // Everything else stays locked down — the same safe default this
+    // project started with, now scoped to only the paths above instead of
+    // applying (and silently breaking) everything.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

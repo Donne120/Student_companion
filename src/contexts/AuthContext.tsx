@@ -13,6 +13,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { upsertUserProfile, updateUserProfileFields } from "@/services/userService";
+import { checkOrganizationDomain } from "@/services/organizationService";
 
 type ProfileUpdate = { name?: string; picture?: string };
 
@@ -40,9 +41,6 @@ export function useAuth() {
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-
-const verifyAluEmail = (email: string): boolean =>
-  email.endsWith("@alustudent.com") || email.endsWith("@alueducation.com");
 
 const friendlyAuthError = (error: unknown): Error => {
   const code: string = (error as { code?: string })?.code ?? "";
@@ -75,7 +73,9 @@ const friendlyAuthError = (error: unknown): Error => {
         return "Email/password sign-in is not enabled. Contact the administrator.";
       default: {
         const msg = (error as { message?: string })?.message ?? "";
-        return msg.startsWith("Please use your ALU") ? msg : "Something went wrong. Please try again.";
+        return msg.startsWith("Please use your university") || msg.startsWith("Couldn't verify your university")
+          ? msg
+          : "Something went wrong. Please try again.";
       }
     }
   })();
@@ -92,15 +92,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Email / password sign-up + Firestore profile write */
   async function signup(email: string, password: string, name: string): Promise<User> {
-    if (!verifyAluEmail(email)) {
-      throw new Error("Please use your ALU student or staff email");
+    // Checked BEFORE creating the Firebase account (unlike the Google path
+    // below, which historically could only check afterward) — a rejected
+    // domain here never creates a dangling account that has to be torn down.
+    const orgCheck = await checkOrganizationDomain(email);
+    if (orgCheck.checkFailed) {
+      throw new Error("Couldn't verify your university right now. Please try again.");
+    }
+    if (!orgCheck.allowed) {
+      throw new Error("Please use your university email to sign up.");
     }
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       if (name) {
         await updateProfile(user, { displayName: name });
       }
-      // Prove the ALU address is real, not just well-formed. ProtectedRoute
+      // Prove the address is real, not just well-formed. ProtectedRoute
       // holds password accounts at the verify screen until the link is clicked.
       sendEmailVerification(user).catch((err) =>
         console.error("[auth] sendEmailVerification failed:", err)
@@ -112,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName: name,
         photoURL: user.photoURL ?? "",
         provider: "password",
+        organizationName: orgCheck.organizationName,
       }).catch((err) => console.error("[Firestore] upsertUserProfile failed:", err));
       return user;
     } catch (error) {
@@ -125,9 +133,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      if (!user.email || !verifyAluEmail(user.email)) {
+      const orgCheck = user.email
+        ? await checkOrganizationDomain(user.email)
+        : { allowed: false, organizationName: null, checkFailed: false };
+
+      if (!user.email || !orgCheck.allowed) {
         await signOut(auth);
-        throw new Error("Please use your ALU student or staff email");
+        throw new Error(
+          orgCheck.checkFailed
+            ? "Couldn't verify your university right now. Please try again."
+            : "Please use your university email to sign up."
+        );
       }
 
       upsertUserProfile({
@@ -136,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName: user.displayName ?? "",
         photoURL: user.photoURL ?? "",
         provider: "google.com",
+        organizationName: orgCheck.organizationName,
       }).catch((err) => console.error("[Firestore] upsertUserProfile failed:", err));
 
       return user;

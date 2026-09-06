@@ -6,14 +6,19 @@
  * so we always have a canonical record in the `users` collection.
  *
  * Document shape (users/{uid}):
- *   uid          – Firebase Auth UID
- *   email        – verified ALU email
- *   displayName  – full name
- *   photoURL     – avatar URL (may be empty string)
- *   provider     – "password" | "google.com"
- *   role         – "student" | "staff" | "admin"  (default "student")
- *   createdAt    – server timestamp on first write
- *   updatedAt    – server timestamp on every write
+ *   uid              – Firebase Auth UID
+ *   email            – verified university email
+ *   displayName      – full name
+ *   photoURL         – avatar URL (may be empty string)
+ *   provider         – "password" | "google.com"
+ *   role             – "student" | "staff" | "admin"  (default "student")
+ *   organizationName – the university this email's domain resolved to at
+ *                       signup (from backend_hf's organizations table, via
+ *                       GET /api/organizations/check) — a display label,
+ *                       not a tenant id; the backend's own Aurora lookup on
+ *                       each request remains the actual authorization check.
+ *   createdAt        – server timestamp on first write
+ *   updatedAt        – server timestamp on every write
  */
 
 import {
@@ -34,14 +39,21 @@ export interface UserProfile {
   photoURL: string;
   provider: "password" | "google.com";
   role: UserRole;
+  organizationName?: string | null;
   createdAt?: unknown; // Firestore Timestamp
   updatedAt?: unknown;
 }
 
 /**
- * Derive the role from the email domain:
- *   @alustudent.com  → student
- *   @alueducation.com → staff
+ * Derive the role from the email domain.
+ *
+ * This is a UX default only (which nav items/copy to show), never a
+ * security boundary — the backend independently re-derives and enforces
+ * the caller's real organization/role from the Firebase token on every
+ * request (see backend_hf/auth.py, admin_routes.py). Kept ALU-specific
+ * (staff = @alueducation.com) deliberately: a second university's roles
+ * aren't determined by a fixed domain suffix, so every non-ALU signup
+ * defaults to "student" until a real per-org role model exists.
  */
 const roleFromEmail = (email: string): UserRole => {
   if (email.endsWith("@alueducation.com")) return "staff";
@@ -59,6 +71,7 @@ export const upsertUserProfile = async (params: {
   displayName: string;
   photoURL?: string;
   provider: "password" | "google.com";
+  organizationName?: string | null;
 }): Promise<void> => {
   const ref = doc(db, "users", params.uid);
   const existing = await getDoc(ref);
@@ -71,6 +84,9 @@ export const upsertUserProfile = async (params: {
     provider: params.provider,
     updatedAt: serverTimestamp(),
   };
+  if (params.organizationName) {
+    data.organizationName = params.organizationName;
+  }
 
   // Only set role and createdAt on first write so admins can promote users
   // without the client overwriting it on every login.

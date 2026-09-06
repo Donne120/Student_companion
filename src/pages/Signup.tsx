@@ -8,9 +8,6 @@ import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader, ShieldCheck } from "lucide-
 
 const SIDE_IMAGE = "/signup-hero.png";
 
-const validateEmail = (email: string) =>
-  email.endsWith("@alustudent.com") || email.endsWith("@alueducation.com");
-
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,10 +42,9 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-      toast.error("Please use your ALU student or staff email");
-      return;
-    }
+    // AuthContext.signup() checks the email domain against the backend's
+    // organizations table before creating any account — no client-side
+    // domain list to keep in sync with what universities are onboarded.
     setIsLoading(true);
     try {
       await signup(email, password, name);
@@ -121,19 +117,19 @@ export default function Signup() {
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-[#1A1A1A] mb-2">
-                  ALU email
+                  University email
                 </label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your.name@alustudent.com"
+                  placeholder="your.name@youruniversity.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="h-11 bg-white border-[#E8DDB0] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40 focus-visible:ring-[#D4AF37] focus-visible:ring-offset-0"
                 />
                 <p className="mt-2 text-xs text-[#1A1A1A]/50">
-                  Must end in @alustudent.com or @alueducation.com
+                  Must be an email from a university on Student Companion
                 </p>
               </div>
 
