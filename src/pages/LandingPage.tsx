@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const COMPANION_LOGO = "/logo.png";
+const COMPANION_LOGO = "/logo-icon.png";
 
 const HERO_IMAGE = "/news-leadership.png";
 const FEATURE_IMAGE = "/news-tech.png";
@@ -125,7 +125,7 @@ export default function LandingPage() {
           <img
             src={COMPANION_LOGO}
             alt="Student Companion AI"
-            className="w-20 h-20 rounded-2xl object-cover mb-6"
+            className="w-16 h-16 object-contain mb-6"
             style={{
               animation: "welcomeLogo 0.6s ease forwards",
             }}
@@ -154,36 +154,37 @@ export default function LandingPage() {
 
       {/* Top nav */}
       <header
-        className={`sticky top-0 z-40 transition-all ${
-          scrolled
-            ? "bg-white/90 backdrop-blur border-b border-[#E8DDB0]"
-            : "bg-transparent"
+        className={`sticky top-0 z-40 bg-[#FBF7E9]/90 backdrop-blur transition-shadow ${
+          scrolled ? "shadow-sm border-b border-[#E8DDB0]" : "border-b border-transparent"
         }`}
       >
-        <div className="h-1 w-full bg-[#D4AF37]" />
-        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 h-14 md:h-16 flex items-center justify-between safe-top">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className="h-[3px] w-full bg-gradient-to-r from-[#B8941F] via-[#D4AF37] to-[#E8C35C]" />
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 h-16 md:h-[4.5rem] flex items-center justify-between safe-top">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2.5 min-w-0 group"
+          >
             <img
               src={COMPANION_LOGO}
               alt="Student Companion AI logo"
-              className="w-8 h-8 md:w-9 md:h-9 rounded-lg object-cover flex-shrink-0"
+              className="w-9 h-9 md:w-10 md:h-10 object-contain flex-shrink-0 transition-transform group-hover:scale-105"
             />
-            <span className="font-semibold tracking-tight text-sm md:text-base truncate">
+            <span className="font-serif text-base md:text-lg text-[#1A1A1A] tracking-tight truncate">
               Student Companion AI
             </span>
-          </div>
-          <div className="flex items-center gap-2 md:gap-3">
+          </button>
+          <div className="flex items-center gap-2 md:gap-4">
             <Button
               variant="ghost"
               size="sm"
-              className="text-[#1A1A1A] hover:bg-[#FBF7E9] hidden sm:inline-flex"
+              className="text-[#1A1A1A]/80 hover:text-[#1A1A1A] hover:bg-white/60 hidden sm:inline-flex"
               onClick={() => navigate("/login")}
             >
               Sign in
             </Button>
             <Button
               size="sm"
-              className="bg-[#1A1A1A] hover:bg-black text-white"
+              className="bg-[#1A1A1A] hover:bg-black text-white shadow-sm"
               onClick={() => navigate("/signup")}
             >
               Get started
@@ -575,23 +576,73 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[#E8DDB0]">
-        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
-            <img src={COMPANION_LOGO} alt="Student Companion AI" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
-            <span>Student Companion AI</span>
+      <footer className="bg-[#1A1A1A] text-white">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-16 pb-10">
+          <div className="grid md:grid-cols-[1.3fr_1fr_1fr] gap-10 md:gap-12 pb-12 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-2.5 mb-4">
+                <img
+                  src={COMPANION_LOGO}
+                  alt="Student Companion AI logo"
+                  className="w-9 h-9 object-contain"
+                />
+                <span className="font-serif text-lg">Student Companion AI</span>
+              </div>
+              <p className="text-sm text-white/60 leading-relaxed max-w-xs">
+                An AI companion trained on your own university's handbook —
+                built to give every student a straight answer, day or night.
+              </p>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-widest text-white/40 font-medium mb-4">
+                Product
+              </p>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <button
+                    onClick={() => navigate("/signup")}
+                    className="text-white/70 hover:text-[#D4AF37] transition-colors"
+                  >
+                    Get started
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/login")}
+                    className="text-white/70 hover:text-[#D4AF37] transition-colors"
+                  >
+                    Sign in
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <p className="text-xs uppercase tracking-widest text-white/40 font-medium mb-4">
+                Resources
+              </p>
+              <ul className="space-y-3 text-sm">
+                <li>
+                  <a
+                    href="/presentation.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white/70 hover:text-[#D4AF37] transition-colors"
+                  >
+                    Product overview
+                  </a>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
-            <a
-              href="/presentation.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs font-medium text-[#1A1A1A]/60 hover:text-[#B8941F] transition-colors underline-offset-4 hover:underline"
-            >
-              Doc
-            </a>
-            <p className="text-xs text-[#1A1A1A]/50">
+
+          <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-white/40">
               © {new Date().getFullYear()} Student Companion AI. Built for students.
+            </p>
+            <p className="text-xs text-white/40">
+              Made for universities, one campus at a time.
             </p>
           </div>
         </div>

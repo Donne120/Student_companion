@@ -24,9 +24,9 @@ export const MobileTopBar = ({ title, subtitle, back, right }: MobileTopBarProps
           </button>
         ) : (
           <img
-            src="/logo.png"
+            src="/logo-icon.png"
             alt="Student Companion AI"
-            className="w-7 h-7 rounded-md object-cover flex-shrink-0"
+            className="w-7 h-7 object-contain flex-shrink-0"
           />
         )}
         <div className="min-w-0 flex-1">

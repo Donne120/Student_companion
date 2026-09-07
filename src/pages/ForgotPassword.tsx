@@ -42,9 +42,9 @@ export default function ForgotPassword() {
         {/* Brand mark */}
         <div className="flex items-center gap-2.5 mb-10">
           <img
-            src="/logo.png"
+            src="/logo-icon.png"
             alt="Student Companion AI"
-            className="w-12 h-12 rounded-2xl object-cover flex-shrink-0"
+            className="w-12 h-12 object-contain flex-shrink-0"
           />
           <span className="font-semibold tracking-tight text-[#1A1A1A]">
             Student Companion AI

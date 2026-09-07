@@ -242,7 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
         {/* Brand mark */}
-        <img src="/logo.png" alt="Student Companion AI" className="w-16 h-16 rounded-2xl object-cover" />
+        <img src="/logo-icon.png" alt="Student Companion AI" className="w-16 h-16 object-contain" />
         {/* Spinner */}
         <svg
           className="h-6 w-6 animate-spin text-[#D4AF37]"

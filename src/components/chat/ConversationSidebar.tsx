@@ -63,9 +63,9 @@ export const ConversationSidebar = ({
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
           <img
-            src="/logo.png"
+            src="/logo-icon.png"
             alt="Student Companion AI"
-            className="w-7 h-7 rounded-lg object-cover flex-shrink-0"
+            className="w-7 h-7 object-contain flex-shrink-0"
           />
           {!isCollapsed && (
             <span className="font-semibold tracking-tight text-[#1A1A1A] text-sm">
