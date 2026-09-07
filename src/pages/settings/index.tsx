@@ -388,7 +388,7 @@ export default function Settings() {
                   </Badge>
                 </div>
               }
-              description="Connect your ALU email and let the Companion greet you with what's new"
+              description="Connect your university email and let the Companion greet you with what's new"
               icon={<Mail className="h-5 w-5" />}
               collapsible
             >

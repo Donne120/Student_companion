@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Conversation } from "@/types/chat";
 import {
   ChevronLeft,
-  ExternalLink,
   MessageSquarePlus,
   Settings,
   User,
@@ -141,17 +140,6 @@ export const ConversationSidebar = ({
 
       {/* Footer: user + settings */}
       <div className="border-t border-[#E8DDB0] p-2">
-        <a
-          href="https://www.support.alueducation.com/home"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-[#1A1A1A]/70 hover:bg-[#FBF7E9] hover:text-[#1A1A1A] text-sm transition-colors mb-1 ${
-            isCollapsed ? "justify-center" : ""
-          }`}
-        >
-          <ExternalLink className="h-4 w-4 flex-shrink-0" />
-          {!isCollapsed && <span>ALU Support</span>}
-        </a>
         <button
           onClick={() => navigate("/settings")}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#1A1A1A]/70 hover:bg-[#FBF7E9] hover:text-[#1A1A1A] text-sm transition-colors ${

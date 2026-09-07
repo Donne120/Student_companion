@@ -91,12 +91,12 @@ export default function Login() {
                   htmlFor="email"
                   className="block text-sm font-medium text-[#1A1A1A] mb-2"
                 >
-                  ALU email
+                  University email
                 </label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="your.name@alustudent.com"
+                  placeholder="your.name@youruniversity.edu"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -212,9 +212,9 @@ export default function Login() {
         <div className="relative z-10 h-full flex flex-col justify-end p-14 text-white">
           <blockquote className="font-serif text-3xl leading-tight max-w-md">
             "The Companion is the first place I check when I have a question
-            about anything at ALU."
+            about anything at school."
           </blockquote>
-          <p className="mt-6 text-sm opacity-80">— ALU Student, Class of 2025</p>
+          <p className="mt-6 text-sm opacity-80">— Student Companion user</p>
         </div>
       </div>
     </div>

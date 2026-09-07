@@ -68,7 +68,7 @@ const friendlyAuthError = (error: unknown): Error => {
       case "auth/account-exists-with-different-credential":
         return "This email is linked to a different sign-in method. Try Google sign-in.";
       case "auth/user-disabled":
-        return "This account has been disabled. Contact ALU support.";
+        return "This account has been disabled. Contact your university's support.";
       case "auth/operation-not-allowed":
         return "Email/password sign-in is not enabled. Contact the administrator.";
       default: {

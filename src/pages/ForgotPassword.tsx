@@ -89,7 +89,7 @@ export default function ForgotPassword() {
               Forgot password?
             </h1>
             <p className="text-[#1A1A1A]/70 mb-10">
-              Enter your ALU email and we'll send you a reset link.
+              Enter your university email and we'll send you a reset link.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -98,7 +98,7 @@ export default function ForgotPassword() {
                   htmlFor="email"
                   className="block text-sm font-medium text-[#1A1A1A] mb-2"
                 >
-                  ALU email
+                  University email
                 </label>
                 <Input
                   id="email"

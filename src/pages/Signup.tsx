@@ -111,7 +111,7 @@ export default function Signup() {
               Create your account
             </h1>
             <p className="text-[#1A1A1A]/70 mb-10">
-              Free for every ALU student. Takes less than a minute.
+              Free for every student. Takes less than a minute.
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -278,14 +278,14 @@ export default function Signup() {
         <div className="relative z-10 h-full flex flex-col justify-end p-14 text-white">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur border border-white/20 text-xs font-medium mb-6 w-fit">
             <ShieldCheck className="h-3.5 w-3.5" />
-            Verified ALU students only
+            Verified students only
           </div>
           <h2 className="font-serif text-4xl leading-tight max-w-md">
-            Join thousands of students already exploring with the Companion.
+            Join students already exploring with the Companion.
           </h2>
           <p className="mt-6 text-sm opacity-80 max-w-md">
-            Built on ALU's own knowledge — your answers come from policies,
-            handbooks, and resources made for you.
+            Built on your university's own knowledge — your answers come
+            from policies, handbooks, and resources made for you.
           </p>
         </div>
       </div>

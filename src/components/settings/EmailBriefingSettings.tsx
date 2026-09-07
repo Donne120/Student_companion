@@ -31,9 +31,9 @@ const CATEGORY_TOGGLES: { key: keyof EmailBriefingPrefs; label: string; hint: st
 ];
 
 /**
- * "Email briefing" card for the Settings page: connect the student's ALU
- * Gmail, choose what the Companion should mention, and preview the spoken
- * briefing. Server side: backend_hf/email_briefing.py.
+ * "Email briefing" card for the Settings page: connect the student's
+ * university Gmail, choose what the Companion should mention, and preview
+ * the spoken briefing. Server side: backend_hf/email_briefing.py.
  */
 export const EmailBriefingSettings = () => {
   const { currentUser } = useAuth();
@@ -82,7 +82,7 @@ export const EmailBriefingSettings = () => {
       loadStatus();
     } else if (outcome === "mismatch") {
       toast.error("Wrong Google account", {
-        description: "Please connect the same ALU account you log in with.",
+        description: "Please connect the same account you log in with.",
       });
     } else if (outcome === "denied") {
       toast.error("Connection cancelled", {
@@ -170,7 +170,7 @@ export const EmailBriefingSettings = () => {
     return (
       <Alert>
         <Mail className="h-4 w-4" />
-        <AlertDescription>Sign in to connect your ALU email.</AlertDescription>
+        <AlertDescription>Sign in to connect your university email.</AlertDescription>
       </Alert>
     );
   }
@@ -199,7 +199,7 @@ export const EmailBriefingSettings = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-base font-medium flex items-center gap-2">
-            Your ALU inbox
+            Your university inbox
             {connected && (
               <Badge className="bg-[#2E7D32]/10 text-[#2E7D32] border-[#2E7D32]/30">
                 Connected

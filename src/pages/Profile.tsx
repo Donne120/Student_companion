@@ -137,7 +137,7 @@ export default function Profile() {
                   className="mt-2 h-11 bg-[#FBF7E9] border-[#E8DDB0] text-[#1A1A1A]/70"
                 />
                 <p className="mt-1.5 text-xs text-[#1A1A1A]/50">
-                  Your ALU email cannot be changed here.
+                  Your university email cannot be changed here.
                 </p>
               </div>
 
