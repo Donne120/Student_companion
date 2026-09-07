@@ -24,11 +24,42 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [welcomeVisible, setWelcomeVisible] = useState(true);
   const [welcomeFading, setWelcomeFading] = useState(false);
+  const [heroIn, setHeroIn] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setHeroIn(true), 80);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Reveal-on-scroll for below-the-fold sections
+  useEffect(() => {
+    const targets = document.querySelectorAll("[data-reveal]");
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (prefersReducedMotion) {
+      targets.forEach((el) => el.classList.add("is-revealed"));
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -60px 0px" }
+    );
+    targets.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   // Welcome animation: show for 2.4s then fade out
@@ -97,7 +128,7 @@ export default function LandingPage() {
         }`}
       >
         <div className="h-1 w-full bg-[#D4AF37]" />
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 h-14 md:h-16 flex items-center justify-between safe-top">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-10 h-14 md:h-16 flex items-center justify-between safe-top">
           <div className="flex items-center gap-2 min-w-0">
             <img
               src={COMPANION_LOGO}
@@ -130,37 +161,53 @@ export default function LandingPage() {
 
       {/* Hero — full-bleed panorama as the thesis, copy composed over it */}
       <section className="relative overflow-hidden">
-        <div className="relative h-[68vh] min-h-[520px] max-h-[760px] w-full">
+        <div className="relative h-[58vh] min-h-[480px] max-h-[660px] w-full">
           <img
             src={HERO_IMAGE}
             alt="Students walking across campus at golden hour"
-            className="absolute inset-0 h-full w-full object-cover"
+            className="hero-kenburns absolute inset-0 h-full w-full object-cover"
             loading="eager"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B08] via-[#0D0B08]/45 to-[#0D0B08]/10" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#0D0B08]/70 via-[#0D0B08]/10 to-transparent" />
 
-          <div className="relative h-full max-w-7xl mx-auto px-4 md:px-6 lg:px-10 flex flex-col justify-end pb-12 md:pb-16 lg:pb-20">
+          <div className="relative h-full max-w-6xl mx-auto px-4 md:px-6 lg:px-10 flex flex-col justify-end pb-12 md:pb-14 lg:pb-16">
             <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] md:text-xs font-medium text-[#F3E2B3] mb-5 md:mb-7">
+              <div
+                className="hero-item inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] md:text-xs font-medium text-[#F3E2B3] mb-5 md:mb-7"
+                style={{ transitionDelay: "80ms" }}
+                data-in={heroIn}
+              >
                 <Sparkles className="h-3.5 w-3.5" />
                 Trained on your university's own handbook, not the open web
               </div>
-              <h1 className="font-serif italic font-medium text-[38px] sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.98] tracking-tight text-white text-balance">
+              <h1
+                className="hero-item font-serif italic font-medium text-[34px] sm:text-5xl md:text-6xl lg:text-[4.5rem] leading-[0.98] tracking-tight text-white text-balance"
+                style={{ transitionDelay: "180ms" }}
+                data-in={heroIn}
+              >
                 Smarter learning,
                 <br />
                 <span className="not-italic font-black text-[#D4AF37]">
                   starts here.
                 </span>
               </h1>
-              <p className="mt-5 md:mt-7 text-base md:text-xl text-white/85 max-w-lg leading-relaxed">
+              <p
+                className="hero-item mt-5 md:mt-6 text-base md:text-xl text-white/85 max-w-lg leading-relaxed"
+                style={{ transitionDelay: "300ms" }}
+                data-in={heroIn}
+              >
                 Your AI companion for every step of your university journey —
                 from academics and campus life to graduation and beyond.
               </p>
-              <div className="mt-7 md:mt-10 flex flex-col sm:flex-row gap-3">
+              <div
+                className="hero-item mt-7 md:mt-8 flex flex-col sm:flex-row gap-3"
+                style={{ transitionDelay: "400ms" }}
+                data-in={heroIn}
+              >
                 <Button
                   size="lg"
-                  className="bg-[#D4AF37] hover:bg-[#E8C35C] text-[#1A1A1A] h-12 px-7 text-base font-semibold"
+                  className="bg-[#D4AF37] hover:bg-[#E8C35C] text-[#1A1A1A] h-12 px-7 text-base font-semibold transition-transform hover:-translate-y-0.5"
                   onClick={() => navigate("/signup")}
                 >
                   Get started — it's free
@@ -169,13 +216,17 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/5 backdrop-blur-sm border-white/30 hover:bg-white/15 text-white h-12 px-7 text-base"
+                  className="bg-white/5 backdrop-blur-sm border-white/30 hover:bg-white/15 text-white h-12 px-7 text-base transition-transform hover:-translate-y-0.5"
                   onClick={() => navigate("/login")}
                 >
                   I already have an account
                 </Button>
               </div>
-              <p className="mt-5 md:mt-7 text-xs md:text-sm text-white/60">
+              <p
+                className="hero-item mt-5 md:mt-6 text-xs md:text-sm text-white/60"
+                style={{ transitionDelay: "480ms" }}
+                data-in={heroIn}
+              >
                 For students and staff with a verified university email.
               </p>
             </div>
@@ -183,16 +234,65 @@ export default function LandingPage() {
         </div>
       </section>
 
+      <style>{`
+        @keyframes kenburns {
+          0%   { transform: scale(1) translate3d(0,0,0); }
+          100% { transform: scale(1.08) translate3d(-1%,-1%,0); }
+        }
+        .hero-kenburns {
+          animation: kenburns 18s ease-out forwards;
+        }
+        .hero-item {
+          opacity: 0;
+          transform: translateY(16px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .hero-item[data-in="true"] {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        [data-reveal] {
+          opacity: 0;
+          transform: translateY(24px);
+          transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        [data-reveal].is-revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        @keyframes floatCard {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-8px); }
+        }
+        .animate-float-card {
+          animation: floatCard 5s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-kenburns { animation: none; }
+          .animate-float-card { animation: none; }
+          .hero-item, [data-reveal] {
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+          }
+        }
+      `}</style>
+
       {/* Stat strip */}
       <section className="border-b border-[#E8DDB0] bg-[#FBF7E9]/50">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { value: "24/7", label: "Instant answers" },
             { value: "100%", label: "From your handbook" },
             { value: "0", label: "Generic web answers" },
             { value: "1", label: "Companion, your campus" },
-          ].map((stat) => (
-            <div key={stat.label}>
+          ].map((stat, i) => (
+            <div
+              key={stat.label}
+              data-reveal
+              style={{ transitionDelay: `${i * 90}ms` }}
+              className="transition-transform hover:-translate-y-1"
+            >
               <div className="font-serif text-3xl md:text-4xl text-[#1A1A1A]">{stat.value}</div>
               <div className="mt-1 text-xs uppercase tracking-wider text-[#1A1A1A]/60">
                 {stat.label}
@@ -203,8 +303,8 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
-        <div className="max-w-2xl mb-16">
+      <section className="max-w-6xl mx-auto px-6 lg:px-10 py-24">
+        <div className="max-w-2xl mb-16" data-reveal>
           <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
             What you can do
           </p>
@@ -230,10 +330,12 @@ export default function LandingPage() {
               title: "Quick answers",
               body: "Policies, procedures, deadlines — get clarity in seconds, with context from your conversation history.",
             },
-          ].map(({ icon: Icon, title, body }) => (
+          ].map(({ icon: Icon, title, body }, i) => (
             <div
               key={title}
-              className="group p-8 rounded-2xl border border-[#E8DDB0] bg-white hover:border-[#D4AF37] hover:shadow-lg transition-all"
+              data-reveal
+              style={{ transitionDelay: `${i * 120}ms` }}
+              className="group p-8 rounded-2xl border border-[#E8DDB0] bg-white hover:border-[#D4AF37] hover:shadow-lg hover:-translate-y-1 transition-all"
             >
               <div className="w-12 h-12 rounded-xl bg-[#FBF7E9] border border-[#E8DDB0] flex items-center justify-center mb-6 group-hover:bg-[#D4AF37] transition-colors">
                 <Icon className="h-5 w-5 text-[#B8941F] group-hover:text-[#1A1A1A]" />
@@ -247,8 +349,8 @@ export default function LandingPage() {
 
       {/* Split image feature */}
       <section className="bg-[#FBF7E9]/40 border-y border-[#E8DDB0]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-24 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          <div className="relative">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-24 grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="relative" data-reveal>
             <div className="overflow-hidden rounded-3xl aspect-[5/4] shadow-xl">
               <img
                 src={STUDY_IMAGE}
@@ -257,7 +359,7 @@ export default function LandingPage() {
                 loading="lazy"
               />
             </div>
-            <div className="hidden md:block absolute -bottom-6 -right-6 bg-white border border-[#E8DDB0] rounded-2xl p-5 shadow-lg max-w-xs">
+            <div className="hidden md:block absolute -bottom-6 -right-6 bg-white border border-[#E8DDB0] rounded-2xl p-5 shadow-lg max-w-xs animate-float-card">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="h-4 w-4 text-[#D4AF37]" />
                 <span className="text-xs uppercase tracking-wider text-[#1A1A1A]/60 font-medium">
@@ -271,7 +373,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div>
+          <div data-reveal style={{ transitionDelay: "120ms" }}>
             <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
               Always on
             </p>
@@ -300,7 +402,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
+      <section className="max-w-6xl mx-auto px-6 lg:px-10 py-24" data-reveal>
         <div className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] text-white p-10 md:p-16">
           <div className="absolute inset-0 opacity-25">
             <img
@@ -345,7 +447,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-[#E8DDB0]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto px-6 lg:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
             <img src={COMPANION_LOGO} alt="Student Companion AI" className="w-7 h-7 rounded-lg object-cover flex-shrink-0" />
             <span>Student Companion AI</span>
