@@ -9,7 +9,6 @@ import {
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
-import { MiniChatbot } from "./components/mini-chatbot/MiniChatbot";
 import { MobileTabBar } from "./components/mobile/MobileTabBar";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import "./App.css";
@@ -80,11 +79,9 @@ const Chrome = () => {
   document.title = titleKey ? TITLE_MAP[titleKey] : "Student Companion AI";
 
   const showTabs = APP_ROUTES.some((r) => pathname === r || pathname.startsWith(r + "/"));
-  const onChatPage = pathname === "/chat" || pathname.startsWith("/chat/");
 
   return (
     <>
-      {!onChatPage && <MiniChatbot />}
       {showTabs && <MobileTabBar />}
     </>
   );

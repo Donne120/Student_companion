@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Conversation, Message } from "@/types/chat";
 
-const STORAGE_KEY = 'alu_chat_conversations';
+const STORAGE_KEY = 'sc_chat_conversations';
 const MAX_CONVERSATIONS = 50; // Prevent localStorage from getting too full
 
 export const useConversations = () => {
@@ -21,7 +21,7 @@ export const useConversations = () => {
       updatedAt: now,
       messages: [{
         id: "welcome",
-        text: `# Welcome to Student Companion AI 👋\n\nI'm here to help with anything at ALU — academics, campus life, deadlines, opportunities, and more.\n\nFeel free to say **hi**, ask a question, or pick one of the suggestions below to get started!`,
+        text: `# Welcome to Student Companion AI 👋\n\nI'm here to help with anything at your university — academics, campus life, deadlines, opportunities, and more.\n\nFeel free to say **hi**, ask a question, or pick one of the suggestions below to get started!`,
         isAi: true,
         timestamp: Date.now()
       }]
