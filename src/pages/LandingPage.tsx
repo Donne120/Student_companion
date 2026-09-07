@@ -134,15 +134,15 @@ export default function LandingPage() {
           <div className="lg:col-span-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FBF7E9] border border-[#E8DDB0] text-[11px] md:text-xs font-medium text-[#B8941F] mb-4 md:mb-6">
               <Sparkles className="h-3.5 w-3.5" />
-              Built for ALU students, by the ALU community
+              Trained on your university's own handbook, not the open web
             </div>
             <h1 className="font-serif text-[34px] sm:text-5xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight text-[#1A1A1A]">
               Your AI Assistant for{" "}
               <span className="text-[#D4AF37]">Smarter Learning.</span>
             </h1>
             <p className="mt-4 md:mt-6 text-base md:text-xl text-[#1A1A1A]/70 max-w-xl leading-relaxed">
-              Your AI companion for every step of the ALU journey — from
-              academics and campus life to graduation and beyond.
+              Your AI companion for every step of your university journey —
+              from academics and campus life to graduation and beyond.
             </p>
             <div className="mt-6 md:mt-10 flex flex-col sm:flex-row gap-3">
               <Button
@@ -163,8 +163,7 @@ export default function LandingPage() {
               </Button>
             </div>
             <p className="mt-4 md:mt-6 text-xs md:text-sm text-[#1A1A1A]/50">
-              For students with <span className="font-medium text-[#1A1A1A]/80">@alustudent.com</span>{" "}
-              or <span className="font-medium text-[#1A1A1A]/80">@alueducation.com</span> emails.
+              For students and staff with a verified university email.
             </p>
           </div>
 
@@ -174,14 +173,14 @@ export default function LandingPage() {
             <div className="relative overflow-hidden rounded-3xl aspect-[4/5] shadow-2xl">
               <img
                 src={HERO_IMAGE}
-                alt="ALU students collaborating in a study group"
+                alt="Students collaborating in a study group"
                 className="w-full h-full object-cover"
                 loading="eager"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6 text-white">
-                <p className="text-sm font-medium opacity-90">Join 500+ students</p>
-                <p className="text-xs opacity-70 mt-1">already using the Companion</p>
+                <p className="text-sm font-medium opacity-90">Built for your university</p>
+                <p className="text-xs opacity-70 mt-1">answers sourced from your own handbook</p>
               </div>
             </div>
           </div>
@@ -192,10 +191,10 @@ export default function LandingPage() {
       <section className="border-y border-[#E8DDB0] bg-[#FBF7E9]/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
-            { value: "500+", label: "Active students" },
             { value: "24/7", label: "Instant answers" },
-            { value: "1", label: "ALU campus" },
-            { value: "100%", label: "ALU-specific" },
+            { value: "100%", label: "From your handbook" },
+            { value: "0", label: "Generic web answers" },
+            { value: "1", label: "Companion, your campus" },
           ].map((stat) => (
             <div key={stat.label}>
               <div className="font-serif text-3xl md:text-4xl text-[#1A1A1A]">{stat.value}</div>
@@ -214,7 +213,7 @@ export default function LandingPage() {
             What you can do
           </p>
           <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight">
-            Built around the way ALU students actually learn.
+            Built around the way students actually learn.
           </h2>
         </div>
 
@@ -228,7 +227,7 @@ export default function LandingPage() {
             {
               icon: Compass,
               title: "Campus navigation",
-              body: "Find the right department, contact or service across the ALU campus without the runaround.",
+              body: "Find the right department, contact or service across your campus without the runaround.",
             },
             {
               icon: MessageSquare,
@@ -281,7 +280,7 @@ export default function LandingPage() {
               Always on
             </p>
             <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight leading-tight">
-              Knowledge of the entire ALU handbook, ready when you need it.
+              Knowledge of your university's entire handbook, ready when you need it.
             </h2>
             <p className="mt-6 text-lg text-[#1A1A1A]/70 leading-relaxed">
               No more digging through PDFs or waiting for office hours. Ask in
@@ -310,7 +309,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 opacity-20">
             <img
               src={CAMPUS_IMAGE}
-              alt="ALU students working together in classroom"
+              alt="Students working together in a classroom"
               className="w-full h-full object-cover"
               loading="lazy"
             />
@@ -322,8 +321,8 @@ export default function LandingPage() {
               Start your journey with the Companion today.
             </h2>
             <p className="mt-6 text-lg text-white/80 leading-relaxed">
-              Free for every ALU student. Sign up with your ALU email and start
-              asking questions in under a minute.
+              Free for every student. Sign up with your university email and
+              start asking questions in under a minute.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <Button
