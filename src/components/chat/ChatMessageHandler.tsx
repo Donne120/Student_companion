@@ -35,13 +35,13 @@ export const isUnknownResponse = (text: string): boolean => {
 
 /** Client-side fallback: extract key noun phrases from the question + response. */
 const deriveTopicsLocally = (question: string, response: string): string[] => {
-  // Common ALU-specific topic seeds paired with trigger keywords
+  // Topic seeds paired with trigger keywords — generic across any institution
   const seedMap: [RegExp, string][] = [
-    [/grading|grade|gpa|score|mark/i, "ALU grading policy"],
+    [/grading|grade|gpa|score|mark/i, "Grading policy"],
     [/scholarship|funding|financial aid|bursary/i, "Scholarship opportunities"],
     [/internship|placement|work experience/i, "Internship programs"],
     [/deadline|due date|registration|enroll/i, "Upcoming deadlines"],
-    [/housing|accommodation|dormitory|hostel/i, "Student housing at ALU"],
+    [/housing|accommodation|dormitory|hostel/i, "Student housing"],
     [/graduation|degree|transcript|certificate/i, "Graduation requirements"],
     [/course|module|class|credit/i, "Course registration"],
     [/fee|tuition|payment|invoice/i, "Tuition and fees"],
@@ -63,12 +63,12 @@ const deriveTopicsLocally = (question: string, response: string): string[] => {
     }
   }
 
-  // If fewer than 3 matched, pad with generic ALU follow-ups
+  // If fewer than 3 matched, pad with generic follow-ups
   const fallbacks = [
-    "ALU academic calendar",
+    "Academic calendar",
     "Student support services",
-    "Campus life at ALU",
-    "Opportunities for ALU students",
+    "Campus life",
+    "Opportunities for students",
   ];
   for (const f of fallbacks) {
     if (matched.length >= 3) break;

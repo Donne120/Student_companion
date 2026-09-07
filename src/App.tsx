@@ -23,7 +23,6 @@ const ForgotPassword   = lazy(() => import("./pages/ForgotPassword"));
 const Profile          = lazy(() => import("./pages/Profile"));
 const Settings         = lazy(() => import("./pages/settings"));
 const OfficeHours      = lazy(() => import("./pages/office-hours"));
-const Documents        = lazy(() => import("./pages/documents"));
 const Opportunities    = lazy(() => import("./pages/Opportunities"));
 const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -39,7 +38,6 @@ const TITLE_MAP: Record<string, string> = {
   "/forgot-password":    "Reset password — Student Companion AI",
   "/chat":               "Chat — Student Companion AI",
   "/opportunities":      "Opportunities — Student Companion AI",
-  "/documents":          "Documents — Student Companion AI",
   "/profile":            "Profile — Student Companion AI",
   "/settings":           "Settings — Student Companion AI",
   "/office-hours":       "Office Hours — Student Companion AI",
@@ -65,7 +63,7 @@ const PageSpinner = () => (
 );
 
 // ── Per-route chrome (tab bar, floating chatbot, page title) ──────────────────
-const APP_ROUTES = ["/chat", "/opportunities", "/documents", "/profile", "/settings", "/office-hours"];
+const APP_ROUTES = ["/chat", "/opportunities", "/profile", "/settings", "/office-hours"];
 
 const Chrome = () => {
   const { pathname } = useLocation();
@@ -108,7 +106,7 @@ function App() {
               <Route path="/profile"       element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings"      element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/office-hours"  element={<ProtectedRoute><OfficeHours /></ProtectedRoute>} />
-              <Route path="/documents"     element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+              <Route path="/documents" element={<Navigate to="/chat" replace />} />
 
               {/* Admin */}
               <Route path="/admin/analytics" element={<ProtectedRoute><AnalyticsDashboard /></ProtectedRoute>} />

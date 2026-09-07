@@ -18,7 +18,7 @@ const STATIC_SUGGESTIONS = [
   {
     icon: BookOpen,
     title: "Academic policies",
-    prompt: "What is ALU's grading policy?",
+    prompt: "What is the grading policy?",
   },
   {
     icon: Calendar,
@@ -98,7 +98,7 @@ export const ChatMessages = ({
             How can I help you today?
           </h1>
           <p className="text-sm md:text-base text-[#1A1A1A]/60 mb-6 md:mb-8 px-2">
-            Ask anything about ALU — academics, campus life, policies, or events.
+            Ask anything about your university — academics, campus life, policies, or events.
           </p>
 
           {/* Static suggestion cards */}
