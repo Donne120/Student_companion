@@ -24,7 +24,6 @@ const Profile          = lazy(() => import("./pages/Profile"));
 const Settings         = lazy(() => import("./pages/settings"));
 const OfficeHours      = lazy(() => import("./pages/office-hours"));
 const Documents        = lazy(() => import("./pages/documents"));
-const News             = lazy(() => import("./pages/News"));
 const Opportunities    = lazy(() => import("./pages/Opportunities"));
 const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
@@ -39,7 +38,6 @@ const TITLE_MAP: Record<string, string> = {
   "/signup":             "Create account — Student Companion AI",
   "/forgot-password":    "Reset password — Student Companion AI",
   "/chat":               "Chat — Student Companion AI",
-  "/news":               "News — Student Companion AI",
   "/opportunities":      "Opportunities — Student Companion AI",
   "/documents":          "Documents — Student Companion AI",
   "/profile":            "Profile — Student Companion AI",
@@ -67,7 +65,7 @@ const PageSpinner = () => (
 );
 
 // ── Per-route chrome (tab bar, floating chatbot, page title) ──────────────────
-const APP_ROUTES = ["/chat", "/news", "/opportunities", "/documents", "/profile", "/settings", "/office-hours"];
+const APP_ROUTES = ["/chat", "/opportunities", "/documents", "/profile", "/settings", "/office-hours"];
 
 const Chrome = () => {
   const { pathname } = useLocation();
@@ -105,7 +103,7 @@ function App() {
               {/* Protected app */}
               <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
               <Route path="/chatbot" element={<Navigate to="/chat" replace />} />
-              <Route path="/news"          element={<ProtectedRoute><News /></ProtectedRoute>} />
+              <Route path="/news" element={<Navigate to="/chat" replace />} />
               <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
               <Route path="/profile"       element={<ProtectedRoute><Profile /></ProtectedRoute>} />
               <Route path="/settings"      element={<ProtectedRoute><Settings /></ProtectedRoute>} />

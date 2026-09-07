@@ -1,9 +1,8 @@
 import { NavLink } from "react-router-dom";
-import { MessageSquare, Newspaper, Sparkles, FileText, User } from "lucide-react";
+import { MessageSquare, Sparkles, FileText, User } from "lucide-react";
 
 const tabs = [
   { to: "/chat", label: "Chat", icon: MessageSquare },
-  { to: "/news", label: "News", icon: Newspaper },
   { to: "/opportunities", label: "Discover", icon: Sparkles },
   { to: "/documents", label: "Docs", icon: FileText },
   { to: "/profile", label: "Me", icon: User },
@@ -15,7 +14,7 @@ export const MobileTabBar = () => {
       aria-label="Primary"
       className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-[#E8DDB0] safe-bottom"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-4">
         {tabs.map(({ to, label, icon: Icon }) => (
           <li key={to}>
             <NavLink
