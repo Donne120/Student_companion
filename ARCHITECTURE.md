@@ -1,209 +1,150 @@
-# ALU Student Companion — Architecture Brief
+# Student Companion AI — Architecture
 
-A one-page explanation of how the Student Companion works, what makes it
-different from a generic chatbot, and how it stays cheap to run.
+A technical brief on how the platform works, how tenant isolation is
+enforced, and how a new university actually gets onboarded.
 
 ---
 
-## The 30-second pitch
+## The pitch
 
-The Student Companion is a mobile-first, AI-powered peer assistant for ALU
-students. It answers questions about academics, campus life, policies, and
-opportunities in a Swaniker-flavoured peer-companion voice. It will tell a
-student "I don't know — here's where to look" rather than invent an answer.
-Non-engineers maintain its knowledge through a single Google Sheet, and the
-bot updates itself.
+Student Companion AI is a multi-tenant AI assistant platform: one product,
+many universities, each with its own isolated knowledge base and its own
+admin team. A student signs in with their university email; the platform
+resolves which organization they belong to from the verified domain and
+answers every question from *that university's own* handbook, policies,
+and records — never a generic answer from the open web, and never another
+university's data.
 
 ---
 
 ## How a question becomes an answer
 
-A student asks: *"I'm stressed, where can I get help?"*
+A student asks: *"When is the add/drop deadline for this term?"*
 
-1. **Frontend** (React + TypeScript + Vite, installable PWA, deployed on
-   Vercel) sends the question to the backend.
-2. **Backend** (Dockerised FastAPI service, deployed on a Hugging Face Space)
-   embeds the question with `all-MiniLM-L6-v2` and runs a vector search
-   against **ChromaDB**.
-3. ChromaDB returns the top-K most semantically similar entries from the
-   ALU knowledge base — likely the Wellness Center row, even though the
-   student never typed "wellness."
-4. Those entries are formatted as `[Source N | title | department | url]`
-   blocks and stitched into a carefully engineered system prompt.
-5. The prompt is sent to the **Anthropic Claude API**.
-6. Claude reasons over the retrieved context and answers in a peer voice,
-   citing the official ALU URL inline.
-7. The answer streams back to the student's phone.
-
----
-
-## How knowledge gets in
-
-The ALU knowledge base is a **Google Sheet** that staff edit directly — no
-code, no PRs, no engineer in the loop.
-
-```
-   Google Sheet  ──(Apps Script publishes JSON)──>  Hugging Face Space
-                                                          │
-                                              sheet_sync.py polls
-                                                          │
-                                                          ▼
-                                           ChromaDB vector index
-                                                          │
-                                              embedded once, searched
-                                              by every student query
-```
-
-- The Sheet is the **source of truth**.
-- An Apps Script (`backend_hf/sheet_integration/apps_script/Code.gs`) publishes
-  the whole Sheet as versioned JSON at a URL.
-- On boot and on a poll loop, `sheet_sync.py` downloads the JSON, embeds each
-  row, and upserts it into ChromaDB. Entries are tagged `origin=sheet` so
-  deletions in the Sheet remove the corresponding vectors.
-- This means a staff member can edit a row at 9:00 a.m. and the bot reflects
-  the new answer minutes later. No deploy. No engineer.
+1. **Frontend** (this repository — React + TypeScript + Vite, installable
+   PWA, deployed on Vercel) sends the question to the backend, authenticated
+   with the student's Firebase ID token.
+2. **Backend** (FastAPI, deployed on a Hugging Face Space) verifies the
+   token server-side and resolves the student's organization.
+3. The backend runs a vector search against **that organization's own
+   ChromaDB collection** — every organization is retrieval-isolated; a
+   query for University A can never surface University B's documents.
+4. The most relevant retrieved passages are stitched into a grounded
+   system prompt, along with an explicit instruction: answer from the
+   provided context, or say "I don't know — here's where to look" rather
+   than invent an answer.
+5. The prompt goes to the LLM. The answer streams back to the student,
+   grounded in their own institution's material.
 
 ---
 
-## How costs stay low
+## Multi-tenancy: how isolation is actually enforced
 
-Two design choices keep this affordable:
+Tenant isolation isn't a UI filter — it's enforced at every layer a query
+touches:
 
-### 1. Prompt caching (Anthropic ephemeral cache)
+```
+                    ┌─────────────────────────────┐
+                    │   Firebase Auth (per user)   │
+                    │  email domain → organization │
+                    └──────────────┬───────────────┘
+                                   │
+                    ┌──────────────▼───────────────┐
+                    │   Aurora PostgreSQL (RDS)     │
+                    │  organizations, admins,       │
+                    │  curators — every row scoped  │
+                    │  to an organization_id        │
+                    └──────────────┬───────────────┘
+                                   │
+                    ┌──────────────▼───────────────┐
+                    │   ChromaDB — one collection   │
+                    │   per organization, never     │
+                    │   queried across tenants       │
+                    └────────────────────────────────┘
+```
 
-The system prompt has two cache blocks (`claude_engine.py`):
+- **Identity:** a student's organization is resolved from their verified
+  email domain at signup — there is no manual "choose your university"
+  step, and no client-side list of allowed domains to keep in sync.
+- **Relational data:** every admin, curator, and organization record in
+  Aurora carries an `organization_id`; access is scoped server-side, never
+  filtered client-side.
+- **Retrieval:** each organization gets its own ChromaDB collection,
+  created on first use. A retrieval query is bound to the caller's
+  organization at the engine level — there's no code path where one
+  tenant's query can reach another tenant's collection.
+- **Admin roles:** a **platform admin** can onboard new universities and
+  see the roster of organizations. An **organization (school) admin** can
+  manage their own university's staff, curators, and settings — but
+  cannot see or affect any other university's data or admin roster.
 
-- **Block 1** — the long instruction prompt (Swaniker voice, anti-hallucination
-  rules, formatting). Almost never changes. Stays in cache for the 5-minute
-  window. Every conversation reads it at **1/10th the price** ($0.30/M tokens
-  vs $3/M).
-- **Block 2** — the retrieved ALU context. Changes per question, but
-  overlapping retrievals (many students ask similar questions about
-  admissions, deadlines, wellness) hit the cache.
+---
 
-Token usage is logged on every call (`input_tokens`, `output_tokens`,
-`cache_read_input_tokens`, `cache_creation_input_tokens`) so cache
-effectiveness is auditable in production.
+## Onboarding a new university
 
-### 2. The expensive parts run cheap or free
+Adding a university is a self-service admin action, not an engineering
+task:
 
-| Layer            | Service              | Cost             |
-| ---------------- | -------------------- | ---------------- |
-| Frontend hosting | Vercel               | Free tier        |
-| Backend hosting  | Hugging Face Space   | Free tier        |
-| Knowledge store  | Google Sheets        | Free             |
-| Vector index     | ChromaDB (on-disk)   | Free             |
-| Embedding model  | sentence-transformers (local) | Free — runs in the HF Space |
-| LLM              | Anthropic Claude API | Pay per token, with prompt caching |
-
-The only metered cost is the Claude API, and prompt caching cuts the
-dominant cost (the long system prompt) by 10x.
+1. A platform admin adds the organization (name + allowed email domain(s))
+   from the admin dashboard.
+2. The platform admin grants that university's first admin account.
+3. That admin signs in and can immediately add their own staff/curator
+   accounts, upload source documents, and configure office hours — all
+   from their own scoped dashboard.
+4. The first student who signs up with a verified `@thatuniversity.edu`
+   email is automatically routed into the right organization. No deploy,
+   no CloudShell, no engineer in the loop.
 
 ---
 
 ## Why it won't hallucinate
 
-The system prompt contains an explicit anti-hallucination contract:
-
-> NEVER invent course codes, credit hours, module names, or curriculum
-> structures. NEVER invent tuition amounts, fees, or scholarship dollar
-> values. NEVER invent faculty names, titles, or biographies. NEVER invent
-> specific deadlines, term dates, or examination schedules. When the
-> context doesn't have what's needed, say so plainly and point to the
-> official source.
-
-The prompt also defines three response cases:
-
-- **Case A:** context fully answers the question → answer + cite the URL.
-- **Case B:** context doesn't answer but points to where the answer lives →
-  lead with the link, not the apology.
-- **Case C:** nothing relevant in context → say so honestly and route to
-  the right ALU team (Registry, Student Life, Finance, Wellness).
-
-This is the difference between a useful peer assistant and a confident liar.
-
----
-
-## Voice engineering
-
-The bot's voice is deliberately patterned on Fred Swaniker:
-
-- Mission-driven framing for big-picture questions ("Africa's future," "our
-  generation," "leadership and ownership").
-- Conversational openers ("Look,", "Here's the thing,").
-- Storytelling — real examples from Rwanda, Singapore, M-Pesa.
-- Direct, gently provocative, ends with a call to action.
-- **Calibrated by question type:**
-  - simple lookup → just answer plainly
-  - big-picture → full Swaniker mode
-  - sensitive (mental health, harassment, finances) → drop the persona,
-    be human, route to the right support
-
-The voice is the *delivery*. The *content* must be ALU-accurate from the
-retrieved context. Voice never overrides truth.
+The system prompt enforces a strict grounding contract: answer only from
+retrieved context, and when the context doesn't contain what's needed, say
+so plainly and point the student to where they can find it — rather than
+inventing deadlines, policies, or figures that sound plausible but aren't
+sourced from the university's own material.
 
 ---
 
 ## Tech stack at a glance
 
-| Layer            | Tech                                                    |
-| ---------------- | ------------------------------------------------------- |
-| Frontend         | React 18, TypeScript, Vite, Tailwind, shadcn/ui         |
-| Mobile           | Installable PWA (manifest + service worker)             |
-| Auth             | Firebase Auth (Google + Email/Password)                 |
-| Hosting (FE)     | Vercel                                                  |
-| Backend          | Python, FastAPI, Docker                                 |
-| Hosting (BE)     | Hugging Face Space                                      |
-| Embedding model  | sentence-transformers `all-MiniLM-L6-v2`                |
-| Vector DB        | ChromaDB (persistent, on-disk)                          |
-| Knowledge CMS    | Google Sheets + Apps Script publisher                   |
-| LLM              | Anthropic Claude (Sonnet)                               |
-| Cost optimisation| Anthropic prompt caching (ephemeral, two-block)         |
-| Workflow         | Bun, ESLint, GitHub                                     |
+| Layer | Technology |
+| --- | --- |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Mobile | Installable PWA (manifest + service worker) + a native Expo app (`mobile/`) |
+| Auth | Firebase Authentication (client) + Firebase Admin SDK (server-verified) |
+| Frontend hosting | Vercel |
+| Backend | Python, FastAPI |
+| Backend hosting | Hugging Face Space |
+| Relational data | Aurora PostgreSQL (AWS RDS Serverless v2), IAM-authenticated |
+| Vector retrieval | ChromaDB — one isolated collection per organization |
+| Admin dashboard | Next.js, deployed separately on Vercel |
 
 ---
 
-## What is and isn't novel here
+## What's distinctive about this implementation
 
-This is honest framing — important for talking to technical audiences.
-
-**Not novel** (these are well-known patterns; we use them well):
-
-- RAG over a vector store (paper: Lewis et al., Facebook AI, 2020)
-- sentence-transformers + ChromaDB starter stack
-- Google Sheets as a no-code CMS
-- Anthropic prompt caching (shipped publicly Aug 2024)
-
-**What is distinctive about this implementation:**
-
-- **Domain specialisation done right.** Most "AI chatbot for X" projects
-  end up as a thin GPT wrapper that hallucinates. This one has a real
-  grounded RAG pipeline with an explicit anti-hallucination contract.
-- **No-code authoring layer.** A staff member can update the bot's
-  knowledge by editing a Google Sheet. No engineer in the loop.
-- **Voice engineering as a feature.** The Swaniker persona + tone
-  calibration by question type isn't just a prompt — it's a design choice
-  that gives the product a distinctive feel.
-- **Cost-aware architecture.** Two-block prompt caching means the
-  dominant cost is amortised across users and queries.
-- **Mobile-first delivery.** Installable PWA, bottom-tab navigation, real
-  African student photography. Most university chatbots are dashboards.
-- **A repeatable blueprint.** The architecture is generic — swap the
-  Sheet, swap the system prompt's voice, and the same stack serves any
-  African university. That's the deployment story.
+- **Real per-tenant isolation**, enforced at the identity, relational-data,
+  and retrieval layers — not a single shared knowledge base with a
+  filter bolted on top.
+- **Domain-resolved identity.** No manual university picker; a verified
+  email domain is the source of truth for which organization a student
+  belongs to.
+- **Genuinely self-service onboarding.** A new university can be added,
+  staffed with its own admins and curators, and serving students within
+  the same session — no engineering ticket required.
+- **Grounded, honest answers.** The platform is built to say "I don't
+  know, here's where to look" rather than produce a confident, unsourced
+  guess.
 
 ---
 
-## Open questions / next work
+## Open areas for future work
 
-- Bring `sendPasswordResetEmail` into the auth flow so non-Google users
-  can recover.
-- Add a "Forgot password?" link on the Login page.
-- Add an admin view of cache hit rate over time (data is already logged).
-- Code-split the frontend bundle (currently 1.95 MB pre-gzip) for faster
-  first paint on slow Rwandan mobile networks.
-- Move from in-memory rate-limiting to a shared store if traffic grows.
-
----
-
-*Last updated for the May 2026 academic showcase.*
+- Code-split the frontend bundle for faster first paint on slower mobile
+  networks.
+- Broaden the per-organization role model beyond the current admin/curator
+  split.
+- Expand admin-facing analytics around retrieval quality and cache
+  effectiveness per organization.
