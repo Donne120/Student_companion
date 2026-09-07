@@ -14,9 +14,23 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const COMPANION_LOGO = "/logo.png";
 
-const HERO_IMAGE = "/campus.png";
+const HERO_IMAGE = "/news-leadership.png";
+const FEATURE_IMAGE = "/news-tech.png";
 const STUDY_IMAGE = "/study.png";
 const CTA_IMAGE = "/news-sustainability.png";
+
+const DEMO_MESSAGES = [
+  { from: "student", text: "When is the add/drop deadline for this term?" },
+  {
+    from: "companion",
+    text: "Add/drop closes Friday, Sept 12 at 11:59pm. After that, withdrawals go through the Registrar with a W grade.",
+  },
+  { from: "student", text: "Where do I submit the withdrawal form?" },
+  {
+    from: "companion",
+    text: "Student Portal → Academic Records → Withdrawal Request. Your advisor is auto-notified once submitted.",
+  },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -25,6 +39,7 @@ export default function LandingPage() {
   const [welcomeVisible, setWelcomeVisible] = useState(true);
   const [welcomeFading, setWelcomeFading] = useState(false);
   const [heroIn, setHeroIn] = useState(false);
+  const [visibleMessages, setVisibleMessages] = useState(0);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -35,6 +50,24 @@ export default function LandingPage() {
   useEffect(() => {
     const t = setTimeout(() => setHeroIn(true), 80);
     return () => clearTimeout(t);
+  }, []);
+
+  // Play the demo conversation in on load, one bubble at a time
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (prefersReducedMotion) {
+      setVisibleMessages(DEMO_MESSAGES.length);
+      return;
+    }
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    DEMO_MESSAGES.forEach((_, i) => {
+      timers.push(
+        setTimeout(() => setVisibleMessages((v) => Math.max(v, i + 1)), 900 + i * 950)
+      );
+    });
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   // Reveal-on-scroll for below-the-fold sections
@@ -159,55 +192,46 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero — full-bleed panorama as the thesis, copy composed over it */}
-      <section className="relative overflow-hidden">
-        <div className="relative h-[58vh] min-h-[480px] max-h-[660px] w-full">
-          <img
-            src={HERO_IMAGE}
-            alt="Students walking across campus at golden hour"
-            className="hero-kenburns absolute inset-0 h-full w-full object-cover"
-            loading="eager"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B08] via-[#0D0B08]/45 to-[#0D0B08]/10" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0D0B08]/70 via-[#0D0B08]/10 to-transparent" />
-
-          <div className="relative h-full max-w-6xl mx-auto px-4 md:px-6 lg:px-10 flex flex-col justify-end pb-12 md:pb-14 lg:pb-16">
-            <div className="max-w-2xl">
+      {/* Hero — lecture hall as the thesis, live product demo as the proof */}
+      <section className="relative bg-[#FBF7E9] overflow-hidden">
+        <div className="absolute inset-0 hero-grain pointer-events-none" />
+        <div className="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-10 pt-10 md:pt-16 lg:pt-20 pb-16 md:pb-20 lg:pb-24">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+            {/* Copy + photo */}
+            <div>
               <div
-                className="hero-item inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] md:text-xs font-medium text-[#F3E2B3] mb-5 md:mb-7"
+                className="hero-item inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E8DDB0] text-[11px] md:text-xs font-medium text-[#B8941F] mb-6"
                 style={{ transitionDelay: "80ms" }}
                 data-in={heroIn}
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Trained on your university's own handbook, not the open web
+                Trained on your university's own handbook
               </div>
               <h1
-                className="hero-item font-serif italic font-medium text-[34px] sm:text-5xl md:text-6xl lg:text-[4.5rem] leading-[0.98] tracking-tight text-white text-balance"
+                className="hero-item font-serif text-[34px] sm:text-5xl md:text-[3.4rem] lg:text-[3.8rem] leading-[1.03] tracking-tight text-[#1A1A1A] text-balance"
                 style={{ transitionDelay: "180ms" }}
                 data-in={heroIn}
               >
-                Smarter learning,
-                <br />
-                <span className="not-italic font-black text-[#D4AF37]">
-                  starts here.
-                </span>
+                Every deadline, policy and
+                <br className="hidden lg:block" /> office hour —
+                <span className="italic text-[#B8941F]"> one question away.</span>
               </h1>
               <p
-                className="hero-item mt-5 md:mt-6 text-base md:text-xl text-white/85 max-w-lg leading-relaxed"
+                className="hero-item mt-6 text-base md:text-lg text-[#1A1A1A]/70 max-w-md leading-relaxed"
                 style={{ transitionDelay: "300ms" }}
                 data-in={heroIn}
               >
-                Your AI companion for every step of your university journey —
-                from academics and campus life to graduation and beyond.
+                Student Companion AI answers from your own university's
+                handbook and records — not a guess from the open web.
               </p>
               <div
-                className="hero-item mt-7 md:mt-8 flex flex-col sm:flex-row gap-3"
+                className="hero-item mt-8 flex flex-col sm:flex-row gap-3"
                 style={{ transitionDelay: "400ms" }}
                 data-in={heroIn}
               >
                 <Button
                   size="lg"
-                  className="bg-[#D4AF37] hover:bg-[#E8C35C] text-[#1A1A1A] h-12 px-7 text-base font-semibold transition-transform hover:-translate-y-0.5"
+                  className="bg-[#1A1A1A] hover:bg-black text-white h-12 px-7 text-base font-semibold transition-transform hover:-translate-y-0.5"
                   onClick={() => navigate("/signup")}
                 >
                   Get started — it's free
@@ -216,19 +240,83 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="bg-white/5 backdrop-blur-sm border-white/30 hover:bg-white/15 text-white h-12 px-7 text-base transition-transform hover:-translate-y-0.5"
+                  className="bg-white border-[#E8DDB0] hover:bg-[#FBF7E9] text-[#1A1A1A] h-12 px-7 text-base transition-transform hover:-translate-y-0.5"
                   onClick={() => navigate("/login")}
                 >
                   I already have an account
                 </Button>
               </div>
-              <p
-                className="hero-item mt-5 md:mt-6 text-xs md:text-sm text-white/60"
-                style={{ transitionDelay: "480ms" }}
+
+              <div
+                className="hero-item mt-10 relative rounded-2xl overflow-hidden shadow-xl"
+                style={{ transitionDelay: "500ms" }}
                 data-in={heroIn}
               >
-                For students and staff with a verified university email.
-              </p>
+                <img
+                  src={HERO_IMAGE}
+                  alt="A student speaking to a full lecture hall"
+                  className="w-full h-56 md:h-64 object-cover object-[50%_20%]"
+                  loading="eager"
+                />
+                <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
+              </div>
+            </div>
+
+            {/* Live product demo */}
+            <div
+              className="hero-item"
+              style={{ transitionDelay: "260ms" }}
+              data-in={heroIn}
+            >
+              <div className="relative rounded-2xl bg-white border border-[#E8DDB0] shadow-2xl overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-[#E8DDB0] bg-[#FBF7E9]">
+                  <img
+                    src={COMPANION_LOGO}
+                    alt=""
+                    className="w-6 h-6 rounded-md object-cover"
+                  />
+                  <span className="text-sm font-medium text-[#1A1A1A]">
+                    Student Companion AI
+                  </span>
+                  <span className="ml-auto flex items-center gap-1.5 text-[11px] text-[#1A1A1A]/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Live
+                  </span>
+                </div>
+                <div className="p-4 md:p-5 space-y-3 min-h-[340px] md:min-h-[380px]">
+                  {DEMO_MESSAGES.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`demo-bubble ${msg.from === "student" ? "flex justify-end" : "flex justify-start"}`}
+                      data-shown={i < visibleMessages}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          msg.from === "student"
+                            ? "bg-[#1A1A1A] text-white rounded-br-sm"
+                            : "bg-[#FBF7E9] border border-[#E8DDB0] text-[#1A1A1A] rounded-bl-sm"
+                        }`}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  {visibleMessages > 0 && visibleMessages < DEMO_MESSAGES.length && (
+                    <div className="flex justify-start">
+                      <div className="rounded-2xl rounded-bl-sm bg-[#FBF7E9] border border-[#E8DDB0] px-4 py-3 flex gap-1">
+                        <span className="typing-dot" />
+                        <span className="typing-dot" style={{ animationDelay: "0.15s" }} />
+                        <span className="typing-dot" style={{ animationDelay: "0.3s" }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="px-4 md:px-5 pb-4 md:pb-5">
+                  <div className="flex items-center gap-2 rounded-full border border-[#E8DDB0] bg-[#FBF7E9]/60 px-4 py-2.5 text-sm text-[#1A1A1A]/40">
+                    Ask about deadlines, policies, courses…
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -267,10 +355,37 @@ export default function LandingPage() {
         .animate-float-card {
           animation: floatCard 5s ease-in-out infinite;
         }
+        .hero-grain {
+          background-image: radial-gradient(#1A1A1A 0.5px, transparent 0.5px);
+          background-size: 18px 18px;
+          opacity: 0.04;
+        }
+        .demo-bubble {
+          opacity: 0;
+          transform: translateY(10px);
+          transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+        .demo-bubble[data-shown="true"] {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .typing-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 9999px;
+          background: #B8941F;
+          opacity: 0.5;
+          animation: typingDot 1s ease-in-out infinite;
+        }
+        @keyframes typingDot {
+          0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+          30%           { opacity: 1; transform: translateY(-3px); }
+        }
         @media (prefers-reduced-motion: reduce) {
           .hero-kenburns { animation: none; }
           .animate-float-card { animation: none; }
-          .hero-item, [data-reveal] {
+          .typing-dot { animation: none; }
+          .hero-item, [data-reveal], .demo-bubble {
             opacity: 1 !important;
             transform: none !important;
             transition: none !important;
@@ -304,13 +419,27 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="max-w-6xl mx-auto px-6 lg:px-10 py-24">
-        <div className="max-w-2xl mb-16" data-reveal>
-          <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
-            What you can do
-          </p>
-          <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight text-balance">
-            Built around the way students actually learn.
-          </h2>
+        <div className="grid lg:grid-cols-[1fr_1.1fr] gap-12 lg:gap-16 items-end mb-16">
+          <div data-reveal>
+            <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
+              What you can do
+            </p>
+            <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight text-balance">
+              Built around the way students actually work.
+            </h2>
+          </div>
+          <div
+            className="relative rounded-2xl overflow-hidden shadow-lg hidden lg:block"
+            data-reveal
+            style={{ transitionDelay: "100ms" }}
+          >
+            <img
+              src={FEATURE_IMAGE}
+              alt="Students collaborating around laptops in a study space"
+              className="w-full h-40 object-cover"
+              loading="lazy"
+            />
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
