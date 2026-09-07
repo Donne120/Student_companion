@@ -14,8 +14,12 @@ export default function ApiDocumentation() {
         <h1 className="text-3xl font-bold text-[#D4AF37]">API Documentation</h1>
       </div>
       
-      <p className="text-[#1A1A1A]/50 mb-6">
-        Complete documentation for the Student Companion AI API endpoints.
+      <p className="text-[#1A1A1A]/50 mb-2">
+        Reference documentation for the Student Companion AI API endpoints.
+      </p>
+      <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2 mb-6">
+        This reference may be out of date — verify request/response shapes
+        against the backend before integrating against them.
       </p>
 
       <Tabs defaultValue="chat">
@@ -61,7 +65,7 @@ export default function ApiDocumentation() {
                   <pre className="text-sm overflow-x-auto">
                     {`// Request
 {
-  "message": "Where is ALU located?",
+  "message": "What is the add/drop deadline this term?",
   "history": [
     { "role": "user", "content": "Hello" },
     { "role": "assistant", "content": "Hi there! How can I help you today?" }
@@ -79,8 +83,8 @@ export default function ApiDocumentation() {
                   <pre className="text-sm overflow-x-auto">
                     {`// Response
 {
-  "response": "ALU has campuses in Rwanda (Kigali) and Mauritius (Beau Plan)...",
-  "source": "ALU Brain: Campus Life",
+  "response": "Add/drop closes Friday, Sept 12 at 11:59pm...",
+  "source": "Academic Calendar",
   "confidence": 0.95
 }`}
                   </pre>
@@ -128,7 +132,7 @@ export default function ApiDocumentation() {
 - file: [binary document]
 - metadata: 
 {
-  "title": "ALU Campus Guide",
+  "title": "Student Handbook 2026",
   "category": "campus_services",
   "description": "Overview of campus facilities and services"
 }`}
@@ -146,7 +150,7 @@ export default function ApiDocumentation() {
   "documents": [
     {
       "id": "doc_123",
-      "title": "ALU Campus Guide",
+      "title": "Student Handbook 2026",
       "category": "campus_services",
       "dateAdded": "2023-08-15T14:30:00Z",
       "size": 1024567
@@ -184,7 +188,7 @@ export default function ApiDocumentation() {
   "averageResponseTime": 0.82,
   "userSatisfaction": 0.87,
   "topQueries": [
-    { "query": "ALU location", "count": 89 },
+    { "query": "add/drop deadline", "count": 89 },
     // More top queries...
   ],
   "queriesByCategory": {
