@@ -13,7 +13,7 @@ university is resolved automatically from their verified email domain; no
 manual "pick your school" step, no cross-tenant data leakage, one login for
 every campus on the platform.
 
-[**Live app**](https://chat.studentcompanionai.rw) · [Architecture](ARCHITECTURE.md) · [Report an issue](../../issues)
+[**Live app**](https://chat.studentcompanionai.rw) · [Report an issue](../../issues)
 
 </div>
 
@@ -97,10 +97,6 @@ The model answers from that context — and says "I don't know, here's
         ▼
 Answer streams back to the student, cited
 ```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full technical picture,
-including how new universities are onboarded and how tenant isolation is
-enforced end to end.
 
 <br />
 
