@@ -12,11 +12,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
-const HERO_IMAGE = "/news-tech.png";
 const COMPANION_LOGO = "/logo.png";
 
+const HERO_IMAGE = "/campus.png";
 const STUDY_IMAGE = "/study.png";
-const CAMPUS_IMAGE = "/cta-classroom.jpg";
+const CTA_IMAGE = "/news-sustainability.png";
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -128,67 +128,63 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-10 pt-10 md:pt-16 lg:pt-24 pb-14 md:pb-20 lg:pb-28">
-        <div className="grid lg:grid-cols-12 gap-8 md:gap-10 lg:gap-16 items-center">
-          <div className="lg:col-span-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FBF7E9] border border-[#E8DDB0] text-[11px] md:text-xs font-medium text-[#B8941F] mb-4 md:mb-6">
-              <Sparkles className="h-3.5 w-3.5" />
-              Trained on your university's own handbook, not the open web
-            </div>
-            <h1 className="font-serif text-[34px] sm:text-5xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight text-[#1A1A1A]">
-              Your AI Assistant for{" "}
-              <span className="text-[#D4AF37]">Smarter Learning.</span>
-            </h1>
-            <p className="mt-4 md:mt-6 text-base md:text-xl text-[#1A1A1A]/70 max-w-xl leading-relaxed">
-              Your AI companion for every step of your university journey —
-              from academics and campus life to graduation and beyond.
-            </p>
-            <div className="mt-6 md:mt-10 flex flex-col sm:flex-row gap-3">
-              <Button
-                size="lg"
-                className="bg-[#1A1A1A] hover:bg-black text-white h-12 px-7 text-base"
-                onClick={() => navigate("/signup")}
-              >
-                Get started — it's free
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-white border-[#1A1A1A]/20 hover:bg-[#FBF7E9] text-[#1A1A1A] h-12 px-7 text-base"
-                onClick={() => navigate("/login")}
-              >
-                I already have an account
-              </Button>
-            </div>
-            <p className="mt-4 md:mt-6 text-xs md:text-sm text-[#1A1A1A]/50">
-              For students and staff with a verified university email.
-            </p>
-          </div>
+      {/* Hero — full-bleed panorama as the thesis, copy composed over it */}
+      <section className="relative overflow-hidden">
+        <div className="relative h-[68vh] min-h-[520px] max-h-[760px] w-full">
+          <img
+            src={HERO_IMAGE}
+            alt="Students walking across campus at golden hour"
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0B08] via-[#0D0B08]/45 to-[#0D0B08]/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0D0B08]/70 via-[#0D0B08]/10 to-transparent" />
 
-          {/* Hero image with gold offset */}
-          <div className="lg:col-span-6 relative">
-            <div className="absolute -inset-3 lg:-inset-4 bg-[#D4AF37] rounded-3xl rotate-1" />
-            <div className="relative overflow-hidden rounded-3xl aspect-[4/5] shadow-2xl">
-              <img
-                src={HERO_IMAGE}
-                alt="Students collaborating in a study group"
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 text-white">
-                <p className="text-sm font-medium opacity-90">Built for your university</p>
-                <p className="text-xs opacity-70 mt-1">answers sourced from your own handbook</p>
+          <div className="relative h-full max-w-7xl mx-auto px-4 md:px-6 lg:px-10 flex flex-col justify-end pb-12 md:pb-16 lg:pb-20">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-[11px] md:text-xs font-medium text-[#F3E2B3] mb-5 md:mb-7">
+                <Sparkles className="h-3.5 w-3.5" />
+                Trained on your university's own handbook, not the open web
               </div>
+              <h1 className="font-serif italic font-medium text-[38px] sm:text-6xl md:text-7xl lg:text-[5.5rem] leading-[0.98] tracking-tight text-white text-balance">
+                Smarter learning,
+                <br />
+                <span className="not-italic font-black text-[#D4AF37]">
+                  starts here.
+                </span>
+              </h1>
+              <p className="mt-5 md:mt-7 text-base md:text-xl text-white/85 max-w-lg leading-relaxed">
+                Your AI companion for every step of your university journey —
+                from academics and campus life to graduation and beyond.
+              </p>
+              <div className="mt-7 md:mt-10 flex flex-col sm:flex-row gap-3">
+                <Button
+                  size="lg"
+                  className="bg-[#D4AF37] hover:bg-[#E8C35C] text-[#1A1A1A] h-12 px-7 text-base font-semibold"
+                  onClick={() => navigate("/signup")}
+                >
+                  Get started — it's free
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/5 backdrop-blur-sm border-white/30 hover:bg-white/15 text-white h-12 px-7 text-base"
+                  onClick={() => navigate("/login")}
+                >
+                  I already have an account
+                </Button>
+              </div>
+              <p className="mt-5 md:mt-7 text-xs md:text-sm text-white/60">
+                For students and staff with a verified university email.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Stat strip */}
-      <section className="border-y border-[#E8DDB0] bg-[#FBF7E9]/50">
+      <section className="border-b border-[#E8DDB0] bg-[#FBF7E9]/50">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
           {[
             { value: "24/7", label: "Instant answers" },
@@ -212,7 +208,7 @@ export default function LandingPage() {
           <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
             What you can do
           </p>
-          <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight">
+          <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight text-balance">
             Built around the way students actually learn.
           </h2>
         </div>
@@ -256,7 +252,7 @@ export default function LandingPage() {
             <div className="overflow-hidden rounded-3xl aspect-[5/4] shadow-xl">
               <img
                 src={STUDY_IMAGE}
-                alt="Student studying"
+                alt="Students studying together on campus"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
@@ -279,7 +275,7 @@ export default function LandingPage() {
             <p className="text-sm uppercase tracking-widest text-[#B8941F] font-medium mb-4">
               Always on
             </p>
-            <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight leading-tight">
+            <h2 className="font-serif text-3xl md:text-5xl text-[#1A1A1A] tracking-tight leading-tight text-balance">
               Knowledge of your university's entire handbook, ready when you need it.
             </h2>
             <p className="mt-6 text-lg text-[#1A1A1A]/70 leading-relaxed">
@@ -306,18 +302,19 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
         <div className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] text-white p-10 md:p-16">
-          <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0 opacity-25">
             <img
-              src={CAMPUS_IMAGE}
-              alt="Students working together in a classroom"
+              src={CTA_IMAGE}
+              alt="A modern, sustainable university residence building"
               className="w-full h-full object-cover"
               loading="lazy"
             />
           </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1A1A1A] via-[#1A1A1A]/80 to-[#1A1A1A]/20" />
           <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
           <div className="relative max-w-2xl">
             <GraduationCap className="h-10 w-10 text-[#D4AF37] mb-6" />
-            <h2 className="font-serif text-3xl md:text-5xl tracking-tight leading-tight">
+            <h2 className="font-serif text-3xl md:text-5xl tracking-tight leading-tight text-balance">
               Start your journey with the Companion today.
             </h2>
             <p className="mt-6 text-lg text-white/80 leading-relaxed">
