@@ -65,7 +65,13 @@ async function store(lead: Lead, profile: string) {
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  if (!projectId || !clientEmail || !privateKey) return; // storage optional
+  // Storage is optional, but say so plainly rather than returning silently —
+  // otherwise "not configured" looks identical to "saved successfully" in the
+  // logs, and the caller can't tell whether an enquiry is actually recoverable
+  // if email delivery fails.
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error("storage not configured (FIREBASE_* env vars unset)");
+  }
 
   const { getApps, initializeApp, cert } = await import("firebase-admin/app");
   const { getFirestore, FieldValue } = await import("firebase-admin/firestore");
