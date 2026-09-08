@@ -6,7 +6,99 @@
  * billed to us. Nothing here touches backend_hf, auth, or organizations.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { QUESTIONS } from "../src/pathfinder/questions";
+
+/**
+ * The accepted answers, declared here rather than imported from
+ * src/pathfinder/questions.ts.
+ *
+ * Two reasons. Practically, Vercel bundles each function on its own and an
+ * import reaching out into src/ fails to resolve at runtime. Deliberately,
+ * this list is a server-side allowlist for untrusted public input — it should
+ * not change silently because someone edited a frontend file.
+ *
+ * It must stay in step with the question set the page renders. If you add or
+ * reword an option there, mirror it here or the server will reject it as
+ * invalid. `npm run check:pathfinder` verifies the two agree.
+ */
+const QUESTIONS: Array<{
+  key: string;
+  label: string;
+  type: "choice" | "multi";
+  max?: number;
+  options: string[];
+}> = [
+  {
+    key: "country",
+    label: "Where you are",
+    type: "choice",
+    options: ["Rwanda", "Kenya", "Uganda", "Tanzania", "Burundi", "DR Congo", "Somewhere else"],
+  },
+  {
+    key: "track",
+    label: "What you studied",
+    type: "choice",
+    options: [
+      "Maths, Physics & Computer Science (MPC)",
+      "Physics, Chemistry & Biology (PCB)",
+      "Maths, Chemistry & Biology (MCB)",
+      "Maths, Economics & Geography (MEG)",
+      "History, Economics & Geography (HEG)",
+      "Languages / Humanities",
+      "TVET or technical school",
+      "Something else",
+    ],
+  },
+  {
+    key: "strengths",
+    label: "Where you do well",
+    type: "multi",
+    max: 3,
+    options: [
+      "Solving maths problems",
+      "Writing and explaining",
+      "Building or fixing things",
+      "Persuading and organising people",
+      "Caring for people",
+      "Drawing, design or music",
+      "Working with computers",
+      "Experiments and lab work",
+    ],
+  },
+  {
+    key: "interests",
+    label: "What pulls you",
+    type: "multi",
+    max: 3,
+    options: [
+      "Taking apart a device to see how it works",
+      "Helping a neighbour who is unwell",
+      "Running a small business or side hustle",
+      "Coding or making something on a computer",
+      "Farming, animals or the environment",
+      "Filming, editing, telling a story",
+      "Debating an issue that matters",
+      "Teaching a younger student",
+    ],
+  },
+  {
+    key: "constraint",
+    label: "What's realistic",
+    type: "choice",
+    options: [
+      "I need a scholarship or very low fees",
+      "I need to stay close to home",
+      "I want to study abroad if I can",
+      "I want the fastest route to earning",
+      "Cost is not my main worry",
+    ],
+  },
+  {
+    key: "horizon",
+    label: "How far ahead",
+    type: "choice",
+    options: ["This coming intake", "Next year", "I'm still deciding — just exploring"],
+  },
+];
 
 /**
  * In-memory per-IP rate limit.

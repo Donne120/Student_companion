@@ -12,5 +12,5 @@
     "resolveJsonModule": true,
     "isolatedModules": true
   },
-  "include": ["api", "src/pathfinder"]
+  "include": ["api"]
 }
