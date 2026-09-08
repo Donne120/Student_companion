@@ -159,13 +159,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // student their submission failed — it didn't.
     if (stored) return res.status(200).json({ ok: true });
 
-    const body: Record<string, string> = {
+    // The upstream reason is included deliberately. It comes from Resend, not
+    // from the student's input, and without it this failure is undiagnosable
+    // from the outside — which has already cost several rounds of guessing.
+    // It reveals nothing about the submitter and never includes the API key.
+    return res.status(502).json({
       error: "We couldn't send that. Please try again shortly.",
-    };
-    if (process.env.PATHFINDER_DEBUG === "1") {
-      body.detail = err instanceof Error ? err.message : String(err);
-    }
-    return res.status(502).json(body);
+      detail: err instanceof Error ? err.message : String(err),
+    });
   }
 
   return res.status(200).json({ ok: true });
