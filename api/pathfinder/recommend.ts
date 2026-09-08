@@ -7,13 +7,16 @@
  * Isolated from the platform: no auth, no organization, no backend_hf.
  *
  * Required environment variables (set in Vercel):
- *   TAVILY_API_KEY     — tavily.com, free tier is enough to launch
- *   ANTHROPIC_API_KEY  — for the reasoning step
+ *   TAVILY_API_KEY  — tavily.com, free tier is enough to launch
+ *   GROQ_API_KEY    — console.groq.com, free tier, no card required
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared";
 
-const MODEL = "claude-sonnet-5";
+// Groq's free tier runs this comfortably. The job here is summarising real
+// search results into a fixed JSON shape, not open-ended reasoning, so a
+// mid-size open model is a sound fit rather than a compromise.
+const MODEL = "llama-3.3-70b-versatile";
 
 /** Bias search toward official institutional sources, away from blog spam. */
 const PREFERRED_DOMAINS = [
@@ -89,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const tavilyKey = process.env.TAVILY_API_KEY;
-  const modelKey = process.env.ANTHROPIC_API_KEY;
+  const modelKey = process.env.GROQ_API_KEY;
   if (!tavilyKey || !modelKey) {
     // Explicit rather than silently returning invented data.
     return res.status(503).json({
@@ -120,18 +123,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 900)}`)
       .join("\n\n");
 
-    const ai = await fetch("https://api.anthropic.com/v1/messages", {
+    const ai = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": modelKey,
-        "anthropic-version": "2023-06-01",
+        Authorization: `Bearer ${modelKey}`,
       },
       body: JSON.stringify({
         model: MODEL,
         max_tokens: 2000,
-        system: SYSTEM,
+        temperature: 0.4,
+        // Guarantees parseable output instead of hoping the model obeys the
+        // "return only JSON" instruction.
+        response_format: { type: "json_object" },
         messages: [
+          { role: "system", content: SYSTEM },
           {
             role: "user",
             content: `STUDENT PROFILE\n${profile}\n\nSEARCH RESULTS\n${sources}`,
@@ -142,8 +148,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!ai.ok) throw new Error(`Model call failed (${ai.status})`);
 
-    const payload = (await ai.json()) as { content?: Array<{ text?: string }> };
-    const text = payload.content?.[0]?.text?.trim() ?? "";
+    const payload = (await ai.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const text = payload.choices?.[0]?.message?.content?.trim() ?? "";
     // Models occasionally wrap JSON in a fence despite instructions.
     const json = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
 

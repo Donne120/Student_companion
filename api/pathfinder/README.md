@@ -15,7 +15,7 @@ recommendations.
 | Variable | Required | What it's for |
 | --- | --- | --- |
 | `TAVILY_API_KEY` | yes | Live web search. Free tier at [tavily.com](https://tavily.com) is enough to launch. |
-| `ANTHROPIC_API_KEY` | yes | Turns the search results into the report. |
+| `GROQ_API_KEY` | yes | Turns the search results into the report. Free tier at [console.groq.com](https://console.groq.com), no card required. |
 | `RESEND_API_KEY` | yes, for the form | Sends each enquiry by email. Free tier at [resend.com](https://resend.com). |
 | `LEAD_NOTIFY_EMAIL` | no | Where enquiries go. Defaults to `studentcompanionai@gmail.com`. |
 | `FIREBASE_PROJECT_ID` | no | Enables storing leads as well as emailing them. |
@@ -27,6 +27,16 @@ only on the server and never reach the browser.
 
 If the Firebase variables are omitted, enquiries are still emailed — storage is
 a safety net, not the delivery path.
+
+All three have free tiers, so Pathfinder costs nothing to run at launch
+volumes.
+
+### Changing the model provider
+
+`recommend.ts` calls Groq's OpenAI-compatible endpoint. Swapping to another
+provider means changing the URL, the `MODEL` constant and the env var name —
+the request and response shapes are the standard OpenAI ones, so most
+providers are close to a drop-in.
 
 ## Sending from your own domain
 
