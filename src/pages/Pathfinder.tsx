@@ -409,11 +409,11 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
       <div className="mt-5 rounded-xl border border-[#D4AF37] bg-[#FBF7E9] p-4">
         <h4 className="font-semibold text-[14.5px] mb-1 flex items-center gap-2">
           <Check className="h-4 w-4 text-[#B8941F]" />
-          We've got your details
+          Your request has been sent
         </h4>
         <p className="text-[12.5px] text-[#6B6355]">
-          Someone will get in touch to help you take the next step. Keep this report — you can
-          screenshot it or leave the page open.
+          An adviser will contact you on the email or phone number you gave us. In the meantime,
+          keep this report — screenshot it, or leave this page open.
         </p>
       </div>
     );
@@ -421,10 +421,27 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
 
   return (
     <form onSubmit={send} className="mt-5 rounded-xl border border-[#D4AF37] bg-[#FBF7E9] p-4">
-      <h4 className="font-semibold text-[14.5px] mb-1">Want to talk to a real person?</h4>
+      <h4 className="font-semibold text-[14.5px] mb-1">
+        Still not sure which course is right for you?
+      </h4>
+      <p className="text-[12.5px] text-[#6B6355] mb-2.5">
+        Get free advice from a real adviser — someone who can talk you through:
+      </p>
+      <ul className="text-[12.5px] text-[#4A4437] mb-3.5 space-y-1">
+        {[
+          "Which course actually fits you, and why",
+          "How to apply, and what the entry requirements mean",
+          "Scholarships and how to pay for your studies",
+          "What happens after you graduate",
+        ].map((item) => (
+          <li key={item} className="flex items-start gap-2">
+            <span className="mt-[7px] w-1 h-1 rounded-full bg-[#D4AF37] flex-shrink-0" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
       <p className="text-[12.5px] text-[#6B6355] mb-3.5">
-        Leave your details and we'll get back to you — to answer questions, or to connect you with
-        someone from a university who can advise you properly. It's free.
+        Leave your details below and we'll reach out. It costs nothing.
       </p>
 
       <div className="grid sm:grid-cols-2 gap-2.5">
@@ -455,7 +472,7 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
         onChange={(e) => setMessage(e.target.value)}
         rows={2}
         maxLength={600}
-        placeholder="Anything you'd like us to know? (optional)"
+        placeholder="What would you like advice on? (optional)"
         className="w-full text-[13.5px] px-3 py-2.5 rounded-[9px] border border-[#E8DDB0] bg-white mt-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
       />
 
@@ -467,7 +484,7 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
         className="mt-3 inline-flex items-center gap-2 text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] bg-[#1A1A1A] text-white hover:bg-black disabled:opacity-50"
       >
         {sending ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {sending ? "Sending…" : "Send my details"}
+        {sending ? "Sending…" : "Ask for free advice"}
       </button>
       <p className="text-[11px] text-[#6B6355] mt-2.5">
         We use this only to contact you about your studies. Your answers are included so we can help
