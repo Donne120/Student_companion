@@ -125,6 +125,24 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------------------------------------------------------------------
+    // pathfinder_leads/{id} — contact details submitted by high-school
+    // leavers through the public Pathfinder tool (/pathfinder).
+    //
+    // Closed to ALL client access, deliberately. These are written only by
+    // the server (api/pathfinder/lead.ts, Firebase Admin SDK), which bypasses
+    // these rules. The people submitting have no account, so there is no
+    // "owner" to scope reads to — and the records hold a minor's name, email
+    // and phone number. Anything less than a full client lockdown here would
+    // let one student read another's contact details.
+    //
+    // Read them in the Firebase console, or build an authenticated admin
+    // view that goes through the server — never by loosening this rule.
+    // ---------------------------------------------------------------------
+    match /pathfinder_leads/{id} {
+      allow read, write: if false;
+    }
+
     // Everything else stays locked down — the same safe default this
     // project started with, now scoped to only the paths above instead of
     // applying (and silently breaking) everything.

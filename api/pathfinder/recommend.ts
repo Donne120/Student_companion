@@ -1,0 +1,171 @@
+/**
+ * POST /api/pathfinder/recommend
+ *
+ * Takes a validated answer set, searches the live web for real university
+ * programmes, and asks the model to turn both into a structured report.
+ *
+ * Isolated from the platform: no auth, no organization, no backend_hf.
+ *
+ * Required environment variables (set in Vercel):
+ *   TAVILY_API_KEY     — tavily.com, free tier is enough to launch
+ *   ANTHROPIC_API_KEY  — for the reasoning step
+ */
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared";
+
+const MODEL = "claude-sonnet-5";
+
+/** Bias search toward official institutional sources, away from blog spam. */
+const PREFERRED_DOMAINS = [
+  "ac.rw", "edu", "ac.ke", "ac.ug", "ac.tz", "edu.rw",
+  "mineduc.gov.rw", "hec.gov.rw",
+];
+
+interface TavilyResult {
+  title: string;
+  url: string;
+  content: string;
+}
+
+async function search(query: string, key: string): Promise<TavilyResult[]> {
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      api_key: key,
+      query,
+      search_depth: "advanced",
+      max_results: 10,
+      include_domains: PREFERRED_DOMAINS,
+    }),
+  });
+  if (!res.ok) throw new Error(`Search failed (${res.status})`);
+  const data = (await res.json()) as { results?: TavilyResult[] };
+  return data.results ?? [];
+}
+
+/** Retry once without the domain filter — a narrow filter can return nothing. */
+async function searchWithFallback(query: string, key: string): Promise<TavilyResult[]> {
+  const first = await search(query, key);
+  if (first.length > 0) return first;
+
+  const res = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ api_key: key, query, search_depth: "advanced", max_results: 10 }),
+  });
+  if (!res.ok) return [];
+  return ((await res.json()) as { results?: TavilyResult[] }).results ?? [];
+}
+
+const SYSTEM = `You advise students in East Africa who are finishing secondary school and choosing what to study.
+
+You will be given a student's profile and a set of real web search results about universities and programmes.
+
+Rules you must follow:
+- Recommend fields that genuinely follow from the student's subjects, strengths and interests. Do not flatter; if a field is a stretch, label it "Worth exploring" and say why.
+- Only name universities and programmes that appear in the supplied search results. Never invent an institution, a programme name, or a URL.
+- Copy each school's URL exactly from the search results. If you have no URL for a school, omit that school entirely.
+- Never state fees, deadlines or exact entry cut-offs as fact — those change and being wrong about them harms the student. Refer them to the university's page instead.
+- Respect the student's stated constraint (cost, location, speed to earning). Advice that ignores it is useless.
+- Write plainly, to an 18-year-old, without jargon or hype. Be encouraging but honest.
+
+Return ONLY valid JSON, no markdown fence, matching exactly:
+{
+  "headline": string,
+  "summary": string,
+  "fields": [{ "name": string, "strength": "Strong match" | "Good match" | "Worth exploring", "reason": string, "tags": string[] }],
+  "schools": [{ "name": string, "location": string, "kind": string, "programme": string, "detail": string, "url": string }],
+  "careers": { "summary": string, "roles": string[] }
+}
+Give 2-3 fields, 2-4 schools, and 3-6 career roles.`;
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (!methodGuard(req, res)) return;
+
+  // 5 reports per IP per 10 minutes — generous for a real student, a brake on scripts.
+  if (!rateLimit(req, 5, 10 * 60 * 1000)) {
+    return res.status(429).json({ error: "Too many requests. Please wait a minute." });
+  }
+
+  const tavilyKey = process.env.TAVILY_API_KEY;
+  const modelKey = process.env.ANTHROPIC_API_KEY;
+  if (!tavilyKey || !modelKey) {
+    // Explicit rather than silently returning invented data.
+    return res.status(503).json({
+      error: "Pathfinder isn't switched on yet. Please check back shortly.",
+    });
+  }
+
+  const answers = parseAnswers((req.body as { answers?: unknown })?.answers);
+  if (!answers) return res.status(400).json({ error: "Please answer the questions again." });
+
+  const profile = summarise(answers);
+  const country = (answers.country as string) || "Rwanda";
+  const track = (answers.track as string) || "";
+
+  try {
+    const results = await searchWithFallback(
+      `universities in ${country} undergraduate degree programmes admission ${track}`,
+      tavilyKey
+    );
+
+    if (results.length === 0) {
+      return res.status(502).json({
+        error: "We couldn't find current university information just now. Please try again shortly.",
+      });
+    }
+
+    const sources = results
+      .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 900)}`)
+      .join("\n\n");
+
+    const ai = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": modelKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 2000,
+        system: SYSTEM,
+        messages: [
+          {
+            role: "user",
+            content: `STUDENT PROFILE\n${profile}\n\nSEARCH RESULTS\n${sources}`,
+          },
+        ],
+      }),
+    });
+
+    if (!ai.ok) throw new Error(`Model call failed (${ai.status})`);
+
+    const payload = (await ai.json()) as { content?: Array<{ text?: string }> };
+    const text = payload.content?.[0]?.text?.trim() ?? "";
+    // Models occasionally wrap JSON in a fence despite instructions.
+    const json = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+
+    let report: unknown;
+    try {
+      report = JSON.parse(json);
+    } catch {
+      throw new Error("Model returned malformed JSON");
+    }
+
+    // Drop any school the model produced without a usable link, rather than
+    // rendering a dead end for the student.
+    const r = report as { schools?: Array<{ url?: string }> };
+    if (Array.isArray(r.schools)) {
+      r.schools = r.schools.filter((s) => typeof s.url === "string" && s.url.startsWith("http"));
+    }
+
+    return res.status(200).json(report);
+  } catch (err) {
+    console.error("[pathfinder/recommend]", err);
+    return res.status(502).json({
+      error: "We couldn't build your report just now. Please try again shortly.",
+    });
+  }
+}

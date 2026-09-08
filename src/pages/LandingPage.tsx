@@ -9,6 +9,8 @@ import {
   GraduationCap,
   MessageSquare,
   Sparkles,
+  Compass as CompassIcon,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -44,6 +46,15 @@ export default function LandingPage() {
   const [typingText, setTypingText] = useState("");
   const [typingIndex, setTypingIndex] = useState<number | null>(null);
   const [waitingForReply, setWaitingForReply] = useState(false);
+  // Dismissible so it never becomes an obstacle for a returning student who
+  // isn't the audience for it. Per-browser only; no account is involved.
+  const [pathfinderDismissed, setPathfinderDismissed] = useState(() => {
+    try {
+      return localStorage.getItem("sc_pathfinder_dismissed") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   // The connecting arrow is drawn between two real elements, so it's measured
   // from their actual boxes rather than guessed offsets — that keeps it
@@ -804,6 +815,43 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
+      {/* Pathfinder entry — free, public, for school leavers who have no
+          account and never will. Fixed so it's reachable from anywhere on
+          the page, which is the point: they arrive from a school or a
+          ministry link, not from our signup funnel. */}
+      {!pathfinderDismissed && (
+        <div className="fixed bottom-4 right-4 z-40 max-w-[340px] hidden sm:block">
+          <div className="relative flex items-center gap-3 bg-white border border-[#E8DDB0] border-l-4 border-l-[#D4AF37] rounded-2xl shadow-[0_12px_34px_rgba(26,26,26,0.14)] pl-4 pr-9 py-3.5">
+            <button
+              onClick={() => {
+                setPathfinderDismissed(true);
+                try {
+                  localStorage.setItem("sc_pathfinder_dismissed", "1");
+                } catch {
+                  /* private mode — dismissing for this view is enough */
+                }
+              }}
+              aria-label="Dismiss"
+              className="absolute top-2 right-2 p-1 rounded-full text-[#1A1A1A]/40 hover:text-[#1A1A1A] hover:bg-[#FBF7E9]"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+            <span className="w-9 h-9 flex-none rounded-[9px] bg-[#FBF7E9] border border-[#E8DDB0] grid place-items-center">
+              <CompassIcon className="h-4 w-4 text-[#B8941F]" />
+            </span>
+            <button onClick={() => navigate("/pathfinder")} className="text-left">
+              <span className="block text-[10px] uppercase tracking-[0.07em] text-[#B8941F] font-bold">
+                Free · No account
+              </span>
+              <span className="block text-[13.5px] font-semibold">Finishing high school?</span>
+              <span className="block text-xs text-[#6B6355]">
+                Find the course and university that fit you.
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+
       <footer className="bg-[#1A1A1A] text-white">
         <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-16 pb-10">
           <div className="grid md:grid-cols-[1.3fr_1fr_1fr] gap-10 md:gap-12 pb-12 border-b border-white/10">
