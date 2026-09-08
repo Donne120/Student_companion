@@ -14,7 +14,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const COMPANION_LOGO = "/logo-icon.png";
 
-const HERO_IMAGE = "/news-leadership.png";
+const HERO_VIDEO = "/hero-demo.mp4";
+const HERO_VIDEO_POSTER = "/hero-demo-poster.jpg";
 const FEATURE_IMAGE = "/news-tech.png";
 const STUDY_IMAGE = "/study.png";
 const CTA_IMAGE = "/news-sustainability.png";
@@ -253,11 +254,16 @@ export default function LandingPage() {
                 style={{ transitionDelay: "500ms" }}
                 data-in={heroIn}
               >
-                <img
-                  src={HERO_IMAGE}
-                  alt="A student speaking to a full lecture hall"
-                  className="w-full h-56 md:h-64 object-cover object-[50%_20%]"
-                  loading="eager"
+                <video
+                  src={HERO_VIDEO}
+                  poster={HERO_VIDEO_POSTER}
+                  className="w-full h-56 md:h-64 object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  aria-label="A student asking Student Companion AI a question on their phone"
                 />
                 <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
               </div>
