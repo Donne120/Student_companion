@@ -11,7 +11,11 @@
  *   GROQ_API_KEY    — console.groq.com, free tier, no card required
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared";
+// The .js extension is required: package.json sets "type": "module", so this
+// runs as ESM on Vercel, and Node's ESM resolver does not add extensions the
+// way CommonJS did. Without it the module fails to load and every request
+// returns FUNCTION_INVOCATION_FAILED before the handler ever runs.
+import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 
 // Groq's free tier runs this comfortably. The job here is summarising real
 // search results into a fixed JSON shape, not open-ended reasoning, so a

@@ -16,7 +16,8 @@
  *   FIREBASE_PRIVATE_KEY      — service-account key ("\n" escapes are handled)
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared";
+// See the note in recommend.ts — the .js extension is required under ESM.
+import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 
 const NOTIFY_TO = process.env.LEAD_NOTIFY_EMAIL || "studentcompanionai@gmail.com";
 
