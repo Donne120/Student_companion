@@ -21,6 +21,14 @@ import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 
 const NOTIFY_TO = process.env.LEAD_NOTIFY_EMAIL || "studentcompanionai@gmail.com";
 
+/**
+ * Resend's shared onboarding@resend.dev sender works without any setup, but
+ * only delivers to the address that owns the Resend account. Once a domain is
+ * verified in Resend, set LEAD_FROM_EMAIL (e.g. "Pathfinder
+ * <pathfinder@studentcompanionai.rw>") to send to anyone.
+ */
+const FROM_ADDRESS = process.env.LEAD_FROM_EMAIL || "Pathfinder <onboarding@resend.dev>";
+
 interface Lead {
   name: string;
   email: string;
@@ -87,14 +95,19 @@ async function notify(lead: Lead, profile: string, key: string) {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
     body: JSON.stringify({
-      from: "Pathfinder <onboarding@resend.dev>",
+      from: FROM_ADDRESS,
       to: [NOTIFY_TO],
-      reply_to: lead.email,
+      // Resend's current API uses replyTo; the older reply_to is rejected
+      // with a 422, which is invisible without reading the response body.
+      replyTo: lead.email,
       subject: `Pathfinder enquiry — ${lead.name}`,
       html: body,
     }),
   });
-  if (!res.ok) throw new Error(`Email failed (${res.status})`);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Resend ${res.status}: ${detail.slice(0, 300)}`);
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -120,19 +133,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // Store first. If email delivery fails, the enquiry must still be recorded —
+  // a student who asked for help should never be lost because of a mail
+  // provider problem. Storage is optional (needs the FIREBASE_* vars), so a
+  // failure here is logged, not fatal.
+  let stored = false;
+  try {
+    await store(lead, profile);
+    stored = true;
+  } catch (err) {
+    console.error("[pathfinder/lead] store", err);
+  }
+
   try {
     await notify(lead, profile, resendKey);
   } catch (err) {
     console.error("[pathfinder/lead] email", err);
-    return res.status(502).json({ error: "We couldn't send that. Please try again shortly." });
-  }
+    // If the record was saved we can still follow up, so don't tell the
+    // student their submission failed — it didn't.
+    if (stored) return res.status(200).json({ ok: true });
 
-  // Storage is a safety net, not the delivery path. If it fails the student
-  // has still reached us by email, so don't fail their submission for it.
-  try {
-    await store(lead, profile);
-  } catch (err) {
-    console.error("[pathfinder/lead] store", err);
+    const body: Record<string, string> = {
+      error: "We couldn't send that. Please try again shortly.",
+    };
+    if (process.env.PATHFINDER_DEBUG === "1") {
+      body.detail = err instanceof Error ? err.message : String(err);
+    }
+    return res.status(502).json(body);
   }
 
   return res.status(200).json({ ok: true });
