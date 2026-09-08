@@ -1,5 +1,14 @@
 // Student Companion AI — minimal offline shell service worker.
-const CACHE = 'sca-v1';
+//
+// Static build assets (/assets/*.js, /assets/*.css) are content-hashed by
+// Vite — a new deploy ships new filenames, never mutates an old one. That
+// means it's always correct to go to the network first for them; the old
+// cache-first strategy here caused real deploys to appear to "not update"
+// because a browser that had cached an old hashed bundle would keep being
+// served that exact old file, even through a hard refresh, until the cache
+// happened to be evicted. Network-first with a cache fallback (for offline
+// use) fixes that while keeping the offline shell working.
+const CACHE = 'sca-v2';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo.png'];
 
 self.addEventListener('install', (event) => {
@@ -36,19 +45,20 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache-first with background update.
+  // Static assets: network first (so a new deploy is always picked up),
+  // fall back to cache only when offline. Still caches a fresh copy of
+  // whatever the network returns, so the offline shell stays usable.
   if (url.origin === self.location.origin) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        const network = fetch(request).then((response) => {
+      fetch(request)
+        .then((response) => {
           if (response && response.status === 200) {
             const copy = response.clone();
             caches.open(CACHE).then((cache) => cache.put(request, copy));
           }
           return response;
-        }).catch(() => cached);
-        return cached || network;
-      })
+        })
+        .catch(() => caches.match(request))
     );
   }
 });

@@ -270,15 +270,19 @@ export default function LandingPage() {
         <div className="absolute inset-0 hero-grain pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-10 pt-10 md:pt-16 lg:pt-20 pb-16 md:pb-20 lg:pb-24">
           <div className="relative grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
-            {/* Connecting arrow: chat demo -> the video proof, desktop only */}
+            {/* Connecting arrow: chat demo -> the video proof, desktop only.
+                Spans the full grid row; endpoints are positioned in percent
+                so they track the actual column split (1.05fr left / 1fr
+                right) instead of guessed pixel offsets. */}
             <svg
-              className="hero-arrow hidden lg:block absolute z-10 pointer-events-none"
-              style={{ right: "26%", top: "56%", width: "180px", height: "160px", overflow: "visible" }}
-              viewBox="0 0 180 160"
+              className="hero-arrow hidden lg:block absolute inset-0 z-10 pointer-events-none w-full h-full"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
               fill="none"
             >
               <path
-                d="M 165 15 C 90 15, 40 60, 20 130"
+                d="M 63 38 C 58 55, 52 62, 47 68"
+                vectorEffect="non-scaling-stroke"
                 stroke="#D4AF37"
                 strokeWidth="2.5"
                 strokeLinecap="round"
@@ -286,7 +290,8 @@ export default function LandingPage() {
                 className="hero-arrow-path"
               />
               <path
-                d="M 20 130 L 10 112 M 20 130 L 34 118"
+                d="M 47 68 L 46 60 M 47 68 L 54 65"
+                vectorEffect="non-scaling-stroke"
                 stroke="#D4AF37"
                 strokeWidth="2.5"
                 strokeLinecap="round"
