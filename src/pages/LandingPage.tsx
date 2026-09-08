@@ -41,6 +41,9 @@ export default function LandingPage() {
   const [welcomeFading, setWelcomeFading] = useState(false);
   const [heroIn, setHeroIn] = useState(false);
   const [visibleMessages, setVisibleMessages] = useState(0);
+  const [typingText, setTypingText] = useState("");
+  const [typingIndex, setTypingIndex] = useState<number | null>(null);
+  const [waitingForReply, setWaitingForReply] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -53,8 +56,10 @@ export default function LandingPage() {
     return () => clearTimeout(t);
   }, []);
 
-  // Play the demo conversation on a loop: bubble in one at a time, hold on
-  // the finished conversation, then clear and replay from the start.
+  // Play the demo conversation on a loop, typed out character by character —
+  // student messages type in like a real keystroke, companion messages
+  // appear after a "thinking" pause and stream in the same way — then hold
+  // on the finished conversation, clear, and replay from the start.
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -65,30 +70,75 @@ export default function LandingPage() {
     }
 
     let cancelled = false;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const schedule = (fn: () => void, delay: number) => {
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const intervals: ReturnType<typeof setInterval>[] = [];
+    const after = (fn: () => void, delay: number) => {
       const t = setTimeout(() => {
         if (!cancelled) fn();
       }, delay);
-      timers.push(t);
+      timeouts.push(t);
     };
 
-    const HOLD_MS = 3200; // pause on the completed conversation before replaying
-    const RESET_PAUSE_MS = 600; // beat on the empty state before it starts again
+    const STUDENT_CPS = 32; // characters typed per second for the student
+    const COMPANION_CPS = 55; // faster, streamed feel for the AI response
+    const THINKING_MS = 700; // pause before the companion "starts replying"
+    const GAP_AFTER_MESSAGE_MS = 550; // beat before the next bubble starts
+    const HOLD_MS = 3000; // pause on the completed conversation before replaying
+    const RESET_PAUSE_MS = 700; // beat on the empty state before it starts again
 
-    const playOnce = (startAt: number) => {
-      DEMO_MESSAGES.forEach((_, i) => {
-        schedule(() => setVisibleMessages((v) => Math.max(v, i + 1)), startAt + 900 + i * 950);
-      });
-      const endOfConversation = startAt + 900 + (DEMO_MESSAGES.length - 1) * 950;
-      schedule(() => setVisibleMessages(0), endOfConversation + HOLD_MS);
-      schedule(() => playOnce(endOfConversation + HOLD_MS + RESET_PAUSE_MS), endOfConversation + HOLD_MS + RESET_PAUSE_MS);
+    const typeMessage = (index: number, onDone: () => void) => {
+      const msg = DEMO_MESSAGES[index];
+      const cps = msg.from === "student" ? STUDENT_CPS : COMPANION_CPS;
+      setTypingIndex(index);
+      setTypingText("");
+      setWaitingForReply(false);
+
+      let pos = 0;
+      const id = setInterval(() => {
+        if (cancelled) {
+          clearInterval(id);
+          return;
+        }
+        pos += 1;
+        setTypingText(msg.text.slice(0, pos));
+        if (pos >= msg.text.length) {
+          clearInterval(id);
+          setVisibleMessages((v) => Math.max(v, index + 1));
+          setTypingIndex(null);
+          setTypingText("");
+          onDone();
+        }
+      }, 1000 / cps);
+      intervals.push(id);
     };
 
-    playOnce(0);
+    const playFrom = (index: number) => {
+      if (cancelled) return;
+      if (index >= DEMO_MESSAGES.length) {
+        after(() => {
+          setVisibleMessages(0);
+          setWaitingForReply(false);
+          after(() => playFrom(0), RESET_PAUSE_MS);
+        }, HOLD_MS);
+        return;
+      }
+
+      const isCompanion = DEMO_MESSAGES[index].from === "companion";
+      const start = () => typeMessage(index, () => after(() => playFrom(index + 1), GAP_AFTER_MESSAGE_MS));
+
+      if (isCompanion) {
+        setWaitingForReply(true);
+        after(start, THINKING_MS);
+      } else {
+        start();
+      }
+    };
+
+    playFrom(0);
     return () => {
       cancelled = true;
-      timers.forEach(clearTimeout);
+      timeouts.forEach(clearTimeout);
+      intervals.forEach(clearInterval);
     };
   }, []);
 
@@ -219,7 +269,31 @@ export default function LandingPage() {
       <section className="relative bg-[#FBF7E9] overflow-hidden">
         <div className="absolute inset-0 hero-grain pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-10 pt-10 md:pt-16 lg:pt-20 pb-16 md:pb-20 lg:pb-24">
-          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+          <div className="relative grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
+            {/* Connecting arrow: chat demo -> the video proof, desktop only */}
+            <svg
+              className="hero-arrow hidden lg:block absolute z-10 pointer-events-none"
+              style={{ right: "26%", top: "56%", width: "180px", height: "160px", overflow: "visible" }}
+              viewBox="0 0 180 160"
+              fill="none"
+            >
+              <path
+                d="M 165 15 C 90 15, 40 60, 20 130"
+                stroke="#D4AF37"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeDasharray="6 7"
+                className="hero-arrow-path"
+              />
+              <path
+                d="M 20 130 L 10 112 M 20 130 L 34 118"
+                stroke="#D4AF37"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+
             {/* Copy + photo */}
             <div>
               <div
@@ -312,24 +386,30 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div className="p-4 md:p-5 space-y-3 min-h-[340px] md:min-h-[380px]">
-                  {DEMO_MESSAGES.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`demo-bubble ${msg.from === "student" ? "flex justify-end" : "flex justify-start"}`}
-                      data-shown={i < visibleMessages}
-                    >
+                  {DEMO_MESSAGES.map((msg, i) => {
+                    const isComplete = i < visibleMessages;
+                    const isTypingThis = i === typingIndex;
+                    if (!isComplete && !isTypingThis) return null;
+                    return (
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                          msg.from === "student"
-                            ? "bg-[#1A1A1A] text-white rounded-br-sm"
-                            : "bg-[#FBF7E9] border border-[#E8DDB0] text-[#1A1A1A] rounded-bl-sm"
-                        }`}
+                        key={i}
+                        className={`demo-bubble ${msg.from === "student" ? "flex justify-end" : "flex justify-start"}`}
+                        data-shown={isComplete || isTypingThis}
                       >
-                        {msg.text}
+                        <div
+                          className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                            msg.from === "student"
+                              ? "bg-[#1A1A1A] text-white rounded-br-sm"
+                              : "bg-[#FBF7E9] border border-[#E8DDB0] text-[#1A1A1A] rounded-bl-sm"
+                          }`}
+                        >
+                          {isComplete ? msg.text : typingText}
+                          {isTypingThis && <span className="typing-cursor" />}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {visibleMessages > 0 && visibleMessages < DEMO_MESSAGES.length && (
+                    );
+                  })}
+                  {waitingForReply && (
                     <div className="flex justify-start">
                       <div className="rounded-2xl rounded-bl-sm bg-[#FBF7E9] border border-[#E8DDB0] px-4 py-3 flex gap-1">
                         <span className="typing-dot" />
@@ -409,14 +489,44 @@ export default function LandingPage() {
           0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
           30%           { opacity: 1; transform: translateY(-3px); }
         }
+        .hero-arrow-path {
+          animation: arrowFlow 1.1s linear infinite;
+        }
+        @keyframes arrowFlow {
+          to { stroke-dashoffset: -26; }
+        }
+        .hero-arrow {
+          opacity: 0;
+          animation: arrowFadeIn 0.6s ease 1.6s forwards;
+        }
+        @keyframes arrowFadeIn {
+          to { opacity: 1; }
+        }
+        .typing-cursor {
+          display: inline-block;
+          width: 2px;
+          height: 1em;
+          margin-left: 2px;
+          vertical-align: -0.15em;
+          background: currentColor;
+          opacity: 0.6;
+          animation: cursorBlink 0.8s steps(1) infinite;
+        }
+        @keyframes cursorBlink {
+          0%, 49%  { opacity: 0.6; }
+          50%, 100% { opacity: 0; }
+        }
         @media (prefers-reduced-motion: reduce) {
           .hero-kenburns { animation: none; }
           .animate-float-card { animation: none; }
           .typing-dot { animation: none; }
-          .hero-item, [data-reveal], .demo-bubble {
+          .typing-cursor { display: none; }
+          .hero-arrow-path { animation: none; }
+          .hero-arrow, .hero-item, [data-reveal], .demo-bubble {
             opacity: 1 !important;
             transform: none !important;
             transition: none !important;
+            animation: none !important;
           }
         }
       `}</style>
