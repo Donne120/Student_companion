@@ -17,7 +17,8 @@ recommendations.
 | `TAVILY_API_KEY` | yes | Live web search. Free tier at [tavily.com](https://tavily.com) is enough to launch. |
 | `GROQ_API_KEY` | yes | Turns the search results into the report. Free tier at [console.groq.com](https://console.groq.com), no card required. |
 | `RESEND_API_KEY` | yes, for the form | Sends each enquiry by email. Free tier at [resend.com](https://resend.com). |
-| `LEAD_NOTIFY_EMAIL` | no | Where enquiries go. Defaults to `studentcompanionai@gmail.com`. |
+| `LEAD_NOTIFY_EMAIL` | no | Where enquiries go. Defaults to `d.ngum@alustudent.com` — see the sender note below before changing it. |
+| `LEAD_FROM_EMAIL` | no | Sender address. Defaults to Resend's shared `onboarding@resend.dev`; set this once you verify your own domain. |
 | `FIREBASE_PROJECT_ID` | no | Enables storing leads as well as emailing them. |
 | `FIREBASE_CLIENT_EMAIL` | no | Service-account email (Firebase console → Project settings → Service accounts). |
 | `FIREBASE_PRIVATE_KEY` | no | Service-account private key. Paste it whole; `\n` escapes are handled. |
@@ -40,9 +41,26 @@ providers are close to a drop-in.
 
 ## Sending from your own domain
 
-Emails default to Resend's shared `onboarding@resend.dev` sender, which works
-immediately but can land in spam. To send from your own domain, verify it in
-Resend and change the `from` address in `lead.ts`.
+Emails default to Resend's shared `onboarding@resend.dev` sender. It works with
+no setup, but Resend restricts it hard: **it will only deliver to the email
+address that owns the Resend account.** Sending anywhere else returns a 403:
+
+> You can only send testing emails to your own email address. To send emails to
+> other recipients, please verify a domain at resend.com/domains, and change the
+> `from` address to an email using this domain.
+
+That is why `LEAD_NOTIFY_EMAIL` defaults to the account owner's address rather
+than a shared inbox.
+
+To send to any address (and to stop landing in spam):
+
+1. Verify a domain at [resend.com/domains](https://resend.com/domains) — this
+   means adding DNS records at your registrar.
+2. Set `LEAD_FROM_EMAIL` to an address on that domain, e.g.
+   `Pathfinder <pathfinder@studentcompanionai.rw>`.
+3. Set `LEAD_NOTIFY_EMAIL` to wherever you actually want enquiries.
+
+No code change is needed for any of it.
 
 ## Deploying the Firestore rule
 

@@ -19,7 +19,15 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // See the note in recommend.ts — the .js extension is required under ESM.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 
-const NOTIFY_TO = process.env.LEAD_NOTIFY_EMAIL || "studentcompanionai@gmail.com";
+/**
+ * Where enquiries are sent. Defaults to the address that owns the Resend
+ * account, because Resend's free shared sender refuses to deliver anywhere
+ * else — sending to studentcompanionai@gmail.com returned a 403 until a
+ * domain is verified. Once studentcompanionai.rw (or similar) is verified at
+ * resend.com/domains, set LEAD_FROM_EMAIL to an address on it and this can
+ * point anywhere.
+ */
+const NOTIFY_TO = process.env.LEAD_NOTIFY_EMAIL || "d.ngum@alustudent.com";
 
 /**
  * Resend's shared onboarding@resend.dev sender works without any setup, but
@@ -159,14 +167,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // student their submission failed — it didn't.
     if (stored) return res.status(200).json({ ok: true });
 
-    // The upstream reason is included deliberately. It comes from Resend, not
-    // from the student's input, and without it this failure is undiagnosable
-    // from the outside — which has already cost several rounds of guessing.
-    // It reveals nothing about the submitter and never includes the API key.
-    return res.status(502).json({
+    const body: Record<string, string> = {
       error: "We couldn't send that. Please try again shortly.",
-      detail: err instanceof Error ? err.message : String(err),
-    });
+    };
+    // Back behind the flag now the cause is known — a public endpoint
+    // shouldn't leak upstream internals as a matter of course.
+    if (process.env.PATHFINDER_DEBUG === "1") {
+      body.detail = err instanceof Error ? err.message : String(err);
+    }
+    return res.status(502).json(body);
   }
 
   return res.status(200).json({ ok: true });
