@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +45,14 @@ export default function LandingPage() {
   const [typingIndex, setTypingIndex] = useState<number | null>(null);
   const [waitingForReply, setWaitingForReply] = useState(false);
 
+  // The connecting arrow is drawn between two real elements, so it's measured
+  // from their actual boxes rather than guessed offsets — that keeps it
+  // correctly aimed at every viewport width.
+  const heroRowRef = useRef<HTMLDivElement>(null);
+  const chatPanelRef = useRef<HTMLDivElement>(null);
+  const videoCardRef = useRef<HTMLDivElement>(null);
+  const [arrowPath, setArrowPath] = useState<{ d: string; head: string } | null>(null);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll);
@@ -61,13 +69,13 @@ export default function LandingPage() {
   // appear after a "thinking" pause and stream in the same way — then hold
   // on the finished conversation, clear, and replay from the start.
   useEffect(() => {
+    // Under reduced-motion we still cycle the conversation — it's the
+    // product demo, not decoration, so freezing it removes the point of the
+    // panel. We drop the per-character typing (the part that actually reads
+    // as restless motion) and reveal each message whole instead.
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
-    if (prefersReducedMotion) {
-      setVisibleMessages(DEMO_MESSAGES.length);
-      return;
-    }
 
     let cancelled = false;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
@@ -92,6 +100,19 @@ export default function LandingPage() {
       setTypingIndex(index);
       setTypingText("");
       setWaitingForReply(false);
+
+      if (prefersReducedMotion) {
+        // Reveal the whole message at once, then hold for roughly as long as
+        // typing it would have taken, so the pacing still reads naturally.
+        setTypingText(msg.text);
+        after(() => {
+          setVisibleMessages((v) => Math.max(v, index + 1));
+          setTypingIndex(null);
+          setTypingText("");
+          onDone();
+        }, Math.min(2200, (msg.text.length / cps) * 1000));
+        return;
+      }
 
       let pos = 0;
       const id = setInterval(() => {
@@ -140,6 +161,58 @@ export default function LandingPage() {
       timeouts.forEach(clearTimeout);
       intervals.forEach(clearInterval);
     };
+  }, []);
+
+  // Measure the chat panel and video card, then draw a curve from the chat's
+  // lower-left edge to the top edge of the video, with the arrowhead rotated
+  // to match the curve's incoming direction.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const row = heroRowRef.current;
+      const chat = chatPanelRef.current;
+      const video = videoCardRef.current;
+      // Only drawn on the lg two-column layout; below that the cards stack
+      // and a diagonal connector doesn't describe the relationship.
+      if (!row || !chat || !video || window.innerWidth < 1024) {
+        setArrowPath(null);
+        return;
+      }
+
+      const rowBox = row.getBoundingClientRect();
+      const chatBox = chat.getBoundingClientRect();
+      const videoBox = video.getBoundingClientRect();
+
+      // Start just outside the chat panel's left edge, low on the card.
+      const x1 = chatBox.left - rowBox.left - 10;
+      const y1 = chatBox.top - rowBox.top + chatBox.height * 0.72;
+      // End just above the video card, toward its right side.
+      const x2 = videoBox.left - rowBox.left + videoBox.width * 0.78;
+      const y2 = videoBox.top - rowBox.top - 12;
+
+      // Bow the curve outward through the gutter between the columns.
+      const c1x = x1 - (x1 - x2) * 0.15;
+      const c1y = y1 + (y2 - y1) * 0.55;
+      const c2x = x2 + (x1 - x2) * 0.35;
+      const c2y = y2 - 26;
+
+      // Arrowhead aligned to the curve's final tangent (P2 -> P3).
+      const angle = Math.atan2(y2 - c2y, x2 - c2x);
+      const size = 11;
+      const spread = 0.45;
+      const hx1 = x2 - size * Math.cos(angle - spread);
+      const hy1 = y2 - size * Math.sin(angle - spread);
+      const hx2 = x2 - size * Math.cos(angle + spread);
+      const hy2 = y2 - size * Math.sin(angle + spread);
+
+      setArrowPath({
+        d: `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`,
+        head: `M ${hx1} ${hy1} L ${x2} ${y2} L ${hx2} ${hy2}`,
+      });
+    };
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, []);
 
   // Reveal-on-scroll for below-the-fold sections
@@ -269,35 +342,38 @@ export default function LandingPage() {
       <section className="relative bg-[#FBF7E9] overflow-hidden">
         <div className="absolute inset-0 hero-grain pointer-events-none" />
         <div className="relative max-w-6xl mx-auto px-4 md:px-6 lg:px-10 pt-10 md:pt-16 lg:pt-20 pb-16 md:pb-20 lg:pb-24">
-          <div className="relative grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center">
-            {/* Connecting arrow: chat demo -> the video proof, desktop only.
-                Spans the full grid row; endpoints are positioned in percent
-                so they track the actual column split (1.05fr left / 1fr
-                right) instead of guessed pixel offsets. */}
-            <svg
-              className="hero-arrow hidden lg:block absolute inset-0 z-10 pointer-events-none w-full h-full"
-              viewBox="0 0 100 100"
-              preserveAspectRatio="none"
-              fill="none"
-            >
-              <path
-                d="M 63 38 C 58 55, 52 62, 47 68"
-                vectorEffect="non-scaling-stroke"
-                stroke="#D4AF37"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeDasharray="6 7"
-                className="hero-arrow-path"
-              />
-              <path
-                d="M 47 68 L 46 60 M 47 68 L 54 65"
-                vectorEffect="non-scaling-stroke"
-                stroke="#D4AF37"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+          <div
+            ref={heroRowRef}
+            className="relative grid lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-14 items-center"
+          >
+            {/* Connecting arrow: chat demo -> the video proof. Geometry is
+                measured from the two real elements (see useLayoutEffect), so
+                it stays aimed correctly at any width. */}
+            {arrowPath && (
+              <svg
+                className="hero-arrow absolute inset-0 z-10 pointer-events-none w-full h-full"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d={arrowPath.d}
+                  stroke="#D4AF37"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeDasharray="1 7"
+                  className="hero-arrow-path"
+                  opacity="0.85"
+                />
+                <path
+                  d={arrowPath.head}
+                  stroke="#D4AF37"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity="0.85"
+                />
+              </svg>
+            )}
 
             {/* Copy + photo */}
             <div>
@@ -350,6 +426,7 @@ export default function LandingPage() {
               </div>
 
               <div
+                ref={videoCardRef}
                 className="hero-item mt-10 relative rounded-2xl overflow-hidden shadow-xl"
                 style={{ transitionDelay: "500ms" }}
                 data-in={heroIn}
@@ -375,7 +452,10 @@ export default function LandingPage() {
               style={{ transitionDelay: "260ms" }}
               data-in={heroIn}
             >
-              <div className="relative rounded-2xl bg-white border border-[#E8DDB0] shadow-2xl overflow-hidden">
+              <div
+                ref={chatPanelRef}
+                className="relative rounded-2xl bg-white border border-[#E8DDB0] shadow-2xl overflow-hidden"
+              >
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-[#E8DDB0] bg-[#FBF7E9]">
                   <img
                     src={COMPANION_LOGO}
@@ -495,10 +575,10 @@ export default function LandingPage() {
           30%           { opacity: 1; transform: translateY(-3px); }
         }
         .hero-arrow-path {
-          animation: arrowFlow 1.1s linear infinite;
+          animation: arrowFlow 0.9s linear infinite;
         }
         @keyframes arrowFlow {
-          to { stroke-dashoffset: -26; }
+          to { stroke-dashoffset: -16; }
         }
         .hero-arrow {
           opacity: 0;
@@ -527,11 +607,17 @@ export default function LandingPage() {
           .typing-dot { animation: none; }
           .typing-cursor { display: none; }
           .hero-arrow-path { animation: none; }
-          .hero-arrow, .hero-item, [data-reveal], .demo-bubble {
+          .hero-arrow, .hero-item, [data-reveal] {
             opacity: 1 !important;
             transform: none !important;
             transition: none !important;
             animation: none !important;
+          }
+          /* Bubbles still sequence (that's the demo's content), they just
+             appear without the slide/fade transition. */
+          .demo-bubble {
+            transition: none !important;
+            transform: none !important;
           }
         }
       `}</style>
