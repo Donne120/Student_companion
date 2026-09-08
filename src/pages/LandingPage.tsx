@@ -53,7 +53,8 @@ export default function LandingPage() {
     return () => clearTimeout(t);
   }, []);
 
-  // Play the demo conversation in on load, one bubble at a time
+  // Play the demo conversation on a loop: bubble in one at a time, hold on
+  // the finished conversation, then clear and replay from the start.
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -62,13 +63,33 @@ export default function LandingPage() {
       setVisibleMessages(DEMO_MESSAGES.length);
       return;
     }
+
+    let cancelled = false;
     const timers: ReturnType<typeof setTimeout>[] = [];
-    DEMO_MESSAGES.forEach((_, i) => {
-      timers.push(
-        setTimeout(() => setVisibleMessages((v) => Math.max(v, i + 1)), 900 + i * 950)
-      );
-    });
-    return () => timers.forEach(clearTimeout);
+    const schedule = (fn: () => void, delay: number) => {
+      const t = setTimeout(() => {
+        if (!cancelled) fn();
+      }, delay);
+      timers.push(t);
+    };
+
+    const HOLD_MS = 3200; // pause on the completed conversation before replaying
+    const RESET_PAUSE_MS = 600; // beat on the empty state before it starts again
+
+    const playOnce = (startAt: number) => {
+      DEMO_MESSAGES.forEach((_, i) => {
+        schedule(() => setVisibleMessages((v) => Math.max(v, i + 1)), startAt + 900 + i * 950);
+      });
+      const endOfConversation = startAt + 900 + (DEMO_MESSAGES.length - 1) * 950;
+      schedule(() => setVisibleMessages(0), endOfConversation + HOLD_MS);
+      schedule(() => playOnce(endOfConversation + HOLD_MS + RESET_PAUSE_MS), endOfConversation + HOLD_MS + RESET_PAUSE_MS);
+    };
+
+    playOnce(0);
+    return () => {
+      cancelled = true;
+      timers.forEach(clearTimeout);
+    };
   }, []);
 
   // Reveal-on-scroll for below-the-fold sections
