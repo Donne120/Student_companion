@@ -22,10 +22,23 @@ import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 // mid-size open model is a sound fit rather than a compromise.
 const MODEL = "llama-3.3-70b-versatile";
 
-/** Bias search toward official institutional sources, away from blog spam. */
+/**
+ * Bias search toward official institutional sources, away from blog spam.
+ *
+ * These are matched as domain suffixes by Tavily. The first attempt uses them;
+ * if that returns nothing (a narrow filter easily can) the caller retries
+ * without any restriction, so this improves quality without risking an empty
+ * report.
+ */
 const PREFERRED_DOMAINS = [
-  "ac.rw", "edu", "ac.ke", "ac.ug", "ac.tz", "edu.rw",
-  "mineduc.gov.rw", "hec.gov.rw",
+  "ac.rw",
+  "ur.ac.rw",
+  "ines.ac.rw",
+  "mineduc.gov.rw",
+  "hec.gov.rw",
+  "ac.ke",
+  "ac.ug",
+  "ac.tz",
 ];
 
 interface TavilyResult {
@@ -34,38 +47,42 @@ interface TavilyResult {
   content: string;
 }
 
-async function search(query: string, key: string): Promise<TavilyResult[]> {
+async function search(
+  query: string,
+  key: string,
+  restrictDomains: boolean
+): Promise<TavilyResult[]> {
+  // Tavily authenticates with a Bearer header. The older api_key body field
+  // is deprecated and rejected on newer accounts.
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+    },
     body: JSON.stringify({
-      api_key: key,
       query,
       search_depth: "advanced",
       max_results: 10,
-      include_domains: PREFERRED_DOMAINS,
+      ...(restrictDomains ? { include_domains: PREFERRED_DOMAINS } : {}),
     }),
   });
-  if (!res.ok) throw new Error(`Search failed (${res.status})`);
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Tavily ${res.status}: ${detail.slice(0, 300)}`);
+  }
   const data = (await res.json()) as { results?: TavilyResult[] };
   return data.results ?? [];
 }
 
 /** Retry once without the domain filter — a narrow filter can return nothing. */
 async function searchWithFallback(query: string, key: string): Promise<TavilyResult[]> {
-  const first = await search(query, key);
+  const first = await search(query, key, true);
   if (first.length > 0) return first;
-
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: key, query, search_depth: "advanced", max_results: 10 }),
-  });
-  if (!res.ok) return [];
-  return ((await res.json()) as { results?: TavilyResult[] }).results ?? [];
+  return search(query, key, false).catch(() => []);
 }
 
-const SYSTEM = `You advise students in East Africa who are finishing secondary school and choosing what to study.
+const SYSTEM =`You advise students in East Africa who are finishing secondary school and choosing what to study.
 
 You will be given a student's profile and a set of real web search results about universities and programmes.
 
@@ -150,7 +167,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     });
 
-    if (!ai.ok) throw new Error(`Model call failed (${ai.status})`);
+    if (!ai.ok) {
+      const detail = await ai.text().catch(() => "");
+      throw new Error(`Groq ${ai.status}: ${detail.slice(0, 300)}`);
+    }
 
     const payload = (await ai.json()) as {
       choices?: Array<{ message?: { content?: string } }>;
@@ -176,8 +196,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json(report);
   } catch (err) {
     console.error("[pathfinder/recommend]", err);
-    return res.status(502).json({
+    // PATHFINDER_DEBUG surfaces the upstream failure (which API, which status)
+    // in the response. Vercel's function logs are the proper place for this,
+    // but this makes a failure diagnosable from a single curl. Unset it once
+    // the integration is confirmed working.
+    const body: Record<string, string> = {
       error: "We couldn't build your report just now. Please try again shortly.",
-    });
+    };
+    if (process.env.PATHFINDER_DEBUG === "1") {
+      body.detail = err instanceof Error ? err.message : String(err);
+    }
+    return res.status(502).json(body);
   }
 }
