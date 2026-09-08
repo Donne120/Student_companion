@@ -25,6 +25,7 @@ const Settings         = lazy(() => import("./pages/settings"));
 const OfficeHours      = lazy(() => import("./pages/office-hours"));
 const Opportunities    = lazy(() => import("./pages/Opportunities"));
 const LandingPage      = lazy(() => import("./pages/LandingPage"));
+const Pathfinder       = lazy(() => import("./pages/Pathfinder"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
@@ -36,6 +37,7 @@ const TITLE_MAP: Record<string, string> = {
   "/login":              "Sign in — Student Companion AI",
   "/signup":             "Create account — Student Companion AI",
   "/forgot-password":    "Reset password — Student Companion AI",
+  "/pathfinder":         "Pathfinder — Find your course | Student Companion AI",
   "/chat":               "Chat — Student Companion AI",
   "/opportunities":      "Opportunities — Student Companion AI",
   "/profile":            "Profile — Student Companion AI",
@@ -97,6 +99,8 @@ function App() {
               <Route path="/login"           element={<Login />} />
               <Route path="/signup"          element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              {/* Public, no account — free guidance for high-school leavers. */}
+              <Route path="/pathfinder"      element={<Pathfinder />} />
 
               {/* Protected app */}
               <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
