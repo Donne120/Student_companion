@@ -17,10 +17,20 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // returns FUNCTION_INVOCATION_FAILED before the handler ever runs.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 
-// Groq's free tier runs this comfortably. The job here is summarising real
+// Groq's free tier runs these comfortably. The job here is summarising real
 // search results into a fixed JSON shape, not open-ended reasoning, so a
 // mid-size open model is a sound fit rather than a compromise.
-const MODEL = "llama-3.3-70b-versatile";
+//
+// Tried in order, because Groq retires model names periodically and a
+// hardcoded one eventually 404s — which is exactly what happened here. The
+// first that the account can actually use wins; GROQ_MODEL overrides the list
+// entirely if you want to pin one.
+const MODEL_CANDIDATES = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+];
 
 /**
  * Bias search toward official institutional sources, away from blog spam.
@@ -80,6 +90,44 @@ async function searchWithFallback(query: string, key: string): Promise<TavilyRes
   const first = await search(query, key, true);
   if (first.length > 0) return first;
   return search(query, key, false).catch(() => []);
+}
+
+/**
+ * Ask Groq which models this account can use and return the first candidate
+ * that's actually available.
+ *
+ * Hardcoding a single name is what caused a 404 here: Groq retires model IDs,
+ * and the failure surfaces only in production. GROQ_MODEL pins a specific one
+ * and skips the lookup. If the list can't be fetched we fall back to the first
+ * candidate so a transient failure doesn't take the whole feature down.
+ */
+let cachedModel: string | null = null;
+
+async function pickModel(key: string): Promise<string> {
+  const pinned = process.env.GROQ_MODEL;
+  if (pinned) return pinned;
+  if (cachedModel) return cachedModel;
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/models", {
+      headers: { Authorization: `Bearer ${key}` },
+    });
+    if (!res.ok) return MODEL_CANDIDATES[0];
+
+    const data = (await res.json()) as { data?: Array<{ id?: string }> };
+    const available = new Set((data.data ?? []).map((m) => m.id).filter(Boolean) as string[]);
+    const found = MODEL_CANDIDATES.find((m) => available.has(m));
+
+    // Nothing from our list — fall back to any chat-capable model the account
+    // has, rather than failing outright.
+    cachedModel =
+      found ??
+      [...available].find((id) => /llama|gpt-oss|mixtral|gemma/i.test(id)) ??
+      MODEL_CANDIDATES[0];
+    return cachedModel;
+  } catch {
+    return MODEL_CANDIDATES[0];
+  }
 }
 
 const SYSTEM =`You advise students in East Africa who are finishing secondary school and choosing what to study.
@@ -144,6 +192,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 900)}`)
       .join("\n\n");
 
+    const model = await pickModel(modelKey);
+
     const ai = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -151,7 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         Authorization: `Bearer ${modelKey}`,
       },
       body: JSON.stringify({
-        model: MODEL,
+        model,
         max_tokens: 2000,
         temperature: 0.4,
         // Guarantees parseable output instead of hoping the model obeys the
@@ -169,7 +219,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!ai.ok) {
       const detail = await ai.text().catch(() => "");
-      throw new Error(`Groq ${ai.status}: ${detail.slice(0, 300)}`);
+      throw new Error(`Groq ${ai.status} (model ${model}): ${detail.slice(0, 300)}`);
     }
 
     const payload = (await ai.json()) as {
