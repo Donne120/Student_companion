@@ -8,7 +8,7 @@
 // served that exact old file, even through a hard refresh, until the cache
 // happened to be evicted. Network-first with a cache fallback (for offline
 // use) fixes that while keeping the offline shell working.
-const CACHE = 'sca-v2';
+const CACHE = 'sca-v3';
 const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo.png'];
 
 self.addEventListener('install', (event) => {
@@ -38,9 +38,26 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Navigations: network first, fall back to cached shell.
+  //
+  // caches.match resolves to undefined on a miss, and returning undefined
+  // from respondWith throws "Failed to convert value to 'Response'" — turning
+  // a recoverable network blip into a hard page error. Always resolve to a
+  // real Response.
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request).catch(() => caches.match('/index.html'))
+      fetch(request).catch(async () => {
+        const cached = await caches.match('/index.html');
+        return (
+          cached ||
+          new Response(
+            '<!doctype html><meta charset="utf-8"><title>Offline</title>' +
+              '<body style="font-family:system-ui;padding:2rem;text-align:center">' +
+              '<h1>You appear to be offline</h1>' +
+              '<p>Check your connection and reload.</p>',
+            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+          )
+        );
+      })
     );
     return;
   }
@@ -58,7 +75,15 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(async () => {
+          // Same undefined-on-miss trap as above: respondWith must always
+          // receive a Response, so surface a real 504 rather than throwing.
+          const cached = await caches.match(request);
+          return (
+            cached ||
+            new Response('', { status: 504, statusText: 'Offline and not cached' })
+          );
+        })
     );
   }
 });
