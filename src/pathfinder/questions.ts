@@ -114,6 +114,18 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
+/**
+ * Key for the optional free-text note.
+ *
+ * Deliberately separate from QUESTIONS: those are a closed allowlist, and
+ * keeping this apart means the strict validation of the fixed answers is
+ * unchanged. This one field is length-capped and stripped server-side, and
+ * the model is told to treat it as information about the student, never as
+ * instructions.
+ */
+export const NOTE_KEY = "note";
+export const NOTE_MAX = 400;
+
 /** A completed answer set. `multi` questions hold an array. */
 export type Answers = Record<string, string | string[]>;
 

@@ -7,7 +7,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Check, ExternalLink, Loader, Send } from "lucide-react";
-import { QUESTIONS, type Answers, type PathfinderReport } from "@/pathfinder/questions";
+import {
+  QUESTIONS,
+  NOTE_KEY,
+  NOTE_MAX,
+  type Answers,
+  type PathfinderReport,
+} from "@/pathfinder/questions";
 import { pathfinderService, PathfinderError } from "@/pathfinder/pathfinderService";
 
 const LOGO = "/logo-icon.png";
@@ -203,6 +209,42 @@ export default function Pathfinder() {
                       );
                     })}
                   </div>
+
+                  {/* On the last question, let the student say anything the
+                      fixed options couldn't capture. Without this, someone
+                      whose situation doesn't fit the boxes has no way to tell
+                      us — and gets advice built on a poor approximation. */}
+                  {step === QUESTIONS.length - 1 && (
+                    <div className="mt-6 pt-5 border-t border-[#E8DDB0]">
+                      <label
+                        htmlFor="pathfinder-note"
+                        className="block text-[13.5px] font-medium mb-1"
+                      >
+                        Anything else we should know? <span className="font-normal text-[#6B6355]">(optional)</span>
+                      </label>
+                      <p className="text-[12.5px] text-[#6B6355] mb-2.5">
+                        If none of the options above really fit you, or there's something about your
+                        situation that matters — tell us here in your own words.
+                      </p>
+                      <textarea
+                        id="pathfinder-note"
+                        value={(answers[NOTE_KEY] as string) || ""}
+                        onChange={(e) =>
+                          setAnswers((prev) => ({
+                            ...prev,
+                            [NOTE_KEY]: e.target.value.slice(0, NOTE_MAX),
+                          }))
+                        }
+                        rows={3}
+                        maxLength={NOTE_MAX}
+                        placeholder="For example: I studied a different subject combination, I'm repeating a year, I already work, I have a disability I need supported…"
+                        className="w-full text-[13.5px] px-3 py-2.5 rounded-[10px] border border-[#E8DDB0] bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+                      />
+                      <p className="mt-1.5 text-[11px] text-[#6B6355] tabular-nums">
+                        {((answers[NOTE_KEY] as string) || "").length} / {NOTE_MAX}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex-none border-t border-[#E8DDB0] bg-white px-6 md:px-8 py-3.5 flex items-center gap-2.5">
