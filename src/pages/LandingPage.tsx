@@ -401,9 +401,7 @@ export default function LandingPage() {
                 style={{ transitionDelay: "180ms" }}
                 data-in={heroIn}
               >
-                Every deadline, policy and
-                <br className="hidden lg:block" /> office hour —
-                <span className="italic text-[#B8941F]"> one question away.</span>
+                Every deadline, policy and office hour, one question away.
               </h1>
               <p
                 className="hero-item mt-6 text-base md:text-lg text-[#1A1A1A]/70 max-w-md leading-relaxed"
@@ -411,7 +409,7 @@ export default function LandingPage() {
                 data-in={heroIn}
               >
                 Student Companion AI answers from your own university's
-                handbook and records — not a guess from the open web.
+                handbook and records, not a guess from the open web.
               </p>
               <div
                 className="hero-item mt-8 flex flex-col sm:flex-row gap-3"
@@ -423,7 +421,7 @@ export default function LandingPage() {
                   className="bg-[#1A1A1A] hover:bg-black text-white h-12 px-7 text-base font-semibold transition-transform hover:-translate-y-0.5"
                   onClick={() => navigate("/signup")}
                 >
-                  Get started — it's free
+                  Get started free
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button
@@ -687,7 +685,7 @@ export default function LandingPage() {
             {
               icon: BookOpen,
               title: "Academic resources",
-              body: "Course materials, grading policies, academic calendars and graduation pathways — answered instantly.",
+              body: "Course materials, grading policies, academic calendars and graduation pathways. Answered instantly.",
             },
             {
               icon: Compass,
@@ -697,7 +695,7 @@ export default function LandingPage() {
             {
               icon: MessageSquare,
               title: "Quick answers",
-              body: "Policies, procedures, deadlines — get clarity in seconds, with context from your conversation history.",
+              body: "Policies, procedures, deadlines. Get clarity in seconds, with context from your conversation history.",
             },
           ].map(({ icon: Icon, title, body }, i) => (
             <div
@@ -751,7 +749,7 @@ export default function LandingPage() {
             </h2>
             <p className="mt-6 text-lg text-[#1A1A1A]/70 leading-relaxed">
               No more digging through PDFs or waiting for office hours. Ask in
-              plain English. Get a clear, sourced answer — at 2pm or 2am.
+              plain English. Get a clear, sourced answer, at 2pm or 2am.
             </p>
             <ul className="mt-8 space-y-4">
               {[
@@ -865,7 +863,7 @@ export default function LandingPage() {
                 <span className="font-serif text-lg">Student Companion AI</span>
               </div>
               <p className="text-sm text-white/60 leading-relaxed max-w-xs">
-                An AI companion trained on your own university's handbook —
+                An AI companion trained on your own university's handbook,
                 built to give every student a straight answer, day or night.
               </p>
             </div>
