@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ChevronLeft, Menu, X, CheckCircle } from 'lucide-react';
+import { ChevronLeft, Menu, X, CheckCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   getCourse,
@@ -12,6 +12,7 @@ import {
 } from '@/services/lmsService';
 import { CourseOutline } from '@/components/lms/CourseOutline';
 import { ProgressBar } from '@/components/lms/ProgressBar';
+import { CourseTutorPanel } from '@/components/lms/CourseTutorPanel';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Course, Enrollment, CourseProgress } from '@/types/lms';
@@ -22,6 +23,8 @@ export default function CoursePlayer() {
   const { currentUser } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [scaOpen, setScaOpen] = useState(false);
+  const [currentLesson, setCurrentLesson] = useState<string | undefined>(undefined);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // ── Auth gate ─────────────────────────────────────────────────────────────
@@ -84,6 +87,12 @@ export default function CoursePlayer() {
           console.error,
         );
         refetchProgress();
+      }
+      // Capture lesson title from xAPI data
+      if (e.data.lessonTitle) {
+        setCurrentLesson(String(e.data.lessonTitle));
+      } else if (e.data.activityName) {
+        setCurrentLesson(String(e.data.activityName));
       }
     };
     window.addEventListener('message', handler);
@@ -216,6 +225,25 @@ export default function CoursePlayer() {
           />
         </main>
       </div>
+
+      {/* ── SCA floating button ── */}
+      <button
+        onClick={() => setScaOpen(true)}
+        className="fixed bottom-20 right-4 z-50 flex items-center gap-2 bg-[#D4AF37] text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-[#B8941F] transition-colors font-medium text-sm md:bottom-6"
+        aria-label="Open SCA Course Assistant"
+      >
+        <Sparkles className="h-4 w-4" />
+        Ask SCA
+      </button>
+
+      {/* ── SCA tutor panel ── */}
+      <CourseTutorPanel
+        isOpen={scaOpen}
+        onClose={() => setScaOpen(false)}
+        courseId={courseId!}
+        courseTitle={course.title}
+        currentLesson={currentLesson}
+      />
     </div>
   );
 }
