@@ -34,6 +34,7 @@ const SuggestionsDashboard = lazy(() => import("./pages/admin/SuggestionsDashboa
 const CourseCatalog       = lazy(() => import("./pages/courses/CourseCatalog"));
 const CourseDetail        = lazy(() => import("./pages/courses/CourseDetail"));
 const CoursePlayer        = lazy(() => import("./pages/courses/CoursePlayer"));
+const CourseManager       = lazy(() => import("./pages/admin/CourseManager"));
 
 // ── Page title map ────────────────────────────────────────────────────────────
 const TITLE_MAP: Record<string, string> = {
@@ -51,6 +52,7 @@ const TITLE_MAP: Record<string, string> = {
   "/admin/api-docs":     "API Docs — SCA Admin",
   "/admin/feedback":     "Feedback — SCA Admin",
   "/admin/suggestions":  "Suggestions — SCA Admin",
+  "/admin/courses":      "Course Manager — SCA Admin",
   "/courses":            "Learning Hub — Student Companion AI",
   "/courses/:courseId":  "Course — Student Companion AI",
   "/courses/:courseId/learn": "Learn — Student Companion AI",
@@ -123,6 +125,7 @@ function App() {
               <Route path="/admin/api-docs"  element={<ProtectedRoute><ApiDocumentation /></ProtectedRoute>} />
               <Route path="/admin/feedback"  element={<ProtectedRoute><FeedbackDashboard /></ProtectedRoute>} />
               <Route path="/admin/suggestions" element={<ProtectedRoute><SuggestionsDashboard /></ProtectedRoute>} />
+              <Route path="/admin/courses"   element={<ProtectedRoute><CourseManager /></ProtectedRoute>} />
 
               {/* LMS */}
               <Route path="/courses" element={<ProtectedRoute><CourseCatalog /></ProtectedRoute>} />

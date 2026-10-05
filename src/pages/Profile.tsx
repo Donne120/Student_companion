@@ -1,12 +1,142 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Camera, LogOut, User } from "lucide-react";
+import { ArrowLeft, BookOpen, Camera, LogOut, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { getUserEnrollments, getCourse } from "@/services/lmsService";
+import type { Enrollment, Course } from "@/types/lms";
+
+// ── My Courses component ──────────────────────────────────────────────────────
+
+const STATUS_LABEL: Record<string, string> = {
+  trial: 'Trial',
+  enrolled: 'Enrolled',
+  completed: 'Completed',
+  pending_payment: 'Pending Payment',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  trial: 'bg-gray-100 text-gray-600',
+  enrolled: 'bg-green-100 text-green-700',
+  completed: 'bg-blue-100 text-blue-700',
+  pending_payment: 'bg-yellow-100 text-yellow-700',
+};
+
+interface EnrollmentWithCourse {
+  enrollment: Enrollment;
+  course: Course | null;
+}
+
+function MyCourses({ uid }: { uid: string | null }) {
+  const { data: items = [], isLoading } = useQuery<EnrollmentWithCourse[]>({
+    queryKey: ['my-enrollments', uid],
+    enabled: !!uid,
+    queryFn: async () => {
+      const enrollments = await getUserEnrollments(uid!);
+      const results = await Promise.all(
+        enrollments.map(async (enrollment) => ({
+          enrollment,
+          course: await getCourse(enrollment.courseId),
+        }))
+      );
+      return results;
+    },
+  });
+
+  const continuePath = (e: Enrollment) => {
+    if (e.status === 'enrolled' || e.status === 'completed') {
+      return `/courses/${e.courseId}/learn`;
+    }
+    return `/courses/${e.courseId}`;
+  };
+
+  return (
+    <section className="mt-6 bg-white border border-[#E8DDB0] rounded-2xl p-5 md:p-8">
+      <div className="flex items-center gap-2 mb-5">
+        <BookOpen className="h-5 w-5 text-[#D4AF37]" />
+        <h2 className="font-serif text-xl text-[#1A1A1A]">My Courses</h2>
+      </div>
+
+      {isLoading ? (
+        <p className="text-sm text-[#1A1A1A]/50">Loading your courses…</p>
+      ) : items.length === 0 ? (
+        <div className="text-center py-6">
+          <p className="text-sm text-[#1A1A1A]/50 mb-3">No courses yet.</p>
+          <Link
+            to="/courses"
+            className="text-sm text-[#D4AF37] hover:underline font-medium"
+          >
+            Browse courses →
+          </Link>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {items.map(({ enrollment: e, course }) => (
+            <li
+              key={e.courseId}
+              className="flex items-center gap-4 p-3 rounded-xl border border-[#E8DDB0] hover:bg-[#FBF7E9] transition-colors"
+            >
+              {/* Thumbnail */}
+              {course?.thumbnailUrl ? (
+                <img
+                  src={course.thumbnailUrl}
+                  alt={course.title}
+                  className="h-12 w-20 object-cover rounded-lg shrink-0"
+                />
+              ) : (
+                <div className="h-12 w-20 bg-[#FBF7E9] rounded-lg shrink-0 flex items-center justify-center">
+                  <BookOpen className="h-5 w-5 text-[#D4AF37]" />
+                </div>
+              )}
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm text-[#1A1A1A] truncate">
+                  {course?.title ?? e.courseId}
+                </p>
+                <div className="flex items-center gap-3 mt-1">
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[e.status] ?? STATUS_COLOR.trial}`}
+                  >
+                    {STATUS_LABEL[e.status] ?? e.status}
+                  </span>
+                  {/* Progress bar (only for enrolled/completed) */}
+                  {(e.status === 'enrolled' || e.status === 'completed') && (
+                    <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                      <div className="flex-1 h-1.5 bg-[#E8DDB0] rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-[#D4AF37]"
+                          style={{ width: e.status === 'completed' ? '100%' : '0%' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* CTA */}
+              <Link to={continuePath(e)}>
+                <Button
+                  size="sm"
+                  className="shrink-0 bg-[#D4AF37] hover:bg-[#B8941F] text-[#1A1A1A] text-xs"
+                >
+                  {e.status === 'enrolled' || e.status === 'completed' ? 'Continue' : 'View'}
+                </Button>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+// ── Main profile page ─────────────────────────────────────────────────────────
 
 export default function Profile() {
   const { currentUser, updateProfile, logout } = useAuth();
@@ -204,6 +334,9 @@ export default function Profile() {
             </div>
           </form>
         </section>
+
+        {/* ── My Courses ──────────────────────────────────────────────────── */}
+        <MyCourses uid={currentUser?.uid ?? null} />
       </main>
     </div>
   );

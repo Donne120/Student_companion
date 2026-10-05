@@ -43,3 +43,18 @@ export interface CourseFilter {
   free?: boolean;
   search?: string;
 }
+
+export interface PaymentRequest {
+  id: string;
+  userId: string;
+  courseId: string;
+  courseTitle: string;
+  amount: number;
+  currency: string;
+  method: 'momo' | 'card';
+  momoRef?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  studentEmail: string;
+  studentName: string;
+  submittedAt: unknown;
+}

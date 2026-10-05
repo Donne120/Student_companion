@@ -4,6 +4,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -11,7 +12,9 @@ import {
   type QueryConstraint,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import type { Course, Enrollment, CourseProgress, CourseFilter } from '@/types/lms';
+import type { Course, Enrollment, CourseProgress, CourseFilter, PaymentRequest } from '@/types/lms';
+
+const PAYMENT_REQUESTS_COL = 'paymentRequests';
 
 const COURSES_COL = 'courses';
 const ENROLLMENTS_COL = 'enrollments';
@@ -143,6 +146,52 @@ export async function getProgress(uid: string, courseId: string): Promise<Course
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return snap.data() as CourseProgress;
+}
+
+// ─── Payment Requests ─────────────────────────────────────────────────────────
+
+export async function getPendingPayments(): Promise<PaymentRequest[]> {
+  const ref = collection(db, PAYMENT_REQUESTS_COL);
+  const q = query(ref, where('status', '==', 'pending'), orderBy('submittedAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as PaymentRequest));
+}
+
+export async function approvePayment(
+  requestDocId: string,
+  userId: string,
+  courseId: string,
+  paymentRef: string,
+): Promise<void> {
+  const reqRef = doc(db, PAYMENT_REQUESTS_COL, requestDocId);
+  await updateDoc(reqRef, { status: 'approved' });
+  await enrollUserPaid(userId, courseId, paymentRef);
+}
+
+export async function rejectPayment(
+  requestDocId: string,
+  userId: string,
+  courseId: string,
+): Promise<void> {
+  const reqRef = doc(db, PAYMENT_REQUESTS_COL, requestDocId);
+  await updateDoc(reqRef, { status: 'rejected' });
+  const enrollDocId = `${userId}_${courseId}`;
+  const enrollRef = doc(db, ENROLLMENTS_COL, enrollDocId);
+  await updateDoc(enrollRef, { status: 'rejected' });
+}
+
+// ─── Admin Reads ──────────────────────────────────────────────────────────────
+
+export async function getAllProgress(): Promise<CourseProgress[]> {
+  const ref = collection(db, PROGRESS_COL);
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => d.data() as CourseProgress);
+}
+
+export async function getAllEnrollments(): Promise<Enrollment[]> {
+  const ref = collection(db, ENROLLMENTS_COL);
+  const snap = await getDocs(ref);
+  return snap.docs.map((d) => d.data() as Enrollment);
 }
 
 // ─── Seed ─────────────────────────────────────────────────────────────────────
