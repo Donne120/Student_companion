@@ -31,6 +31,9 @@ const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
 const SuggestionsDashboard = lazy(() => import("./pages/admin/SuggestionsDashboard"));
+const CourseCatalog       = lazy(() => import("./pages/courses/CourseCatalog"));
+const CourseDetail        = lazy(() => import("./pages/courses/CourseDetail"));
+const CoursePlayer        = lazy(() => import("./pages/courses/CoursePlayer"));
 
 // ── Page title map ────────────────────────────────────────────────────────────
 const TITLE_MAP: Record<string, string> = {
@@ -48,6 +51,9 @@ const TITLE_MAP: Record<string, string> = {
   "/admin/api-docs":     "API Docs — SCA Admin",
   "/admin/feedback":     "Feedback — SCA Admin",
   "/admin/suggestions":  "Suggestions — SCA Admin",
+  "/courses":            "Learning Hub — Student Companion AI",
+  "/courses/:courseId":  "Course — Student Companion AI",
+  "/courses/:courseId/learn": "Learn — Student Companion AI",
 };
 
 // ── Thin fallback spinner shown while a lazy chunk loads ──────────────────────
@@ -66,7 +72,7 @@ const PageSpinner = () => (
 );
 
 // ── Per-route chrome (tab bar, floating chatbot, page title) ──────────────────
-const APP_ROUTES = ["/chat", "/news", "/opportunities", "/documents", "/profile", "/settings"];
+const APP_ROUTES = ["/chat", "/news", "/opportunities", "/documents", "/profile", "/settings", "/courses"];
 
 const Chrome = () => {
   const { pathname } = useLocation();
@@ -117,6 +123,11 @@ function App() {
               <Route path="/admin/api-docs"  element={<ProtectedRoute><ApiDocumentation /></ProtectedRoute>} />
               <Route path="/admin/feedback"  element={<ProtectedRoute><FeedbackDashboard /></ProtectedRoute>} />
               <Route path="/admin/suggestions" element={<ProtectedRoute><SuggestionsDashboard /></ProtectedRoute>} />
+
+              {/* LMS */}
+              <Route path="/courses" element={<ProtectedRoute><CourseCatalog /></ProtectedRoute>} />
+              <Route path="/courses/:courseId" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+              <Route path="/courses/:courseId/learn" element={<ProtectedRoute><CoursePlayer /></ProtectedRoute>} />
             </Routes>
           </Suspense>
           <Chrome />

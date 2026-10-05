@@ -8,6 +8,7 @@ const LOGO = "/logo.png";
 const NAV_LINKS = [
   { id: "home",     label: "Home" },
   { id: "services", label: "Products & Services" },
+  { id: "courses",  label: "Courses" },
   { id: "team",     label: "Team" },
   { id: "contact",  label: "Contact" },
 ];
@@ -344,6 +345,57 @@ export default function LandingPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── COURSES ── */}
+      <section
+        ref={setRef("courses")}
+        id="courses"
+        className="max-w-6xl mx-auto px-5 sm:px-8 py-24 md:py-32"
+      >
+        <div className="mb-12">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#B8941F] mb-4">
+            Courses
+          </p>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-[#1A1A1A] max-w-xl">
+            Start Learning Today
+          </h2>
+          <p className="mt-4 text-[#1A1A1A]/55 max-w-lg leading-relaxed">
+            Expert-led, self-paced courses designed for African students building world-class careers.
+          </p>
+        </div>
+
+        {/* Hard-coded preview card — Career Readiness 101 */}
+        <div className="max-w-sm border border-[#E8DDB0] rounded-2xl overflow-hidden bg-white hover:shadow-md transition-shadow duration-200">
+          <div className="aspect-video overflow-hidden bg-[#F5F5F5]">
+            <img
+              src="/campus.png"
+              alt="Career Readiness 101"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80';
+              }}
+            />
+          </div>
+          <div className="p-5 space-y-3">
+            <span className="inline-block text-xs font-semibold bg-green-100 text-green-700 px-2.5 py-0.5 rounded-full">
+              Free
+            </span>
+            <h3 className="font-bold text-[#1A1A1A] text-base leading-snug">
+              Career Readiness 101
+            </h3>
+            <p className="text-sm text-[#1A1A1A]/55 leading-relaxed">
+              Build the skills employers actually want — CV writing, interview prep, personal branding.
+            </p>
+            <button
+              onClick={() => navigate('/login')}
+              className="mt-2 w-full inline-flex items-center justify-center gap-2 bg-[#D4AF37] hover:bg-[#B8941F] text-[#1A1A1A] text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
+            >
+              Start for Free
+            </button>
           </div>
         </div>
       </section>

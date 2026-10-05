@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { MessageSquare, Newspaper, Sparkles, FileText, User } from "lucide-react";
+import { MessageSquare, Newspaper, Sparkles, GraduationCap, User } from "lucide-react";
 
 const tabs = [
   { to: "/chat", label: "Chat", icon: MessageSquare },
   { to: "/news", label: "News", icon: Newspaper },
   { to: "/opportunities", label: "Discover", icon: Sparkles },
-  { to: "/documents", label: "Docs", icon: FileText },
+  { to: "/courses", label: "Courses", icon: GraduationCap },
   { to: "/profile", label: "Me", icon: User },
 ];
 

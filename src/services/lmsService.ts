@@ -81,6 +81,23 @@ export async function enrollUserFree(uid: string, courseId: string): Promise<voi
   await setDoc(ref, enrollment, { merge: true });
 }
 
+export async function enrollUserPending(
+  uid: string,
+  courseId: string,
+  momoRef: string,
+): Promise<void> {
+  const docId = `${uid}_${courseId}`;
+  const ref = doc(db, ENROLLMENTS_COL, docId);
+  const enrollment: Omit<Enrollment, 'enrolledAt'> & { enrolledAt: ReturnType<typeof serverTimestamp> } = {
+    userId: uid,
+    courseId,
+    status: 'pending_payment' as Enrollment['status'],
+    paymentRef: momoRef,
+    enrolledAt: serverTimestamp(),
+  };
+  await setDoc(ref, enrollment, { merge: true });
+}
+
 export async function enrollUserPaid(
   uid: string,
   courseId: string,

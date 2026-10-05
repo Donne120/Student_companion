@@ -23,7 +23,7 @@ export interface Course {
 export interface Enrollment {
   userId: string;
   courseId: string;
-  status: 'trial' | 'enrolled' | 'completed';
+  status: 'trial' | 'enrolled' | 'completed' | 'pending_payment';
   paymentRef?: string;
   enrolledAt?: unknown;
   completedAt?: unknown;
