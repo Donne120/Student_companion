@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Admin course manager page and seed data. Depends on FEAT-001 (types + service). Independent of FEAT-002 (no shared code beyond the service layer). Adds /admin/courses route, wires App.tsx, and provides the seedFirstCourse trigger.",
+  "status": "pending",
+  "steps": [
+    "Create src/pages/admin/CourseManager.tsx. Default export wrapped with requireAdmin HOC (from @/utils/adminAuth, same pattern as AnalyticsDashboard.tsx). Uses useQuery(['courses-admin']) → getCourses() (no filter, admin sees all). State: { dialogOpen, editCourse: Course | null, seeding: boolean }. Layout matches AnalyticsDashboard style: header with ArrowLeft back-link to '/admin/analytics', title 'Course Manager', 'Add Course' Button. Table (or card list on mobile) with columns: Thumbnail (16x16 img), Title+subtitle, Category, Level, Price, Published toggle, Actions (Edit, Delete placeholder). Published toggle: clicking calls setDoc on the course doc to flip isPublished, invalidate query. 'Add / Edit Course' Dialog (shadcn Dialog): form fields for title, subtitle, description, thumbnailUrl, category (Select), level (Select), price (Input type=number), currency (Select: RWF|USD), duration, lessonsCount (Input type=number), instructor, scormUrl, isPublished (Checkbox), isFeatured (Checkbox). On submit: setDoc to courses/{id} with serverTimestamp updatedAt; if new course, generate id from title slug + Date.now(). Uses react-hook-form is NOT available here — use controlled useState per field to match the existing pattern in Profile.tsx. Seed button: 'Seed Career Readiness 101' button calls seedFirstCourse() then shows toast.success('Course seeded'). All Firestore ops via lmsService functions.",
+    "Update src/App.tsx: (a) Add lazy import: CourseManager = lazy(() => import('./pages/admin/CourseManager')). (b) Add to TITLE_MAP: '/admin/courses': 'Course Manager — SCA Admin'. (c) Add route: <Route path='/admin/courses' element={<ProtectedRoute><CourseManager /></ProtectedRoute>} />. Note: admin identity is checked by the requireAdmin HOC inside the component (client-side UX gate), consistent with all other admin pages.",
+    "Verify the seed data shape in seedFirstCourse() in lmsService.ts matches exactly: id='career-readiness-101', title='Career Readiness 101', subtitle='Land your first role — from CV to offer letter', description (full text from spec), thumbnailUrl='/campus.png', category='Career Development', level='Beginner', price=0, currency='RWF', duration='2 hours', lessonsCount=8, instructor='Student Companion AI Team', tags=['career','cv','interview','jobs'], isPublished=true, isFeatured=true, scormUrl='https://share.articulate.com/z08w8cMiDEbwgFjZHJDnC', trialModuleId='module-1'. Uses setDoc with merge:true so re-running is idempotent."
+  ],
+  "acceptance_criteria": [
+    "npm run build exits 0 with CourseManager compiling",
+    "/admin/courses route exists in App.tsx and renders CourseManager",
+    "CourseManager is wrapped with requireAdmin HOC — unauthenticated admin users see the 'Admin Access Required' screen",
+    "seedFirstCourse() in lmsService.ts writes all seed fields exactly as specified",
+    "Add/Edit dialog submits to Firestore via lmsService without TypeScript errors"
+  ],
+  "verification": [
+    "cd /Users/newmacbookair12/Documents/andrewstevenboima.github.io/Student_companion && npm run build"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

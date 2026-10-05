@@ -1,0 +1,7 @@
+{
+  "task_id": "task-lms-feature",
+  "task_description": "Build a full LMS (Learning Management System) into the existing React/TypeScript/Vite/Tailwind/shadcn career platform. Students can browse free/paid courses, enroll, pay via Flutterwave, and play SCORM content (first course: Career Readiness 101). Includes admin course management panel.",
+  "status": "pending",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
