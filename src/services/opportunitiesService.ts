@@ -12,6 +12,12 @@ export type Opportunity = {
 };
 
 const OPPORTUNITIES_ENDPOINT = `${API_URL}/api/opportunities`;
+// The career site (career.studentcompanionai.rw) reads its opportunities live
+// from the SCA Opportunities Google Sheet through this Apps Script web app.
+// opportunities.json on the site is only its fallback snapshot, which goes
+// stale, so the chat reads the same live feed first.
+const CAREER_SHEET_URL =
+  "https://script.google.com/macros/s/AKfycbw18zxmzIiicaePtqdlds9-rioJVjBRXB5c-4wISad6qo7hGRCAnYF7hf-qp1MIeDgg/exec?action=opportunities";
 const CAREER_SITE_URL = "https://career.studentcompanionai.rw/opportunities.json";
 const CACHE_KEY = "ALU_OPPORTUNITIES_CACHE";
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -27,9 +33,10 @@ const CATEGORY_MAP: Record<string, Opportunity["category"]> = {
   Grants: "Grant",
 };
 
-// Shape of a raw entry from career.studentcompanionai.rw/opportunities.json
+// Shape of a raw entry from the career site's Sheet feed or opportunities.json.
+// Sheet cells pass through as typed, so values are not guaranteed to be strings.
 interface CareerSiteEntry {
-  id: string;
+  id?: string;
   title: string;
   organization?: string;
   category: string;
@@ -38,19 +45,29 @@ interface CareerSiteEntry {
   deadline?: string;
   location?: string;
   status?: string;
+  date_added?: string;
 }
 
 /** Normalise a career-site entry to the widget's Opportunity type */
-const normaliseCareer = (e: CareerSiteEntry): Opportunity => ({
-  id: e.id,
-  title: e.title,
-  organization: e.organization,
-  category: CATEGORY_MAP[e.category] ?? "Program",
-  description: e.description,
-  url: e.apply_link,
-  deadline: e.deadline,
-  location: e.location,
-});
+const text = (v: unknown): string | undefined => {
+  const s = v === null || v === undefined ? "" : String(v).trim();
+  return s || undefined;
+};
+
+const normaliseCareer = (e: CareerSiteEntry): Opportunity => {
+  const title = text(e.title) ?? "";
+  const category = text(e.category) ?? "";
+  return {
+    id: text(e.id) ?? title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    title,
+    organization: text(e.organization),
+    category: CATEGORY_MAP[category] ?? CATEGORY_MAP[`${category}s`] ?? "Program",
+    description: text(e.description) ?? "",
+    url: text(e.apply_link) ?? "",
+    deadline: text(e.deadline),
+    location: text(e.location),
+  };
+};
 
 // Curated fallback list — shown only when both the career site and backend are unreachable.
 const FALLBACK: Opportunity[] = [
@@ -164,29 +181,38 @@ const writeCache = (opportunities: Opportunity[]) => {
   }
 };
 
-/**
- * Fetch live opportunities from career.studentcompanionai.rw.
- * Returns null if the fetch fails or returns no data.
- */
-const fetchFromCareerSite = async (): Promise<Opportunity[] | null> => {
+/** Live entries from one career-site source, or null if it fails or is empty. */
+const fetchCareerEntries = async (url: string, timeoutMs: number): Promise<Opportunity[] | null> => {
   try {
-    const res = await fetchWithTimeout(CAREER_SITE_URL, {}, 5000);
+    const res = await fetchWithTimeout(url, {}, timeoutMs);
     if (!res.ok) return null;
-    const data = (await res.json()) as { opportunities?: CareerSiteEntry[] };
-    const entries = data.opportunities;
+    const data = (await res.json()) as { opportunities?: CareerSiteEntry[] } | CareerSiteEntry[];
+    const entries = Array.isArray(data) ? data : data.opportunities;
     if (!Array.isArray(entries) || entries.length === 0) return null;
-    const live = entries.filter((e) => !e.status || e.status === "live");
-    return live.map(normaliseCareer);
+    const live = entries
+      .filter((e) => text(e.title) && (text(e.status) ?? "live").toLowerCase() === "live")
+      .map(normaliseCareer)
+      .filter((o) => o.url);
+    return live.length > 0 ? live : null;
   } catch {
     return null;
   }
 };
 
 /**
+ * Fetch live opportunities the way career.studentcompanionai.rw does: the
+ * Google Sheet feed first (Apps Script can take a few seconds to wake), then
+ * the site's opportunities.json snapshot.
+ */
+const fetchFromCareerSite = async (): Promise<Opportunity[] | null> =>
+  (await fetchCareerEntries(CAREER_SHEET_URL, 10000)) ??
+  (await fetchCareerEntries(CAREER_SITE_URL, 5000));
+
+/**
  * Returns a shuffled list of opportunities.
  *
  * Source priority:
- *  1. career.studentcompanionai.rw/opportunities.json — live SCA career site data
+ *  1. The career site's live Google Sheet feed, then its opportunities.json snapshot
  *  2. Backend at GET /api/opportunities (Tavily-powered)
  *  3. localStorage cache from a recent fetch (within 30 min)
  *  4. Curated FALLBACK list bundled with the app
