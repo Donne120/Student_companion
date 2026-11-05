@@ -6,6 +6,7 @@ import {
   Sparkles,
   Bookmark,
   BookmarkCheck,
+  MessageCircle,
 } from "lucide-react";
 import { opportunitiesService, type Opportunity } from "@/services/opportunitiesService";
 import { bookmarkService } from "@/services/bookmarkService";
@@ -104,6 +105,23 @@ const OpportunityCard = ({
         Learn more <ExternalLink className="h-3 w-3" />
       </span>
     </a>
+    {/* Outside the link: a button may not sit inside an <a>. Fills the chat
+        box with a question the backend answers from the live career feed. */}
+    <button
+      type="button"
+      onClick={() =>
+        window.dispatchEvent(
+          new CustomEvent("companion:suggest", {
+            detail: `Tell me about ${opportunity.title}${
+              opportunity.organization ? ` (${opportunity.organization})` : ""
+            }: am I eligible, when is the deadline, and how do I apply?`,
+          })
+        )
+      }
+      className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#1A1A1A]/70 hover:text-[#B8941F]"
+    >
+      <MessageCircle className="h-3 w-3" /> Ask the Companion
+    </button>
   </div>
 );
 

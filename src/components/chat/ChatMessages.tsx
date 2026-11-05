@@ -1,6 +1,6 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "../ChatMessage";
-import { BookOpen, Calendar, Compass, Loader, Sparkles, TrendingUp } from "lucide-react";
+import { BookOpen, Briefcase, Calendar, Loader, Sparkles, TrendingUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { isUnknownResponse } from "./ChatMessageHandler";
 import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
@@ -26,9 +26,9 @@ const STATIC_SUGGESTIONS = [
     prompt: "When does the next term start?",
   },
   {
-    icon: Compass,
-    title: "Campus services",
-    prompt: "How do I contact student housing?",
+    icon: Briefcase,
+    title: "Opportunities",
+    prompt: "Which opportunities can I apply to right now?",
   },
   {
     icon: Sparkles,
