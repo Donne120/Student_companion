@@ -11,6 +11,9 @@ export const getApiUrl = (): string => {
     return "http://localhost:8080";
   }
 
+  // Last resort for builds without VITE_API_URL. Set VITE_API_URL explicitly
+  // in every hosting environment (Vercel, Amplify): it is how the backend is
+  // switched between Hugging Face and AWS.
   return "https://studentcompanion-alu-chatbot.hf.space";
 };
 
