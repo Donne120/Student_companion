@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ArrowLeft, Eye, EyeOff, Loader } from "lucide-react";
 
-const SIDE_IMAGE = "/login-hero.png";
+const SIDE_IMAGE = "/login-hero.jpg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -205,7 +205,7 @@ export default function Login() {
         <img
           src={SIDE_IMAGE}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover object-[center_75%]"
         />
         <div className="absolute inset-0 bg-gradient-to-tr from-[#1A1A1A]/60 via-[#1A1A1A]/20 to-transparent" />
         <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
