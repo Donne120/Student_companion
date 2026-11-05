@@ -19,8 +19,8 @@ const COMPANION_LOGO = "/logo-icon.png";
 const HERO_VIDEO = "/hero-demo.mp4";
 const HERO_VIDEO_POSTER = "/hero-demo-poster.jpg";
 const FEATURE_IMAGE = "/news-tech.png";
-const STUDY_IMAGE = "/study.png";
-const CTA_IMAGE = "/news-sustainability.png";
+const STUDY_IMAGE = "/student-portrait.jpg";
+const CTA_IMAGE = "/cta-portrait.jpg";
 
 const DEMO_MESSAGES = [
   { from: "student", text: "When is the add/drop deadline for this term?" },
@@ -721,8 +721,8 @@ export default function LandingPage() {
             <div className="overflow-hidden rounded-3xl aspect-[5/4] shadow-xl">
               <img
                 src={STUDY_IMAGE}
-                alt="Students studying together on campus"
-                className="w-full h-full object-cover"
+                alt="A smiling student"
+                className="w-full h-full object-cover object-[center_12%]"
                 loading="lazy"
               />
             </div>
@@ -771,11 +771,13 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 lg:px-10 py-24" data-reveal>
         <div className="relative overflow-hidden rounded-3xl bg-[#1A1A1A] text-white p-10 md:p-16">
-          <div className="absolute inset-0 opacity-25">
+          {/* A portrait on the right half (faint full background on phones);
+              the gradient below fades it into the dark side behind the text. */}
+          <div className="absolute inset-y-0 right-0 w-full md:w-1/2 opacity-30 md:opacity-100">
             <img
               src={CTA_IMAGE}
-              alt="A modern, sustainable university residence building"
-              className="w-full h-full object-cover"
+              alt="A student"
+              className="w-full h-full object-cover object-[center_22%]"
               loading="lazy"
             />
           </div>
