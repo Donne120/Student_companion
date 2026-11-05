@@ -2,9 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Server } from "lucide-react";
-
-// Environment variable for local development
-const useLocalBackend = import.meta.env.DEV || false;
+import { API_URL } from "@/config/api";
 
 // Check if backend is available
 export const BackendStatus = () => {
@@ -12,18 +10,10 @@ export const BackendStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
 
-  // Get backend URL with efficient caching
-  const getBackendUrl = () => {
-    // Check if a BACKEND_URL is set in localStorage (for testing)
-    const storedBackendUrl = localStorage.getItem('BACKEND_URL');
-    if (storedBackendUrl) return storedBackendUrl;
-    
-    // Local development mode
-    if (useLocalBackend) return "http://localhost:8000";
-    
-    // Production deployment URL
-    return "https://studentcompanion-alu-chatbot.hf.space";
-  };
+  // Check the same backend the chat actually uses (src/config/api.ts), so the
+  // badge stays truthful when VITE_API_URL moves to another host. It used to
+  // hardcode the Hugging Face Space and would show "Offline" after a move.
+  const getBackendUrl = () => API_URL;
 
   // Check backend availability
   const checkBackendHealth = useCallback(async () => {

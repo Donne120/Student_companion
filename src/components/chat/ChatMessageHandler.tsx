@@ -3,7 +3,7 @@ import { Message } from "@/types/chat";
 import { toast } from "sonner";
 import { aiService } from "@/services/aiService";
 import { trendingService } from "@/services/trendingService";
-import { API_URL, fetchWithTimeout } from "@/config/api";
+import { API_URL, authHeader, fetchWithTimeout } from "@/config/api";
 
 interface ChatMessageHandlerProps {
   currentConversationId: string;
@@ -88,7 +88,9 @@ const fetchRelatedTopics = async (
       `${API_URL}/api/chat/related-topics`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // The backend answers from the caller's own university's knowledge
+        // base, so it needs to know who is asking.
+        headers: { "Content-Type": "application/json", ...(await authHeader()) },
         body: JSON.stringify({ question, response }),
       },
       5000
