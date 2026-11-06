@@ -5,10 +5,11 @@ import { aiService, type AttachmentPayload } from "@/services/aiService";
 import { toAttachmentPayload } from "@/lib/attachments";
 import { speak } from "@/utils/speech";
 import { stripSourceMarkers } from "@/lib/citations";
+import { splitQuickReplies } from "@/lib/quickReplies";
 
 /** An answer as it should be heard: no markdown symbols, links read as their text. */
 const toSpeech = (markdown: string): string =>
-  stripSourceMarkers(markdown)
+  splitQuickReplies(stripSourceMarkers(markdown)).body
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
     .replace(/https?:\/\/\S+/g, "")

@@ -115,6 +115,18 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     return () => recognition.abort();
   }, []);
 
+  // companion:send event — a quick-reply button answers right away
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (typeof detail === "string" && detail.trim() && !disabled) {
+        onSend(detail.trim(), []);
+      }
+    };
+    window.addEventListener("companion:send", handler);
+    return () => window.removeEventListener("companion:send", handler);
+  }, [disabled, onSend]);
+
   // companion:suggest event — fill input from suggestion chips
   useEffect(() => {
     const handler = (e: Event) => {
