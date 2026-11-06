@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ export default function Signup() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const { signup, signupWithGoogle } = useAuth();
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const { signup, signupWithGoogle, confirmSignup, resendSignupCode } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +49,12 @@ export default function Signup() {
     // domain list to keep in sync with what universities are onboarded.
     setIsLoading(true);
     try {
-      await signup(email, password, name);
+      const { needsConfirmation } = await signup(email, password, name);
+      if (needsConfirmation) {
+        // Cognito emailed a code; the form below asks for it.
+        setAwaitingCode(true);
+        return;
+      }
       toast.success("Account created", {
         description: "We emailed you a verification link — click it to unlock the Companion.",
       });
@@ -113,6 +120,32 @@ export default function Signup() {
             <p className="text-[#1A1A1A]/70 mb-10">
               Free for every student. Takes less than a minute.
             </p>
+
+            {awaitingCode ? (
+
+              <EmailCodeForm
+
+                email={email}
+
+                submitLabel="Confirm and continue"
+
+                onSubmit={async (code) => {
+
+                  await confirmSignup(email, code, password, name);
+
+                  toast.success("Welcome to Student Companion");
+
+                  navigate("/chat", { replace: true });
+
+                }}
+
+                onResend={() => resendSignupCode(email)}
+
+                onBack={() => setAwaitingCode(false)}
+
+              />
+
+            ) : (
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -259,6 +292,8 @@ export default function Signup() {
                 )}
               </Button>
             </form>
+
+            )}
 
             <p className="mt-10 text-sm text-center text-[#1A1A1A]/70">
               Already have an account?{" "}

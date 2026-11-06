@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login, signupWithGoogle } = useAuth();
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const { login, signupWithGoogle, confirmSignup, resendSignupCode } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,6 +27,11 @@ export default function Login() {
       toast.success("Welcome back");
       navigate("/chat");
     } catch (error) {
+      if ((error as { code?: string })?.code === "auth/needs-confirmation") {
+        setAwaitingCode(true);
+        toast.info("Confirm your email to finish signing in.");
+        return;
+      }
       toast.error(error instanceof Error ? error.message : "Failed to login");
     } finally {
       setIsLoading(false);
@@ -84,6 +91,32 @@ export default function Login() {
             <p className="text-[#1A1A1A]/70 mb-10">
               Sign in to continue your conversation with the Companion.
             </p>
+
+            {awaitingCode ? (
+
+              <EmailCodeForm
+
+                email={email}
+
+                submitLabel="Confirm and sign in"
+
+                onSubmit={async (code) => {
+
+                  await confirmSignup(email, code, password);
+
+                  toast.success("Welcome back");
+
+                  navigate("/chat");
+
+                }}
+
+                onResend={() => resendSignupCode(email)}
+
+                onBack={() => setAwaitingCode(false)}
+
+              />
+
+            ) : (
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
@@ -189,6 +222,8 @@ export default function Login() {
                 )}
               </Button>
             </form>
+
+            )}
 
             <p className="mt-10 text-sm text-center text-[#1A1A1A]/70">
               New to the Companion?{" "}

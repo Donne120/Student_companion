@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,8 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const { sendPasswordReset } = useAuth();
+  const { sendPasswordReset, confirmPasswordReset, usesEmailCodes } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +53,26 @@ export default function ForgotPassword() {
           </span>
         </div>
 
-        {sent ? (
+        {sent && usesEmailCodes ? (
+          /* ── Code + new password (Cognito) ─────────────────────── */
+          <>
+            <h1 className="font-serif text-4xl text-[#1A1A1A] tracking-tight mb-3">
+              Set a new password
+            </h1>
+            <EmailCodeForm
+              email={email}
+              askNewPassword
+              submitLabel="Save new password"
+              onSubmit={async (code, newPassword) => {
+                await confirmPasswordReset(email, code, newPassword ?? "");
+                toast.success("Password changed", { description: "Sign in with your new password." });
+                navigate("/login");
+              }}
+              onResend={() => sendPasswordReset(email)}
+              onBack={() => setSent(false)}
+            />
+          </>
+        ) : sent ? (
           /* ── Success state ─────────────────────────────────────── */
           <div className="text-center space-y-4">
             <div className="mx-auto w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
@@ -89,7 +110,9 @@ export default function ForgotPassword() {
               Forgot password?
             </h1>
             <p className="text-[#1A1A1A]/70 mb-10">
-              Enter your university email and we'll send you a reset link.
+              {usesEmailCodes
+                ? "Enter your university email and we'll send you a code to set a new password."
+                : "Enter your university email and we'll send you a reset link."}
             </p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -123,7 +146,7 @@ export default function ForgotPassword() {
                     Sending…
                   </>
                 ) : (
-                  "Send reset link"
+                  usesEmailCodes ? "Send code" : "Send reset link"
                 )}
               </Button>
             </form>
