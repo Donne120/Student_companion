@@ -156,6 +156,7 @@ export const ChatMessages = ({
               sources={message.sources}
               onEdit={(newText) => onEditMessage(message.id, newText)}
               onFeedback={(type, details) => handleFeedback(message.id, type, details)}
+              isLatest={idx === messages.length - 1 && !isLoading}
             />
 
             {/* Related topic chips — shown below finished AI messages */}

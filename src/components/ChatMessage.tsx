@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { speak, stopSpeaking, isSpeaking } from "@/utils/speech";
 import { stripSourceMarkers } from "@/lib/citations";
+import { sendQuickReply, splitQuickReplies } from "@/lib/quickReplies";
 
 interface ChatMessageProps {
   message: string;
@@ -20,6 +21,8 @@ interface ChatMessageProps {
   sources?: MessageSource[];
   onEdit?: (newMessage: string) => void;
   onFeedback?: (type: "positive" | "negative", details?: string) => void;
+  /** The newest answer: only its quick replies are shown as buttons. */
+  isLatest?: boolean;
 }
 
 interface CodeProps {
@@ -36,6 +39,7 @@ export const ChatMessage = ({
   sources = [],
   onEdit,
   onFeedback,
+  isLatest = false,
 }: ChatMessageProps) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -43,7 +47,10 @@ export const ChatMessage = ({
   const [feedbackGiven, setFeedbackGiven] = useState<"positive" | "negative" | null>(null);
   const [speaking, setSpeaking] = useState(false);
   // What the student sees, hears and copies: without "【Source 8】" markers.
-  const text = isAi ? stripSourceMarkers(message) : message;
+  // and without the "Quick replies:" line, which becomes buttons instead.
+  const { body: text, replies: quickReplies } = isAi
+    ? splitQuickReplies(stripSourceMarkers(message))
+    : { body: message, replies: [] as string[] };
   // Sources worth showing: the ones with a link, each once.
   const linkedSources = sources.filter(
     (src, i) => src.url && sources.findIndex((o) => o.url === src.url) === i
@@ -290,6 +297,22 @@ export const ChatMessage = ({
           )}
 
           {/* Sources: knowledge-base citations or "open in Gmail" links */}
+          {/* Quick replies: tap to answer the Companion's question */}
+          {isAi && isLatest && quickReplies.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2" role="group" aria-label="Quick replies">
+              {quickReplies.map((reply) => (
+                <button
+                  key={reply}
+                  type="button"
+                  onClick={() => sendQuickReply(reply)}
+                  className="px-3.5 py-1.5 rounded-full border border-[#1C1B19]/15 bg-white text-[13px] font-medium text-[#1C1B19] hover:bg-[#1C1B19] hover:text-white hover:border-[#1C1B19] transition-colors"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
+
           {isAi && linkedSources.length > 0 && (
             <div className="mt-5 pt-3 border-t border-[#EDEBE6]">
               <p className="text-xs font-medium text-[#6B6862] mb-1.5">Sources</p>
