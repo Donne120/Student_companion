@@ -28,7 +28,7 @@ interface ChatMessageHandlerProps {
     convId: string,
     messageId: string,
     newText: string,
-    options?: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[] }
+    options?: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[]; status?: string }
   ) => void;
 }
 
@@ -155,6 +155,11 @@ export const useChatMessageHandler = ({
             onChunk: (text) => {
               accumulated += text;
               onUpdateMessage(currentConversationId, aiMessageId, accumulated, { silent: true });
+            },
+            onStatus: (status) => {
+              if (!accumulated) {
+                onUpdateMessage(currentConversationId, aiMessageId, accumulated, { silent: true, status });
+              }
             },
             onSources: (sources) => {
               onUpdateMessage(currentConversationId, aiMessageId, accumulated, {

@@ -50,7 +50,10 @@ export const ChatMessages = ({
   const firstName = (currentUser?.displayName || "").trim().split(/\s+/)[0];
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // "end": keep the newest message just above the input. With a full-screen
+    // minimum height on the list, a short chat used to scroll down to blank
+    // space and hide the question and the progress line above the fold.
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages, isLoading]);
 
   // Load trending topics once when in empty state
@@ -139,7 +142,7 @@ export const ChatMessages = ({
 
   // ── Message list ──────────────────────────────────────────────────────────
   return (
-    <div className="bg-white min-h-screen overflow-x-hidden">
+    <div className="bg-white overflow-x-hidden">
       {messages.map((message, idx) => {
         // Find the user question that preceded this AI message
         const precedingUserMsg =
@@ -157,6 +160,8 @@ export const ChatMessages = ({
               onEdit={(newText) => onEditMessage(message.id, newText)}
               onFeedback={(type, details) => handleFeedback(message.id, type, details)}
               isLatest={idx === messages.length - 1 && !isLoading}
+              pending={idx === messages.length - 1 && isLoading}
+              status={message.status}
             />
 
             {/* Related topic chips — shown below finished AI messages */}
@@ -193,7 +198,8 @@ export const ChatMessages = ({
         );
       })}
 
-      {isLoading && (
+      {/* Before the answer's own placeholder exists (it shows the progress itself). */}
+      {isLoading && !messages[messages.length - 1]?.isAi && (
         <div className="pt-5 pb-3 px-4 md:px-8 bg-white">
           <div className="max-w-[44rem] mx-auto">
             <div className="flex items-center gap-2 mb-2">
@@ -208,7 +214,8 @@ export const ChatMessages = ({
           </div>
         </div>
       )}
-      <div ref={messagesEndRef} />
+      {/* Room for the input box pinned over the bottom of the page. */}
+      <div ref={messagesEndRef} className="scroll-mb-[190px] md:scroll-mb-[150px]" />
     </div>
   );
 };

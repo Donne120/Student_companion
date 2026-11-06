@@ -24,6 +24,8 @@ const errorDetail = async (res: Response, fallback: string): Promise<string> => 
 export type StreamCallbacks = {
   onChunk: (text: string) => void;
   onSources?: (sources: MessageSource[]) => void;
+  /** What the backend is doing before the first words ("Writing your answer"). */
+  onStatus?: (text: string) => void;
   onDone?: () => void;
   onError?: (message: string) => void;
 };
@@ -152,6 +154,8 @@ const streamResponseFromBackend = async (
           callbacks.onChunk(event.text);
         } else if (event.type === "sources" && Array.isArray(event.sources)) {
           callbacks.onSources?.(event.sources);
+        } else if (event.type === "status" && typeof event.text === "string") {
+          callbacks.onStatus?.(event.text);
         } else if (event.type === "done") {
           callbacks.onDone?.();
         } else if (event.type === "error") {
