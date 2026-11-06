@@ -1,3 +1,4 @@
+import { ACCEPTED_FILES } from "@/lib/attachments";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -20,7 +21,8 @@ import {
 import { toast } from "sonner";
 
 interface ChatInputProps {
-  onSend: (message: string, attachments: File[]) => void;
+  /** `viaVoice`: the question was spoken, so the answer is read aloud. */
+  onSend: (message: string, attachments: File[], viaVoice?: boolean) => void;
   disabled?: boolean;
 }
 
@@ -48,6 +50,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const autoSendRef = useRef(false);
+  const voiceTurnRef = useRef(false);
 
   // Set up speech recognition
   useEffect(() => {
@@ -85,6 +88,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
       // If we got a final transcript, send after a tiny delay so state settles
       if (autoSendRef.current) {
         autoSendRef.current = false;
+        voiceTurnRef.current = true;
         // Read latest message via callback form
         setMessage((prev) => {
           if (prev.trim()) {
@@ -145,7 +149,8 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
 
   const handleSend = () => {
     if ((message.trim() || attachments.length > 0) && !disabled) {
-      onSend(message.trim(), attachments);
+      onSend(message.trim(), attachments, voiceTurnRef.current);
+      voiceTurnRef.current = false;
       setMessage("");
       setAttachments([]);
       if (textareaRef.current) {
@@ -260,7 +265,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
               onChange={handleFileChange}
               multiple
               className="hidden"
-              accept="image/*,.pdf,.doc,.docx,.txt,.md,.csv,.xlsx,.xls,.pptx"
+              accept={ACCEPTED_FILES}
             />
             <Button
               onClick={() => fileInputRef.current?.click()}
