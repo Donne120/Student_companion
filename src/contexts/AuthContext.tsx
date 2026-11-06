@@ -8,20 +8,31 @@ import {
   sendEmailVerification,
   User,
   signInWithPopup,
+  signInWithCustomToken,
   GoogleAuthProvider,
   updateProfile,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { upsertUserProfile, updateUserProfileFields } from "@/services/userService";
 import { checkOrganizationDomain } from "@/services/organizationService";
+import * as cognito from "@/lib/cognito";
 
 type ProfileUpdate = { name?: string; picture?: string };
 
 type AuthContextType = {
   currentUser: User | null;
-  signup: (email: string, password: string, name: string) => Promise<User>;
+  /** With Cognito, `needsConfirmation` is true: a code was emailed; call confirmSignup next. */
+  signup: (email: string, password: string, name: string) => Promise<{ needsConfirmation: boolean }>;
+  /** Confirm the emailed sign-up code, then sign in. */
+  confirmSignup: (email: string, code: string, password: string, name?: string) => Promise<User>;
+  resendSignupCode: (email: string) => Promise<void>;
   signupWithGoogle: () => Promise<User>;
+  /** Throws an error with code "auth/needs-confirmation" when the email isn't confirmed yet. */
   login: (email: string, password: string) => Promise<User>;
+  /** Finish a password reset with the emailed code (Cognito only). */
+  confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<void>;
+  /** True when password reset and sign-up use emailed codes (Cognito). */
+  usesEmailCodes: boolean;
   logout: () => Promise<void>;
   updateProfile: (updates: ProfileUpdate) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
@@ -90,8 +101,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
 
+  /** Email/password through Cognito, then a Firebase session for the same student. */
+  async function cognitoSignIn(email: string, password: string, name?: string): Promise<User> {
+    const idToken = await cognito.signIn(email, password);
+    const { customToken, isNew } = await cognito.exchangeForFirebase(idToken);
+    let user: User;
+    try {
+      ({ user } = await signInWithCustomToken(auth, customToken));
+    } catch (error) {
+      throw friendlyAuthError(error);
+    }
+    if (isNew) {
+      const orgCheck = await checkOrganizationDomain(email).catch(() => null);
+      upsertUserProfile({
+        uid: user.uid,
+        email: user.email ?? email.trim().toLowerCase(),
+        displayName: name || user.displayName || "",
+        photoURL: user.photoURL ?? "",
+        provider: "password",
+        organizationName: orgCheck?.organizationName ?? null,
+      }).catch((err) => console.error("[Firestore] upsertUserProfile failed:", err));
+    }
+    return user;
+  }
+
   /** Email / password sign-up + Firestore profile write */
-  async function signup(email: string, password: string, name: string): Promise<User> {
+  async function signup(email: string, password: string, name: string): Promise<{ needsConfirmation: boolean }> {
     // Checked BEFORE creating the Firebase account (unlike the Google path
     // below, which historically could only check afterward) — a rejected
     // domain here never creates a dangling account that has to be torn down.
@@ -101,6 +136,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (!orgCheck.allowed) {
       throw new Error("Please use your university email to sign up.");
+    }
+    if (cognito.cognitoEnabled) {
+      await cognito.signUp(email, password, name);
+      return { needsConfirmation: true };
     }
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
@@ -121,10 +160,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         provider: "password",
         organizationName: orgCheck.organizationName,
       }).catch((err) => console.error("[Firestore] upsertUserProfile failed:", err));
-      return user;
+      return { needsConfirmation: false };
     } catch (error) {
       throw friendlyAuthError(error);
     }
+  }
+
+  async function confirmSignup(email: string, code: string, password: string, name?: string): Promise<User> {
+    await cognito.confirmSignUp(email, code);
+    return cognitoSignIn(email, password, name);
+  }
+
+  async function resendSignupCode(email: string): Promise<void> {
+    await cognito.resendCode(email);
   }
 
   /** Google sign-in/sign-up + Firestore profile write */
@@ -163,6 +211,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Email / password sign-in */
   async function login(email: string, password: string): Promise<User> {
+    if (cognito.cognitoEnabled) {
+      try {
+        return await cognitoSignIn(email, password);
+      } catch (error) {
+        if (error instanceof cognito.CognitoError && error.code === "UserNotConfirmedException") {
+          // Send a fresh code so the login page can ask for it right away.
+          await cognito.resendCode(email).catch(() => undefined);
+          const e = new Error("Enter the 6-digit code we just emailed you to confirm your account.");
+          (e as { code?: string }).code = "auth/needs-confirmation";
+          throw e;
+        }
+        throw error;
+      }
+    }
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       return user;
@@ -191,11 +253,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Password reset email */
   async function sendPasswordReset(email: string): Promise<void> {
+    if (cognito.cognitoEnabled) {
+      await cognito.forgotPassword(email);
+      return;
+    }
     try {
       await sendPasswordResetEmail(auth, email);
     } catch (error) {
       throw friendlyAuthError(error);
     }
+  }
+
+  async function confirmPasswordReset(email: string, code: string, newPassword: string): Promise<void> {
+    await cognito.confirmForgotPassword(email, code, newPassword);
   }
 
   /** Re-send the signup verification link to the signed-in user */
@@ -228,8 +298,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     currentUser,
     signup,
+    confirmSignup,
+    resendSignupCode,
     signupWithGoogle,
     login,
+    confirmPasswordReset,
+    usesEmailCodes: cognito.cognitoEnabled,
     logout,
     updateProfile: updateUserProfile,
     sendPasswordReset,
