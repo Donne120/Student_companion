@@ -16,8 +16,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const COMPANION_LOGO = "/logo-icon.png";
 
-const HERO_VIDEO = "/hero-demo.mp4";
-const HERO_VIDEO_POSTER = "/hero-demo-poster.jpg";
+// Real student portrait (replaced the stock demo video). A slow zoom in
+// index.css (.hero-photo-zoom) keeps a little motion; off for reduced motion.
+const HERO_PHOTO = "/hero-student.jpg";
 const FEATURE_IMAGE = "/news-tech.png";
 const STUDY_IMAGE = "/student-portrait.jpg";
 const CTA_IMAGE = "/cta-portrait.jpg";
@@ -440,16 +441,11 @@ export default function LandingPage() {
                 style={{ transitionDelay: "500ms" }}
                 data-in={heroIn}
               >
-                <video
-                  src={HERO_VIDEO}
-                  poster={HERO_VIDEO_POSTER}
-                  className="w-full h-56 md:h-64 object-cover"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="metadata"
-                  aria-label="A student asking Student Companion AI a question on their phone"
+                <img
+                  src={HERO_PHOTO}
+                  alt="A smiling Student Companion AI student"
+                  className="w-full h-56 md:h-64 object-cover object-[center_30%] hero-photo-zoom"
+                  loading="eager"
                 />
                 <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
               </div>
