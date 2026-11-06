@@ -1,6 +1,6 @@
 import { Message } from "@/types/chat";
 import { ChatMessage } from "../ChatMessage";
-import { BookOpen, Briefcase, Calendar, Loader, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { isUnknownResponse } from "./ChatMessageHandler";
 import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
@@ -17,24 +17,20 @@ interface ChatMessagesProps {
 
 const STATIC_SUGGESTIONS = [
   {
-    icon: BookOpen,
-    title: "Academic policies",
+    title: "Academics",
     prompt: "What is the grading policy?",
   },
   {
-    icon: Calendar,
-    title: "Important dates",
+    title: "Dates",
     prompt: "When does the next term start?",
   },
   {
-    icon: Briefcase,
     title: "Opportunities",
     prompt: "Which opportunities can I apply to right now?",
   },
   {
-    icon: Sparkles,
-    title: "Get started",
-    prompt: "What can you help me with?",
+    title: "Campus life",
+    prompt: "How do I join a club or student society?",
   },
 ];
 
@@ -91,53 +87,44 @@ export const ChatMessages = ({
   if (messages.length === 0) {
     const showTrending = trendingTopics.length >= 3;
 
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
     return (
-      <div className="min-h-[calc(100dvh-260px)] md:min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-4 py-8 md:py-12 bg-white">
-        <div className="max-w-2xl w-full text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#FBF7E9] border border-[#E8DDB0] mb-4 md:mb-6">
-            <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-[#D4AF37]" />
-          </div>
-          <p className="text-sm md:text-base font-medium text-[#B8941F] mb-1 md:mb-2">
-            {firstName ? `Welcome, ${firstName} 👋` : "Welcome to Student Companion AI 👋"}
-          </p>
-          <h1 className="font-serif text-[28px] md:text-5xl text-[#1A1A1A] tracking-tight mb-2 md:mb-3 leading-tight">
-            How can I help you today?
+      <div className="min-h-[calc(100dvh-260px)] md:min-h-[calc(100vh-200px)] flex flex-col justify-center px-4 md:px-8 py-10 bg-white">
+        <div className="max-w-[44rem] w-full mx-auto">
+          <h1 className="text-[26px] md:text-[32px] font-semibold text-[#1C1B19] tracking-[-0.02em] leading-tight">
+            {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="text-sm md:text-base text-[#1A1A1A]/60 mb-6 md:mb-8 px-2">
-            Ask about academics, deadlines, campus life or opportunities.
-            Type your own question below, or start with one of these.
+          <p className="mt-2 text-[15px] text-[#6B6862] leading-relaxed">
+            Ask about courses, deadlines, campus services or opportunities at your university.
           </p>
 
-          {/* Static suggestion cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto mb-6">
-            {STATIC_SUGGESTIONS.map(({ icon: Icon, title, prompt }) => (
+          {/* Suggested questions */}
+          <div className="mt-8 rounded-xl border border-[#E5E3DE] divide-y divide-[#EDEBE6] overflow-hidden">
+            {STATIC_SUGGESTIONS.map(({ title, prompt }) => (
               <button
                 key={title}
                 onClick={() => firePrompt(prompt)}
-                className="group text-left p-4 rounded-xl border border-[#E8DDB0] bg-white hover:border-[#D4AF37] hover:bg-[#FBF7E9]/40 transition-all"
+                className="group w-full flex items-center gap-4 px-4 py-3.5 text-left bg-white hover:bg-[#F7F6F3] transition-colors"
               >
-                <Icon className="h-4 w-4 text-[#B8941F] mb-2" />
-                <div className="text-sm font-medium text-[#1A1A1A] mb-1">{title}</div>
-                <div className="text-xs text-[#1A1A1A]/60 leading-relaxed">{prompt}</div>
+                <span className="hidden sm:block w-32 flex-shrink-0 text-[13px] text-[#8C887F]">{title}</span>
+                <span className="flex-1 min-w-0 text-[14px] text-[#262521]">{prompt}</span>
+                <ArrowRight className="h-4 w-4 text-[#B5B0A5] group-hover:text-[#1C1B19] group-hover:translate-x-0.5 transition-all flex-shrink-0" />
               </button>
             ))}
           </div>
 
-          {/* Trending topics */}
+          {/* What other students are asking */}
           {showTrending && (
-            <div className="max-w-xl mx-auto">
-              <div className="flex items-center justify-center gap-1.5 mb-3">
-                <TrendingUp className="h-3.5 w-3.5 text-[#B8941F]" />
-                <span className="text-xs font-medium text-[#1A1A1A]/50 uppercase tracking-wider">
-                  Trending this week
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2 justify-center">
+            <div className="mt-8">
+              <p className="text-[13px] text-[#8C887F] mb-2.5">Popular with students this week</p>
+              <div className="flex flex-wrap gap-2">
                 {trendingTopics.map((topic) => (
                   <button
                     key={topic}
                     onClick={() => firePrompt(topic)}
-                    className="px-3 py-1.5 rounded-full border border-[#E8DDB0] bg-white text-xs text-[#1A1A1A]/70 hover:border-[#D4AF37] hover:text-[#B8941F] hover:bg-[#FBF7E9]/40 transition-all"
+                    className="px-3 py-1.5 rounded-lg border border-[#E5E3DE] bg-white text-[13px] text-[#4A4843] hover:border-[#C8C4BA] hover:text-[#1C1B19] transition-colors"
                   >
                     {topic.length > 50 ? topic.slice(0, 50) + "…" : topic}
                   </button>
@@ -175,21 +162,21 @@ export const ChatMessages = ({
             {message.isAi &&
               message.relatedTopics &&
               message.relatedTopics.length > 0 && (
-                <div className="px-4 md:px-8 pb-2 max-w-5xl mx-auto">
-                  <p className="text-[10px] uppercase tracking-wider text-[#1A1A1A]/40 mb-2">
-                    Related topics
-                  </p>
+                <div className="px-4 md:px-8 pb-4">
+                <div className="max-w-[44rem] mx-auto">
+                  <p className="text-xs font-medium text-[#6B6862] mb-2">Related</p>
                   <div className="flex flex-wrap gap-2">
                     {message.relatedTopics.map((topic) => (
                       <button
                         key={topic}
                         onClick={() => firePrompt(topic)}
-                        className="px-3 py-1.5 rounded-full border border-[#E8DDB0] bg-white text-xs text-[#1A1A1A]/70 hover:border-[#D4AF37] hover:text-[#B8941F] hover:bg-[#FBF7E9]/40 transition-all"
+                        className="px-3 py-1.5 rounded-lg border border-[#E5E3DE] bg-white text-[13px] text-[#4A4843] hover:border-[#C8C4BA] hover:text-[#1C1B19] transition-colors"
                       >
                         {topic}
                       </button>
                     ))}
                   </div>
+                </div>
                 </div>
               )}
 
@@ -197,7 +184,7 @@ export const ChatMessages = ({
             {message.isAi &&
               isUnknownResponse(message.text) &&
               precedingUserMsg && (
-                <div className="px-4 md:px-8 pb-4 max-w-5xl mx-auto">
+                <div className="px-4 md:px-8 pb-4 max-w-[44rem] mx-auto">
                   <AnswerSuggestionForm questionText={precedingUserMsg} />
                 </div>
               )}
@@ -206,12 +193,16 @@ export const ChatMessages = ({
       })}
 
       {isLoading && (
-        <div className="py-6 px-4 md:px-8 bg-white">
-          <div className="max-w-5xl mx-auto flex gap-4 items-start">
-            <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse mt-2" />
-            <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60">
-              <Loader className="h-4 w-4 animate-spin text-[#D4AF37]" />
-              <span>Thinking…</span>
+        <div className="pt-5 pb-3 px-4 md:px-8 bg-white">
+          <div className="max-w-[44rem] mx-auto">
+            <div className="flex items-center gap-2 mb-2">
+              <img src="/logo-icon.png" alt="" className="h-5 w-5 object-contain" />
+              <span className="text-[13px] font-semibold text-[#1C1B19]">Student Companion</span>
+            </div>
+            <div className="flex items-center gap-1.5 h-6" aria-label="Writing an answer">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9C978C] animate-bounce [animation-delay:-0.3s]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9C978C] animate-bounce [animation-delay:-0.15s]" />
+              <span className="h-1.5 w-1.5 rounded-full bg-[#9C978C] animate-bounce" />
             </div>
           </div>
         </div>

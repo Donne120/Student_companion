@@ -1,7 +1,21 @@
 import { useState, useCallback } from "react";
 import { Message } from "@/types/chat";
 import { toast } from "sonner";
-import { aiService } from "@/services/aiService";
+import { aiService, type AttachmentPayload } from "@/services/aiService";
+import { toAttachmentPayload } from "@/lib/attachments";
+import { speak } from "@/utils/speech";
+import { stripSourceMarkers } from "@/lib/citations";
+
+/** An answer as it should be heard: no markdown symbols, links read as their text. */
+const toSpeech = (markdown: string): string =>
+  stripSourceMarkers(markdown)
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/[*_`>]+/g, "")
+    .replace(/\n{2,}/g, ". ")
+    .trim();
 import { trendingService } from "@/services/trendingService";
 import { API_URL, authHeader, fetchWithTimeout } from "@/config/api";
 
@@ -18,6 +32,13 @@ interface ChatMessageHandlerProps {
 }
 
 const MAX_CONTEXT_MESSAGES = 10;
+
+// The files last attached in each chat, kept in memory (never saved) so a
+// follow-up like "and what does page 2 say?" can still read them.
+const recentFiles = new Map<string, AttachmentPayload[]>();
+
+const DEFAULT_FILE_QUESTION =
+  "Please look at what I've attached: tell me what it is and summarise what matters for me.";
 
 /** Detect whether the AI response signals that it doesn't know the answer. */
 export const isUnknownResponse = (text: string): boolean => {
@@ -114,7 +135,7 @@ export const useChatMessageHandler = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const runAi = useCallback(
-    async (userText: string, history: Message[]) => {
+    async (userText: string, history: Message[], attachments: AttachmentPayload[] = [], readAloud = false) => {
       const aiMessageId = `${Date.now()}-ai`;
       const aiMessage: Message = {
         id: aiMessageId,
@@ -151,8 +172,15 @@ export const useChatMessageHandler = ({
                 );
               }
             },
-          }
+          },
+          attachments
         );
+
+        // Voice mode: a spoken question gets a spoken answer, in the
+        // Companion's voice (backend /api/tts, browser voice as fallback).
+        if (readAloud && accumulated.trim()) {
+          speak(toSpeech(accumulated));
+        }
 
         // After streaming finishes: fetch related topics (non-blocking)
         if (accumulated.trim()) {
@@ -181,7 +209,7 @@ export const useChatMessageHandler = ({
   );
 
   const handleSendMessage = useCallback(
-    async (message: string, files: File[] = []) => {
+    async (message: string, files: File[] = [], viaVoice = false) => {
       if (!message.trim() && files.length === 0) {
         toast.error("Please enter a message or attach a file");
         return;
@@ -203,9 +231,25 @@ export const useChatMessageHandler = ({
             )
           : undefined;
 
+      // Read the files for the backend. A new attachment replaces the chat's
+      // earlier ones; a follow-up without files reuses them.
+      let payload: AttachmentPayload[] = [];
+      if (files.length > 0) {
+        try {
+          payload = await Promise.all(files.map(toAttachmentPayload));
+        } catch (e) {
+          toast.error(e instanceof Error ? e.message : "Could not read that file.");
+          return;
+        }
+        recentFiles.set(currentConversationId, payload);
+      } else {
+        payload = recentFiles.get(currentConversationId) ?? [];
+      }
+      const question = message.trim() || DEFAULT_FILE_QUESTION;
+
       const newMessage: Message = {
         id: `${Date.now()}-user`,
-        text: message,
+        text: message.trim() ? message : files.map((f) => f.name).join(", "),
         isAi: false,
         timestamp: Date.now(),
         attachments,
@@ -214,7 +258,7 @@ export const useChatMessageHandler = ({
       onAddMessage(currentConversationId, newMessage);
       setIsLoading(true);
       try {
-        await runAi(message, [...messages, newMessage]);
+        await runAi(question, [...messages, newMessage], payload, viaVoice);
       } finally {
         setIsLoading(false);
       }
@@ -242,7 +286,7 @@ export const useChatMessageHandler = ({
 
       setIsLoading(true);
       try {
-        await runAi(newText, editedHistory);
+        await runAi(newText, editedHistory, recentFiles.get(currentConversationId) ?? []);
       } finally {
         setIsLoading(false);
       }

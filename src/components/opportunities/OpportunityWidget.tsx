@@ -3,7 +3,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Sparkles,
   Bookmark,
   BookmarkCheck,
   MessageCircle,
@@ -47,91 +46,82 @@ const OpportunityCard = ({
   compact,
   bookmarked,
   onToggleBookmark,
-}: OpportunityCardProps) => (
-  <div className="group/card rounded-xl border border-[#E8DDB0] bg-white p-4 hover:border-[#D4AF37] hover:shadow-sm transition-all">
-    <div className="flex items-center justify-between mb-2">
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FBF7E9] border border-[#E8DDB0] text-[10px] font-medium text-[#B8941F]">
-        {opportunity.category}
-      </span>
-      <div className="flex items-center gap-1">
-        {opportunity.location && (
-          <span className="text-[10px] text-[#1A1A1A]/50 truncate max-w-[80px]">
-            {opportunity.location}
-          </span>
-        )}
+}: OpportunityCardProps) => {
+  const meta = [opportunity.category, opportunity.location].filter(Boolean).join(" · ");
+  return (
+    <div className="group/card rounded-lg border border-[#E5E3DE] bg-white p-4 hover:border-[#C8C4BA] transition-colors">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[12px] text-[#8C887F] truncate">{meta}</p>
         <button
           onClick={() => onToggleBookmark(opportunity)}
-          className="p-1 rounded hover:bg-[#FBF7E9] transition-colors flex-shrink-0"
+          className="-mt-1 -mr-1 p-1 rounded hover:bg-[#F4F3F0] transition-colors flex-shrink-0"
           aria-label={bookmarked ? "Remove bookmark" : "Save opportunity"}
           title={bookmarked ? "Remove from saved" : "Save for later"}
         >
           {bookmarked ? (
-            <BookmarkCheck className="h-3.5 w-3.5 text-[#D4AF37]" />
+            <BookmarkCheck className="h-3.5 w-3.5 text-[#1C1B19]" />
           ) : (
-            <Bookmark className="h-3.5 w-3.5 text-[#1A1A1A]/30 group-hover/card:text-[#1A1A1A]/60" />
+            <Bookmark className="h-3.5 w-3.5 text-[#B5B0A5] group-hover/card:text-[#6B6862]" />
           )}
         </button>
       </div>
-    </div>
-    <a
-      href={opportunity.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block group/link"
-    >
-      <h3
-        className={`font-semibold text-[#1A1A1A] leading-snug group-hover/link:text-[#B8941F] transition-colors ${
-          compact ? "text-sm" : "text-[15px]"
-        }`}
-      >
-        {opportunity.title}
-      </h3>
-      {opportunity.organization && (
-        <p className="text-xs text-[#1A1A1A]/60 mt-0.5">{opportunity.organization}</p>
-      )}
-      <p
-        className={`text-[#1A1A1A]/75 mt-2 leading-relaxed line-clamp-3 ${
-          compact ? "text-xs" : "text-sm"
-        }`}
-      >
-        {opportunity.description}
-      </p>
-      {opportunity.deadline && (
-        <p className="mt-1.5 text-[10px] text-[#B8941F] font-medium">
-          Deadline: {opportunity.deadline}
+      <a href={opportunity.url} target="_blank" rel="noopener noreferrer" className="block group/link mt-1">
+        <h3
+          className={`font-semibold text-[#1C1B19] leading-snug group-hover/link:underline underline-offset-2 ${
+            compact ? "text-[13px]" : "text-[14px]"
+          }`}
+        >
+          {opportunity.title}
+        </h3>
+        {opportunity.organization && (
+          <p className="text-[12px] text-[#6B6862] mt-0.5">{opportunity.organization}</p>
+        )}
+        <p className="text-[13px] text-[#4A4843] mt-2 leading-relaxed line-clamp-2">
+          {opportunity.description}
         </p>
-      )}
-      <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#B8941F]">
-        Learn more <ExternalLink className="h-3 w-3" />
-      </span>
-    </a>
-    {/* Outside the link: a button may not sit inside an <a>. Fills the chat
-        box with a question the backend answers from the live career feed. */}
-    <button
-      type="button"
-      onClick={() =>
-        window.dispatchEvent(
-          new CustomEvent("companion:suggest", {
-            detail: `Tell me about ${opportunity.title}${
-              opportunity.organization ? ` (${opportunity.organization})` : ""
-            }: am I eligible, when is the deadline, and how do I apply?`,
-          })
-        )
-      }
-      className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#1A1A1A]/70 hover:text-[#B8941F]"
-    >
-      <MessageCircle className="h-3 w-3" /> Ask the Companion
-    </button>
-  </div>
-);
+      </a>
+      <div className="mt-3 flex items-center justify-between gap-2 text-[12px]">
+        <span className="text-[#6B6862] truncate">
+          {opportunity.deadline ? `Deadline: ${opportunity.deadline}` : ""}
+        </span>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Fills the chat box with a question the backend answers from the live career feed. */}
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(
+                new CustomEvent("companion:suggest", {
+                  detail: `Tell me about ${opportunity.title}${
+                    opportunity.organization ? ` (${opportunity.organization})` : ""
+                  }: am I eligible, when is the deadline, and how do I apply?`,
+                })
+              )
+            }
+            className="inline-flex items-center gap-1 font-medium text-[#4A4843] hover:text-[#1C1B19]"
+          >
+            <MessageCircle className="h-3 w-3" /> Ask
+          </button>
+          <a
+            href={opportunity.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium text-[#1C1B19] hover:underline underline-offset-2"
+          >
+            Apply <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SkeletonCard = () => (
-  <div className="rounded-xl border border-[#E8DDB0] bg-white p-4">
-    <div className="h-3 w-1/3 bg-[#FBF7E9] rounded animate-pulse mb-3" />
+  <div className="rounded-xl border border-[#E5E3DE] bg-white p-4">
+    <div className="h-3 w-1/3 bg-[#F4F3F0] rounded animate-pulse mb-3" />
     <div className="space-y-2">
-      <div className="h-3 w-2/3 bg-[#FBF7E9] rounded animate-pulse" />
-      <div className="h-3 w-full bg-[#FBF7E9] rounded animate-pulse" />
-      <div className="h-3 w-4/5 bg-[#FBF7E9] rounded animate-pulse" />
+      <div className="h-3 w-2/3 bg-[#F4F3F0] rounded animate-pulse" />
+      <div className="h-3 w-full bg-[#F4F3F0] rounded animate-pulse" />
+      <div className="h-3 w-4/5 bg-[#F4F3F0] rounded animate-pulse" />
     </div>
   </div>
 );
@@ -252,59 +242,44 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
     >
       {/* Header with tabs */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1 bg-[#FBF7E9] rounded-lg p-0.5">
+        <div className="flex items-center gap-4 text-[13px]">
           <button
             onClick={() => setTab("browse")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+            className={`pb-1 border-b-2 transition-colors ${
               tab === "browse"
-                ? "bg-white shadow-sm text-[#1A1A1A]"
-                : "text-[#1A1A1A]/60 hover:text-[#1A1A1A]"
+                ? "border-[#1C1B19] text-[#1C1B19] font-medium"
+                : "border-transparent text-[#8C887F] hover:text-[#1C1B19]"
             }`}
           >
-            <Sparkles className="h-3 w-3 text-[#D4AF37]" />
-            Browse
+            Latest
           </button>
           <button
             onClick={() => setTab("saved")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+            className={`pb-1 border-b-2 transition-colors ${
               tab === "saved"
-                ? "bg-white shadow-sm text-[#1A1A1A]"
-                : "text-[#1A1A1A]/60 hover:text-[#1A1A1A]"
+                ? "border-[#1C1B19] text-[#1C1B19] font-medium"
+                : "border-transparent text-[#8C887F] hover:text-[#1C1B19]"
             }`}
           >
-            <BookmarkCheck className="h-3 w-3" />
-            Saved
-            {bookmarkedIds.size > 0 && (
-              <span className="bg-[#D4AF37] text-[#1A1A1A] text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-                {bookmarkedIds.size}
-              </span>
-            )}
+            Saved{bookmarkedIds.size > 0 ? ` (${bookmarkedIds.size})` : ""}
           </button>
         </div>
 
         {tab === "browse" && (
-          <div className="flex items-center gap-2">
-            <a
-              href="https://career.studentcompanionai.rw"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[10px] text-[#B8941F] hover:underline font-medium flex items-center gap-0.5"
-            >
-              SCA Careers <ExternalLink className="h-2.5 w-2.5" />
-            </a>
+          <div className="flex items-center gap-1">
             <button
               onClick={() => advance(-1)}
-              className="p-1 rounded hover:bg-[#FBF7E9] text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors"
+              className="p-1 rounded hover:bg-[#F4F3F0] text-[#1C1B19]/50 hover:text-[#1C1B19] transition-colors"
               aria-label="Previous opportunities"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <button
               onClick={() => advance(1)}
-              className="p-1 rounded hover:bg-[#FBF7E9] text-[#1A1A1A]/50 hover:text-[#1A1A1A] transition-colors"
+              className="p-1 rounded hover:bg-[#F4F3F0] text-[#1C1B19]/50 hover:text-[#1C1B19] transition-colors"
               aria-label="Next opportunities"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
         )}
@@ -322,10 +297,10 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
               <button
                 key={cat}
                 onClick={() => handleFilter(cat)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                className={`px-2.5 py-1 rounded-md text-[12px] border transition-colors ${
                   activeFilter === cat
-                    ? "bg-[#D4AF37] border-[#D4AF37] text-[#1A1A1A]"
-                    : "bg-white border-[#E8DDB0] text-[#1A1A1A]/60 hover:border-[#D4AF37] hover:text-[#B8941F]"
+                    ? "bg-[#1C1B19] border-[#1C1B19] text-white"
+                    : "bg-white border-[#E5E3DE] text-[#4A4843] hover:border-[#C8C4BA] hover:text-[#1C1B19]"
                 }`}
               >
                 {cat}
@@ -340,13 +315,13 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
 
           {/* Cards */}
           {filtered.length === 0 ? (
-            <div className="rounded-xl border border-[#E8DDB0] bg-[#FBF7E9]/50 p-6 text-center">
-              <p className="text-sm text-[#1A1A1A]/50">
+            <div className="rounded-xl border border-[#E5E3DE] bg-[#F4F3F0]/50 p-6 text-center">
+              <p className="text-sm text-[#1C1B19]/50">
                 No {activeFilter.toLowerCase()} opportunities right now.
               </p>
               <button
                 onClick={() => handleFilter("All")}
-                className="mt-2 text-xs text-[#B8941F] hover:underline"
+                className="mt-2 text-xs text-[#8A6A16] hover:underline"
               >
                 Show all
               </button>
@@ -376,7 +351,7 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
                 <span
                   key={i}
                   className={`h-1 rounded-full transition-all ${
-                    i === currentPage % 5 ? "w-4 bg-[#D4AF37]" : "w-1 bg-[#E8DDB0]"
+                    i === currentPage % 5 ? "w-4 bg-[#6B6862]" : "w-1 bg-[#E5E3DE]"
                   }`}
                 />
               ))}
@@ -388,9 +363,9 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
             href="https://career.studentcompanionai.rw"
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 flex items-center justify-center gap-1.5 w-full py-2 rounded-lg border border-[#E8DDB0] text-xs text-[#B8941F] font-medium hover:bg-[#FBF7E9] hover:border-[#D4AF37] transition-all"
+            className="mt-4 flex items-center justify-center gap-1.5 w-full py-2 text-[13px] text-[#1C1B19] font-medium hover:underline underline-offset-2"
           >
-            Browse all on SCA Careers
+            See all opportunities
             <ExternalLink className="h-3 w-3" />
           </a>
         </>

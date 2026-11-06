@@ -40,7 +40,7 @@ export const ChatContainer = () => {
 
   return (
     <div
-      className={`min-h-[100dvh] bg-white font-sans text-[#1A1A1A] flex ${
+      className={`min-h-[100dvh] bg-white font-sans text-[#1C1B19] flex ${
         accessibilityMode ? "text-lg leading-relaxed" : ""
       }`}
     >
@@ -55,20 +55,20 @@ export const ChatContainer = () => {
         />
       </div>
 
-      <main className="flex-1 min-w-0 md:pl-64 lg:pr-80 transition-all duration-300 relative overflow-x-hidden">
+      <main className="flex-1 min-w-0 md:pl-64 lg:pr-80 transition-all duration-300 relative overflow-x-clip">
         {/* Mobile top bar */}
-        <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E8DDB0] safe-top">
+        <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E5E3DE] safe-top">
           <div className="h-14 px-3 flex items-center gap-2">
             <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
               <SheetTrigger asChild>
                 <button
-                  className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-[#FBF7E9] text-[#1A1A1A]"
+                  className="h-9 w-9 -ml-1 flex items-center justify-center rounded-full hover:bg-[#F4F3F0] text-[#1C1B19]"
                   aria-label="Open conversations"
                 >
                   <Menu className="h-5 w-5" />
                 </button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-72 bg-[#FBF7E9]/40">
+              <SheetContent side="left" className="p-0 w-72 bg-[#F4F3F0]/40">
                 <ConversationSidebar
                   conversations={conversations}
                   currentConversationId={currentConversationId}
@@ -86,14 +86,14 @@ export const ChatContainer = () => {
             </Sheet>
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <img src="/logo-icon.png" alt="Student Companion AI" className="w-8 h-8 object-contain flex-shrink-0" />
-              <span className="text-[15px] font-semibold tracking-tight text-[#1A1A1A] truncate">
+              <span className="text-[15px] font-semibold tracking-tight text-[#1C1B19] truncate">
                 {currentConversation?.title || "Companion"}
               </span>
             </div>
             <BackendStatus quiet />
             <button
               onClick={createNewConversation}
-              className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#FBF7E9] text-[#1A1A1A]"
+              className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#F4F3F0] text-[#1C1B19]"
               aria-label="New chat"
             >
               <Plus className="h-5 w-5" />
@@ -102,14 +102,11 @@ export const ChatContainer = () => {
         </div>
 
         {/* Desktop top bar */}
-        <div className="hidden md:block sticky top-0 z-10 bg-white/85 backdrop-blur border-b border-[#E8DDB0]">
+        <div className="hidden md:block sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-[#EDEBE6]">
           <div className="h-14 px-6 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <img src="/logo-icon.png" alt="Student Companion AI" className="w-8 h-8 object-contain flex-shrink-0" />
-              <span className="text-sm font-medium text-[#1A1A1A]">
-                {currentConversation?.title || "New chat"}
-              </span>
-            </div>
+            <span className="text-[14px] font-medium text-[#1C1B19] truncate">
+              {currentConversation?.messages?.length ? currentConversation.title : "New conversation"}
+            </span>
             <BackendStatus quiet />
           </div>
         </div>
@@ -131,17 +128,12 @@ export const ChatContainer = () => {
       </main>
 
       {/* Right rail: Opportunities — desktop only */}
-      <aside className="hidden lg:flex fixed right-0 top-0 h-full w-80 bg-[#FBF7E9]/30 border-l border-[#E8DDB0] flex-col z-30">
-        <div className="h-14 px-5 flex items-center border-b border-[#E8DDB0]">
-          <span className="text-[10px] uppercase tracking-widest text-[#1A1A1A]/60 font-semibold">
-            For students
-          </span>
+      <aside className="hidden lg:flex fixed right-0 top-0 h-full w-80 bg-[#FAFAF8] border-l border-[#EDEBE6] flex-col z-30">
+        <div className="h-14 px-5 flex items-center border-b border-[#EDEBE6]">
+          <span className="text-[14px] font-semibold text-[#1C1B19]">Opportunities</span>
         </div>
         <div className="flex-1 overflow-y-auto p-5">
           <OpportunityWidget />
-        </div>
-        <div className="px-5 py-3 border-t border-[#E8DDB0] text-[10px] text-[#1A1A1A]/40 leading-relaxed">
-          Opportunities rotate every few seconds. Hover the card to pause.
         </div>
       </aside>
     </div>

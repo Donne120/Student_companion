@@ -40,7 +40,7 @@ export const BookmarksPanel = () => {
 
   if (!currentUser) {
     return (
-      <div className="py-8 text-center text-sm text-[#1A1A1A]/50">
+      <div className="py-8 text-center text-sm text-[#1C1B19]/50">
         Sign in to save opportunities.
       </div>
     );
@@ -52,11 +52,11 @@ export const BookmarksPanel = () => {
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="rounded-xl border border-[#E8DDB0] bg-white p-4 animate-pulse"
+            className="rounded-xl border border-[#E5E3DE] bg-white p-4 animate-pulse"
           >
-            <div className="h-3 w-1/3 bg-[#FBF7E9] rounded mb-3" />
-            <div className="h-3 w-2/3 bg-[#FBF7E9] rounded mb-2" />
-            <div className="h-3 w-full bg-[#FBF7E9] rounded" />
+            <div className="h-3 w-1/3 bg-[#F4F3F0] rounded mb-3" />
+            <div className="h-3 w-2/3 bg-[#F4F3F0] rounded mb-2" />
+            <div className="h-3 w-full bg-[#F4F3F0] rounded" />
           </div>
         ))}
       </div>
@@ -66,9 +66,9 @@ export const BookmarksPanel = () => {
   if (bookmarks.length === 0) {
     return (
       <div className="py-10 text-center">
-        <BookmarkX className="h-8 w-8 text-[#E8DDB0] mx-auto mb-3" />
-        <p className="text-sm text-[#1A1A1A]/50">No saved opportunities yet.</p>
-        <p className="text-xs text-[#1A1A1A]/40 mt-1">
+        <BookmarkX className="h-8 w-8 text-[#E5E3DE] mx-auto mb-3" />
+        <p className="text-sm text-[#1C1B19]/50">No saved opportunities yet.</p>
+        <p className="text-xs text-[#1C1B19]/40 mt-1">
           Click the bookmark icon on any card to save it here.
         </p>
       </div>
@@ -80,15 +80,15 @@ export const BookmarksPanel = () => {
       {bookmarks.map((opp) => (
         <div
           key={opp.id}
-          className="rounded-xl border border-[#E8DDB0] bg-white p-4 hover:border-[#D4AF37] transition-all group"
+          className="rounded-xl border border-[#E5E3DE] bg-white p-4 hover:border-[#C8C4BA] transition-all group"
         >
           <div className="flex items-start justify-between gap-2 mb-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FBF7E9] border border-[#E8DDB0] text-[10px] font-medium text-[#B8941F]">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F4F3F0] border border-[#E5E3DE] text-[10px] font-medium text-[#8A6A16]">
               {opp.category}
             </span>
             <button
               onClick={() => handleRemove(opp.id, opp.title)}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-[#1A1A1A]/40 hover:text-red-500 transition-all flex-shrink-0"
+              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-[#1C1B19]/40 hover:text-red-500 transition-all flex-shrink-0"
               aria-label="Remove bookmark"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -101,18 +101,18 @@ export const BookmarksPanel = () => {
             rel="noopener noreferrer"
             className="block group/link"
           >
-            <h3 className="text-sm font-semibold text-[#1A1A1A] leading-snug group-hover/link:text-[#B8941F] transition-colors">
+            <h3 className="text-sm font-semibold text-[#1C1B19] leading-snug group-hover/link:text-[#8A6A16] transition-colors">
               {opp.title}
             </h3>
             {opp.organization && (
-              <p className="text-xs text-[#1A1A1A]/60 mt-0.5">{opp.organization}</p>
+              <p className="text-xs text-[#1C1B19]/60 mt-0.5">{opp.organization}</p>
             )}
             {opp.deadline && (
-              <p className="mt-1 text-[10px] text-[#B8941F] font-medium">
+              <p className="mt-1 text-[10px] text-[#8A6A16] font-medium">
                 Deadline: {opp.deadline}
               </p>
             )}
-            <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#B8941F]">
+            <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#8A6A16]">
               Open link <ExternalLink className="h-3 w-3" />
             </span>
           </a>

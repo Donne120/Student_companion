@@ -17,7 +17,7 @@ export const AnswerSuggestionForm = ({ questionText }: AnswerSuggestionFormProps
 
   if (submitted) {
     return (
-      <div className="mt-3 flex items-center gap-2 text-xs text-[#B8941F] bg-[#FBF7E9] border border-[#E8DDB0] rounded-lg px-3 py-2">
+      <div className="mt-3 flex items-center gap-2 text-xs text-[#8A6A16] bg-[#F4F3F0] border border-[#E5E3DE] rounded-lg px-3 py-2">
         <Lightbulb className="h-3.5 w-3.5 flex-shrink-0" />
         Thanks! Your suggestion is under review.
       </div>
@@ -28,7 +28,7 @@ export const AnswerSuggestionForm = ({ questionText }: AnswerSuggestionFormProps
     return (
       <button
         onClick={() => setOpen(true)}
-        className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#1A1A1A]/50 hover:text-[#B8941F] transition-colors"
+        className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#1C1B19]/50 hover:text-[#8A6A16] transition-colors"
       >
         <Lightbulb className="h-3.5 w-3.5" />
         Know the answer? Suggest one
@@ -58,27 +58,27 @@ export const AnswerSuggestionForm = ({ questionText }: AnswerSuggestionFormProps
   };
 
   return (
-    <div className="mt-3 rounded-xl border border-[#E8DDB0] bg-[#FBF7E9]/60 p-3">
+    <div className="mt-3 rounded-xl border border-[#E5E3DE] bg-[#F4F3F0]/60 p-3">
       <div className="flex items-center justify-between mb-2">
-        <span className="flex items-center gap-1.5 text-xs font-medium text-[#B8941F]">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-[#8A6A16]">
           <Lightbulb className="h-3.5 w-3.5" />
           Suggest an answer
         </span>
         <button
           onClick={() => setOpen(false)}
-          className="p-1 rounded hover:bg-[#E8DDB0]/60 text-[#1A1A1A]/40"
+          className="p-1 rounded hover:bg-[#E5E3DE]/60 text-[#1C1B19]/40"
           aria-label="Close"
         >
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
-      <p className="text-xs text-[#1A1A1A]/50 mb-2 leading-relaxed line-clamp-2">
+      <p className="text-xs text-[#1C1B19]/50 mb-2 leading-relaxed line-clamp-2">
         Question: {questionText}
       </p>
       {!currentUser ? (
-        <p className="text-xs text-[#1A1A1A]/50">
+        <p className="text-xs text-[#1C1B19]/50">
           Please{" "}
-          <a href="/login" className="text-[#B8941F] hover:underline">
+          <a href="/login" className="text-[#8A6A16] hover:underline">
             sign in
           </a>{" "}
           to submit a suggestion.
@@ -91,16 +91,16 @@ export const AnswerSuggestionForm = ({ questionText }: AnswerSuggestionFormProps
             placeholder="Share what you know… (10–2000 characters)"
             maxLength={2000}
             rows={3}
-            className="w-full text-xs rounded-lg border border-[#E8DDB0] bg-white p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[#D4AF37] text-[#1A1A1A] placeholder:text-[#1A1A1A]/40"
+            className="w-full text-xs rounded-lg border border-[#E5E3DE] bg-white p-2.5 resize-none focus:outline-none focus:ring-1 focus:ring-[#9C978C] text-[#1C1B19] placeholder:text-[#1C1B19]/40"
           />
           <div className="flex items-center justify-between mt-2">
-            <span className="text-[10px] text-[#1A1A1A]/40">
+            <span className="text-[10px] text-[#1C1B19]/40">
               {answer.length}/2000
             </span>
             <button
               onClick={handleSubmit}
               disabled={submitting || answer.trim().length < 10}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1A1A1A] hover:bg-black text-white text-xs font-medium disabled:opacity-40 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1C1B19] hover:bg-black text-white text-xs font-medium disabled:opacity-40 transition-colors"
             >
               {submitting ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

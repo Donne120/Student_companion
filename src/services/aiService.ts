@@ -7,6 +7,20 @@ const CHAT_ENDPOINT = `${API_URL}/api/chat/claude`;
 const CHAT_STREAM_ENDPOINT = `${API_URL}/api/chat/claude/stream`;
 const HEALTH_CACHE_MS = 30_000;
 
+/** A file attached to a question, as the backend expects it (base64 data). */
+export type AttachmentPayload = { name: string; media_type: string; data: string };
+
+/** The backend's message for a rejected request (e.g. a file it can't read). */
+const errorDetail = async (res: Response, fallback: string): Promise<string> => {
+  try {
+    const data = await res.json();
+    if (typeof data?.detail === "string") return data.detail;
+  } catch {
+    /* not JSON */
+  }
+  return fallback;
+};
+
 export type StreamCallbacks = {
   onChunk: (text: string) => void;
   onSources?: (sources: MessageSource[]) => void;
@@ -44,7 +58,8 @@ const isBackendAvailable = async (): Promise<boolean> => {
 const getResponseFromBackend = async (
   query: string,
   conversationHistory: Message[],
-  options: { personality?: Personality } = {}
+  options: { personality?: Personality } = {},
+  attachments: AttachmentPayload[] = []
 ): Promise<{ text: string; sources: MessageSource[] }> => {
   const history = conversationHistory.map((message) => ({
     role: message.isAi ? "assistant" : "user",
@@ -56,13 +71,15 @@ const getResponseFromBackend = async (
     {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeader()) },
-      body: JSON.stringify({ message: query, history, options }),
+      body: JSON.stringify({ message: query, history, options, attachments }),
     },
-    30_000
+    attachments.length ? 90_000 : 30_000
   );
 
   if (!res.ok) {
-    throw new Error(`Backend response error: ${res.status}`);
+    throw new Error(
+      res.status === 400 ? await errorDetail(res, "That file could not be read.") : `Backend response error: ${res.status}`
+    );
   }
 
   const data = await res.json();
@@ -81,7 +98,8 @@ const getResponseFromBackend = async (
 const streamResponseFromBackend = async (
   query: string,
   conversationHistory: Message[],
-  callbacks: StreamCallbacks
+  callbacks: StreamCallbacks,
+  attachments: AttachmentPayload[] = []
 ): Promise<string> => {
   const history = conversationHistory.map((message) => ({
     role: message.isAi ? "assistant" : "user",
@@ -95,9 +113,13 @@ const streamResponseFromBackend = async (
       Accept: "text/event-stream",
       ...(await authHeader()),
     },
-    body: JSON.stringify({ message: query, history }),
+    body: JSON.stringify({ message: query, history, attachments }),
   });
 
+  if (res.status === 400) {
+    // A file the backend can't read: retrying without streaming won't help.
+    throw Object.assign(new Error(await errorDetail(res, "That file could not be read.")), { final: true });
+  }
   if (!res.ok || !res.body) {
     throw new Error(`Stream request failed: ${res.status}`);
   }
@@ -179,14 +201,19 @@ export const aiService = {
   async streamResponse(
     query: string,
     conversationHistory: Message[] = [],
-    callbacks: StreamCallbacks
+    callbacks: StreamCallbacks,
+    attachments: AttachmentPayload[] = []
   ): Promise<string> {
     try {
-      return await streamResponseFromBackend(query, conversationHistory, callbacks);
+      return await streamResponseFromBackend(query, conversationHistory, callbacks, attachments);
     } catch (error) {
+      if ((error as { final?: boolean })?.final) {
+        callbacks.onError?.((error as Error).message);
+        return "";
+      }
       console.warn("Stream failed, falling back to non-streaming:", error);
       try {
-        const full = await getResponseFromBackend(query, conversationHistory);
+        const full = await getResponseFromBackend(query, conversationHistory, {}, attachments);
         if (full.sources.length) callbacks.onSources?.(full.sources);
         callbacks.onChunk(full.text);
         callbacks.onDone?.();
