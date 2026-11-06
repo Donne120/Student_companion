@@ -183,3 +183,16 @@
     @apply bg-white hover:bg-[#FBF7E9] text-[#1A1A1A] border border-[#D4AF37] font-medium px-4 py-2 rounded transition-colors;
   }
 }
+
+/* Landing hero photo: slow, subtle zoom in place of the old demo video. */
+@keyframes hero-photo-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
+}
+.hero-photo-zoom {
+  animation: hero-photo-zoom 14s ease-in-out infinite alternate;
+  transform-origin: 55% 35%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-zoom { animation: none; }
+}
