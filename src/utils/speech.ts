@@ -1,25 +1,17 @@
 /**
  * TTS utility for Student Companion AI.
  *
- * Primary:  ElevenLabs streaming TTS  (requires VITE_ELEVENLABS_API_KEY +
- *           VITE_ELEVENLABS_VOICE_ID in .env — set these to your cloned voice)
- * Fallback: Web Speech API            (browser built-in, no API key needed)
- *
- * To use your custom voice:
- *   1. Go to elevenlabs.io → Voice Lab → Add a Generative or Professional Clone
- *   2. Upload your voice sample audio file
- *   3. Copy the generated Voice ID
- *   4. Add to .env:
- *        VITE_ELEVENLABS_API_KEY=your_key_here
- *        VITE_ELEVENLABS_VOICE_ID=your_voice_id_here
+ * Primary:  natural voice from the backend (POST /api/tts), which calls
+ *           ElevenLabs with a key kept on the server. The key used to be a
+ *           VITE_ variable, which put it in the public JavaScript bundle
+ *           where anyone could copy it.
+ * Fallback: Web Speech API (browser built-in), when the backend has no
+ *           voice configured (503) or the request fails.
  */
+import { API_URL, authHeader } from "@/config/api";
 
-const EL_API_KEY   = import.meta.env.VITE_ELEVENLABS_API_KEY   as string | undefined;
-const EL_VOICE_ID  = import.meta.env.VITE_ELEVENLABS_VOICE_ID  as string | undefined;
-const EL_MODEL     = (import.meta.env.VITE_ELEVENLABS_MODEL as string | undefined)
-                     ?? "eleven_turbo_v2_5"; // fastest, lowest latency
-
-const elevenLabsEnabled = !!EL_API_KEY && !!EL_VOICE_ID;
+// Set to false after the backend says it has no voice, so we stop asking.
+let backendVoiceAvailable = true;
 
 // Holds the current AudioContext + source so we can stop mid-speech cleanly.
 let currentAudioCtx: AudioContext | null = null;
@@ -34,29 +26,15 @@ const speakElevenLabs = async (
   try {
     stopSpeaking(); // cancel any in-progress speech
 
-    const res = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${EL_VOICE_ID}/stream`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "xi-api-key": EL_API_KEY!,
-        },
-        body: JSON.stringify({
-          text,
-          model_id: EL_MODEL,
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.85,
-            style: 0.2,
-            use_speaker_boost: true,
-          },
-        }),
-      }
-    );
+    const res = await fetch(`${API_URL}/api/tts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(await authHeader()) },
+      body: JSON.stringify({ text }),
+    });
 
     if (!res.ok) {
-      console.warn(`[ElevenLabs] HTTP ${res.status} — falling back to Web Speech`);
+      if (res.status === 503 || res.status === 404) backendVoiceAvailable = false;
+      console.warn(`[TTS] HTTP ${res.status}; using the browser voice`);
       speakWebSpeech(text, handlers);
       return;
     }
@@ -82,7 +60,7 @@ const speakElevenLabs = async (
     };
     currentAudioSource.start(0);
   } catch (err) {
-    console.warn("[ElevenLabs] Error — falling back to Web Speech:", err);
+    console.warn("[TTS] Voice request failed; using the browser voice:", err);
     speakWebSpeech(text, handlers);
   }
 };
@@ -143,7 +121,7 @@ export const speak = (
     handlers.onBlocked?.();
     return;
   }
-  if (elevenLabsEnabled) {
+  if (backendVoiceAvailable) {
     speakElevenLabs(text, handlers);
   } else {
     speakWebSpeech(text, handlers);
