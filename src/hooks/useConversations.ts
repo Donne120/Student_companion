@@ -27,6 +27,21 @@ export function loadSavedConversations(storage: Storage, uid: string): string | 
 }
 const MAX_CONVERSATIONS = 50; // Prevent localStorage from getting too full
 
+/** Saved chats as the welcome screen expects them: without the old built-in
+ *  welcome message, and with at most one empty chat. */
+export function tidySavedConversations(saved: Conversation[]): Conversation[] {
+  if (!Array.isArray(saved)) return [];
+  let keptEmpty = false;
+  return saved
+    .map(conv => ({ ...conv, messages: (conv.messages || []).filter(m => m.id !== "welcome") }))
+    .filter(conv => {
+      if (conv.messages.length > 0) return true;
+      if (keptEmpty) return false;
+      keptEmpty = true;
+      return true;
+    });
+}
+
 export const useConversations = () => {
   const { currentUser } = useAuth();
   const uid = currentUser?.uid ?? "";
@@ -46,12 +61,9 @@ export const useConversations = () => {
       timestamp: Date.now(),
       createdAt: now,
       updatedAt: now,
-      messages: [{
-        id: "welcome",
-        text: `# Welcome to Student Companion AI 👋\n\nI'm here to help with anything at your university — academics, campus life, deadlines, opportunities, and more.\n\nFeel free to say **hi**, ask a question, or pick one of the suggestions below to get started!`,
-        isAi: true,
-        timestamp: Date.now()
-      }]
+      // Empty on purpose: an empty chat shows the welcome screen with its
+      // suggestions (ChatMessages). A welcome *message* hid that screen.
+      messages: []
     };
     setConversations([defaultConversation]);
     setCurrentConversationId(defaultConversation.id);
@@ -69,7 +81,7 @@ export const useConversations = () => {
     }
     if (savedConversations) {
       try {
-        const parsed = JSON.parse(savedConversations);
+        const parsed = tidySavedConversations(JSON.parse(savedConversations));
         if (parsed.length > 0) {
           setConversations(parsed);
           setCurrentConversationId(parsed[0].id);
@@ -118,6 +130,13 @@ export const useConversations = () => {
   };
 
   const createNewConversation = () => {
+    // Reuse an untouched chat rather than stacking "New chat" entries.
+    const empty = conversations.find(conv => conv.messages.length === 0);
+    if (empty) {
+      setConversations(prev => [empty, ...prev.filter(conv => conv.id !== empty.id)]);
+      setCurrentConversationId(empty.id);
+      return;
+    }
     const now = new Date();
     const newConversation: Conversation = {
       id: Date.now().toString(),
