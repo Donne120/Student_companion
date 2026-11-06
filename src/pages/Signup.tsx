@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader, ShieldCheck } from "lucide-react";
 
-const SIDE_IMAGE = "/signup-hero.png";
+const SIDE_IMAGE = "/signup-hero.jpg";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -307,8 +307,8 @@ export default function Signup() {
 
       {/* Image side */}
       <div className="hidden lg:block relative bg-[#FBF7E9] order-1 lg:order-2">
-        <img src={SIDE_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-bl from-[#1A1A1A]/60 via-[#1A1A1A]/20 to-transparent" />
+        <img src={SIDE_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover object-[center_20%]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#111]/90 via-[#111]/45 to-transparent" />
         <div className="absolute top-0 left-0 h-1 w-full bg-[#D4AF37]" />
         <div className="relative z-10 h-full flex flex-col justify-end p-14 text-white">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur border border-white/20 text-xs font-medium mb-6 w-fit">
