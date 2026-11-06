@@ -90,7 +90,7 @@ export const ChatContainer = () => {
                 {currentConversation?.title || "Companion"}
               </span>
             </div>
-            <BackendStatus />
+            <BackendStatus quiet />
             <button
               onClick={createNewConversation}
               className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-[#FBF7E9] text-[#1A1A1A]"
@@ -110,7 +110,7 @@ export const ChatContainer = () => {
                 {currentConversation?.title || "New chat"}
               </span>
             </div>
-            <BackendStatus />
+            <BackendStatus quiet />
           </div>
         </div>
 

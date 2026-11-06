@@ -4,8 +4,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Server } from "lucide-react";
 import { API_URL } from "@/config/api";
 
-// Check if backend is available
-export const BackendStatus = () => {
+// Check if backend is available.
+// `quiet` (the chat header): show nothing while the Companion is reachable and
+// only a plain-language notice when it is not. Students have no use for a
+// permanent "Backend Connected" badge. Settings keeps the full badge.
+export const BackendStatus = ({ quiet = false }: { quiet?: boolean }) => {
   const [isBackendAvailable, setIsBackendAvailable] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastCheck, setLastCheck] = useState<Date>(new Date());
@@ -47,6 +50,19 @@ export const BackendStatus = () => {
     // Clean up interval on unmount
     return () => clearInterval(intervalId);
   }, [checkBackendHealth]);
+
+  if (quiet) {
+    // Keeps the last result during the 30-second re-checks, so it doesn't flicker.
+    if (isBackendAvailable !== false) return null;
+    return (
+      <span
+        role="status"
+        className="text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1"
+      >
+        Can't reach the Companion right now. Retrying…
+      </span>
+    );
+  }
 
   return (
     <TooltipProvider>

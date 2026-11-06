@@ -1,14 +1,41 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Conversation, Message } from "@/types/chat";
+import { useAuth } from "@/contexts/AuthContext";
 
-const STORAGE_KEY = 'sc_chat_conversations';
+// Chats are kept in this browser, one list per signed-in account. They used to
+// share one key, so every account signed in on the same browser (a student
+// and a staff address, or two students on a shared computer) saw the same
+// history.
+const LEGACY_STORAGE_KEY = 'sc_chat_conversations';
+export const storageKeyFor = (uid: string) => `${LEGACY_STORAGE_KEY}:${uid}`;
+
+/** The saved chats for `uid`. The old shared list is handed, once, to the
+ *  first account that signs in on this browser after the update (on a
+ *  personal device, its owner) and then removed, so it can never reach a
+ *  second account. */
+export function loadSavedConversations(storage: Storage, uid: string): string | null {
+  const key = storageKeyFor(uid);
+  const own = storage.getItem(key);
+  if (own !== null) return own;
+  const legacy = storage.getItem(LEGACY_STORAGE_KEY);
+  if (legacy !== null) {
+    storage.removeItem(LEGACY_STORAGE_KEY);
+    storage.setItem(key, legacy);
+  }
+  return legacy;
+}
 const MAX_CONVERSATIONS = 50; // Prevent localStorage from getting too full
 
 export const useConversations = () => {
+  const { currentUser } = useAuth();
+  const uid = currentUser?.uid ?? "";
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true); // Add loading state
+  // The account whose chats are in state; saving waits until it matches, so
+  // one account's chats are never written under another's key on a switch.
+  const [loadedFor, setLoadedFor] = useState("");
 
   // Memoize with useCallback for better performance
   const initializeDefaultConversation = useCallback(() => {
@@ -32,7 +59,14 @@ export const useConversations = () => {
   }, []);
 
   useEffect(() => {
-    const savedConversations = localStorage.getItem(STORAGE_KEY);
+    if (!uid) return; // The chat page is only shown signed in; wait for the account.
+    setIsLoading(true);
+    let savedConversations: string | null = null;
+    try {
+      savedConversations = loadSavedConversations(localStorage, uid);
+    } catch (error) {
+      console.error('Error reading saved conversations:', error);
+    }
     if (savedConversations) {
       try {
         const parsed = JSON.parse(savedConversations);
@@ -50,17 +84,18 @@ export const useConversations = () => {
     } else {
       initializeDefaultConversation();
     }
+    setLoadedFor(uid);
     setIsLoading(false);
-  }, [initializeDefaultConversation]);
+  }, [uid, initializeDefaultConversation]);
 
   // More efficient localStorage saving with debounce
   useEffect(() => {
-    if (conversations.length > 0 && !isLoading) {
+    if (uid && loadedFor === uid && conversations.length > 0 && !isLoading) {
       // Only save the most recent conversations to prevent localStorage overflow
       const conversationsToSave = conversations.slice(0, MAX_CONVERSATIONS);
       const saveTimeout = setTimeout(() => {
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(conversationsToSave));
+          localStorage.setItem(storageKeyFor(uid), JSON.stringify(conversationsToSave));
         } catch (error) {
           console.error('Error saving conversations:', error);
           toast.error("Failed to save conversations");
@@ -69,7 +104,7 @@ export const useConversations = () => {
       
       return () => clearTimeout(saveTimeout);
     }
-  }, [conversations, isLoading]);
+  }, [uid, loadedFor, conversations, isLoading]);
 
   const getCurrentConversation = (): Conversation => {
     const current = conversations.find(conv => conv.id === currentConversationId);
