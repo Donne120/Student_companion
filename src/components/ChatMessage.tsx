@@ -11,6 +11,7 @@ import rehypeKatex from "rehype-katex";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { speak, stopSpeaking, isSpeaking } from "@/utils/speech";
+import { stripSourceMarkers } from "@/lib/citations";
 
 interface ChatMessageProps {
   message: string;
@@ -41,6 +42,12 @@ export const ChatMessage = ({
   const [editedMessage, setEditedMessage] = useState(message);
   const [feedbackGiven, setFeedbackGiven] = useState<"positive" | "negative" | null>(null);
   const [speaking, setSpeaking] = useState(false);
+  // What the student sees, hears and copies: without "【Source 8】" markers.
+  const text = isAi ? stripSourceMarkers(message) : message;
+  // Sources worth showing: the ones with a link, each once.
+  const linkedSources = sources.filter(
+    (src, i) => src.url && sources.findIndex((o) => o.url === src.url) === i
+  );
 
   const handleSpeak = () => {
     if (speaking || isSpeaking()) {
@@ -48,7 +55,7 @@ export const ChatMessage = ({
       setSpeaking(false);
     } else {
       // Strip markdown symbols for cleaner speech
-      const plainText = message
+      const plainText = text
         .replace(/#{1,6}\s/g, "")
         .replace(/\*\*(.+?)\*\*/g, "$1")
         .replace(/\*(.+?)\*/g, "$1")
@@ -69,7 +76,7 @@ export const ChatMessage = ({
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(message);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       toast.success("Copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
@@ -246,7 +253,7 @@ export const ChatMessage = ({
                   },
                 }}
               >
-                {message}
+                {text}
               </ReactMarkdown>
             </div>
           )}
@@ -277,12 +284,17 @@ export const ChatMessage = ({
           )}
 
           {/* Sources: knowledge-base citations or "open in Gmail" links */}
-          {isAi && sources.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {sources.map((src, i) => {
+          {isAi && linkedSources.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[10px] uppercase tracking-wider text-[#1A1A1A]/40 mb-2">Sources</p>
+              <div className="flex flex-wrap gap-2">
+              {linkedSources.map((src, i) => {
                 const isGmail = (src.url || "").startsWith("https://mail.google.com/");
                 const Icon = isGmail ? Mail : ExternalLink;
-                const label = src.title || src.source || "Source";
+                // Some titles are the first line of a document ("# Overview - ..."):
+                // drop markdown symbols and keep it short.
+                const raw = (src.title || src.source || "Source").replace(/[#*_`>]+/g, " ").replace(/\s+/g, " ").trim();
+                const label = raw.length > 60 ? `${raw.slice(0, 57).trimEnd()}…` : raw;
                 return src.url ? (
                   <a
                     key={i}
@@ -304,6 +316,7 @@ export const ChatMessage = ({
                   </span>
                 );
               })}
+              </div>
             </div>
           )}
 
