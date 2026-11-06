@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { isUnknownResponse } from "./ChatMessageHandler";
 import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
 import { trendingService } from "@/services/trendingService";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -49,6 +50,8 @@ export const ChatMessages = ({
 }: ChatMessagesProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
+  const { currentUser } = useAuth();
+  const firstName = (currentUser?.displayName || "").trim().split(/\s+/)[0];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -94,11 +97,15 @@ export const ChatMessages = ({
           <div className="inline-flex items-center justify-center w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-[#FBF7E9] border border-[#E8DDB0] mb-4 md:mb-6">
             <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-[#D4AF37]" />
           </div>
+          <p className="text-sm md:text-base font-medium text-[#B8941F] mb-1 md:mb-2">
+            {firstName ? `Welcome, ${firstName} 👋` : "Welcome to Student Companion AI 👋"}
+          </p>
           <h1 className="font-serif text-[28px] md:text-5xl text-[#1A1A1A] tracking-tight mb-2 md:mb-3 leading-tight">
             How can I help you today?
           </h1>
           <p className="text-sm md:text-base text-[#1A1A1A]/60 mb-6 md:mb-8 px-2">
-            Ask anything about your university — academics, campus life, policies, or events.
+            Ask about academics, deadlines, campus life or opportunities.
+            Type your own question below, or start with one of these.
           </p>
 
           {/* Static suggestion cards */}
