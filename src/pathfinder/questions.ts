@@ -35,21 +35,50 @@ export const QUESTIONS: Question[] = [
     prompt: "Where are you finishing school?",
     why: "This decides which national system, entry rules and scholarships actually apply to you.",
     type: "choice",
-    options: ["Rwanda", "Kenya", "Uganda", "Tanzania", "Burundi", "DR Congo", "Somewhere else"],
+    options: [
+      "Rwanda",
+      "Kenya",
+      "Uganda",
+      "Tanzania",
+      "Burundi",
+      "DR Congo",
+      "Ethiopia",
+      "South Sudan",
+      "Nigeria",
+      "Ghana",
+      "Senegal",
+      "Côte d'Ivoire",
+      "Cameroon",
+      "Sierra Leone",
+      "Liberia",
+      "The Gambia",
+      "South Africa",
+      "Zambia",
+      "Zimbabwe",
+      "Malawi",
+      "Botswana",
+      "Namibia",
+      "Mozambique",
+      "Mauritius",
+      "Egypt",
+      "Morocco",
+      "Tunisia",
+      "Somewhere else",
+    ],
   },
   {
     key: "track",
     label: "What you studied",
     prompt: "What did you study for your final exams?",
-    why: "Your subject combination decides which programmes you are already eligible for.",
+    why: "Your subjects decide which programmes you are already eligible for. Pick the closest match for your country's system.",
     type: "choice",
     options: [
-      "Maths, Physics & Computer Science (MPC)",
-      "Physics, Chemistry & Biology (PCB)",
-      "Maths, Chemistry & Biology (MCB)",
-      "Maths, Economics & Geography (MEG)",
-      "History, Economics & Geography (HEG)",
-      "Languages / Humanities",
+      "Sciences with Maths & Physics (e.g. MPC, PCM)",
+      "Sciences with Biology & Chemistry (e.g. PCB, MCB)",
+      "Maths with Economics or Business (e.g. MEG, Commerce)",
+      "Humanities & social sciences (e.g. HEG, History, Geography)",
+      "Languages & literature",
+      "Arts, music or design",
       "TVET or technical school",
       "Something else",
     ],
@@ -154,12 +183,28 @@ export interface CareerOutlook {
   roles: string[];
 }
 
+/** A link the server adds (never the model): accreditation body or
+ *  national application portal for the student's country. */
+export interface VerifyLink {
+  label: string;
+  name: string;
+  url: string;
+}
+
+export interface ScholarshipLink {
+  name: string;
+  detail: string;
+  url: string;
+}
+
 export interface PathfinderReport {
   headline: string;
   summary: string;
   fields: FieldSuggestion[];
   schools: SchoolSuggestion[];
   careers: CareerOutlook;
+  verify?: VerifyLink[];
+  scholarships?: ScholarshipLink[];
 }
 
 /**

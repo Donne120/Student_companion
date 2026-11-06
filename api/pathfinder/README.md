@@ -87,3 +87,24 @@ Read them in the Firebase console, never by loosening the rule.
 The rate limiter is per serverless instance and therefore best-effort. If real
 abuse appears, move it to a shared store (e.g. Upstash Redis) rather than
 elaborating the in-memory map.
+
+## Universities across Africa (`api/_directory.ts`)
+
+Pathfinder covers 27 African countries. For each, `_directory.ts` lists
+established universities with their official websites, the higher-education
+regulator (where students check accreditation) and, where there is one, the
+national application portal (KUCCPS, JAMB).
+
+`recommend.ts` gives the model this directory alongside live search results,
+and then, in code:
+
+- keeps only schools whose link is an official directory site or a page the
+  search returned (no invented URLs);
+- drops postgraduate programmes;
+- drops links that are gone (404/410 or no such host);
+- adds the country's accreditation and application links, and scholarship
+  programmes when the student needs funding or wants to study abroad.
+
+Add a university only when its official domain is certain. Keep the country
+list in `src/pathfinder/questions.ts`, `api/_shared.ts` and `_directory.ts`
+in step (`npm run check:pathfinder` checks the first two).
