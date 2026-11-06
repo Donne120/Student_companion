@@ -54,10 +54,10 @@ export const ConversationSidebar = ({
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-[#FBF7E9]/40 border-r border-[#E8DDB0] flex flex-col z-40 transition-all duration-300`}
+      className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-[#FAFAF8] border-r border-[#EDEBE6] flex flex-col z-40 transition-all duration-300`}
     >
       {/* Brand */}
-      <div className="h-14 flex items-center px-3 border-b border-[#E8DDB0]">
+      <div className="h-14 flex items-center px-3 border-b border-[#EDEBE6]">
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -68,8 +68,8 @@ export const ConversationSidebar = ({
             className="w-7 h-7 object-contain flex-shrink-0"
           />
           {!isCollapsed && (
-            <span className="font-semibold tracking-tight text-[#1A1A1A] text-sm">
-              Companion
+            <span className="font-semibold tracking-tight text-[#1C1B19] text-[14px]">
+              Student Companion
             </span>
           )}
         </button>
@@ -77,7 +77,7 @@ export const ConversationSidebar = ({
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="ml-auto h-7 w-7 text-[#1A1A1A]/50 hover:bg-[#FBF7E9] hover:text-[#1A1A1A]"
+          className="ml-auto h-7 w-7 text-[#1C1B19]/50 hover:bg-[#F4F3F0] hover:text-[#1C1B19]"
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <ChevronLeft
@@ -92,7 +92,7 @@ export const ConversationSidebar = ({
       <div className="p-3">
         <button
           onClick={onNewChat}
-          className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#D4AF37] hover:bg-[#B8941F] text-[#1A1A1A] font-medium text-sm transition-colors ${
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border border-[#E5E3DE] bg-white hover:border-[#C8C4BA] text-[#1C1B19] font-medium text-[13px] shadow-[0_1px_0_rgba(28,27,25,0.04)] transition-colors ${
             isCollapsed ? "justify-center" : ""
           }`}
         >
@@ -104,7 +104,7 @@ export const ConversationSidebar = ({
       {/* Conversations */}
       <div className="flex-1 overflow-y-auto px-2 pb-2">
         {!isCollapsed && conversations.length > 0 && (
-          <div className="px-2 py-2 text-[10px] uppercase tracking-widest text-[#1A1A1A]/40 font-medium">
+          <div className="px-3 pt-3 pb-1.5 text-xs text-[#8C887F]">
             Recent
           </div>
         )}
@@ -115,10 +115,10 @@ export const ConversationSidebar = ({
               <div key={conv.id} className="group relative">
                 <button
                   onClick={() => onSelectConversation(conv.id)}
-                  className={`w-full px-3 py-2 rounded-lg text-left text-sm truncate transition-colors ${
+                  className={`w-full px-3 py-1.5 rounded-md text-left text-[13px] truncate transition-colors ${
                     isActive
-                      ? "bg-[#FBF7E9] text-[#1A1A1A] font-medium"
-                      : "text-[#1A1A1A]/75 hover:bg-[#FBF7E9]/60 hover:text-[#1A1A1A]"
+                      ? "bg-[#EDEBE6] text-[#1C1B19] font-medium"
+                      : "text-[#4A4843] hover:bg-[#F1F0EC] hover:text-[#1C1B19]"
                   } ${isCollapsed ? "text-center" : ""}`}
                 >
                   {isCollapsed ? "•" : getConversationTitle(conv)}
@@ -126,7 +126,7 @@ export const ConversationSidebar = ({
                 {!isCollapsed && (
                   <button
                     onClick={(e) => handleDeleteConversation(conv.id, e)}
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#E8DDB0] text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-opacity"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[#E5E3DE] text-[#1C1B19]/60 hover:text-[#1C1B19] transition-opacity"
                     aria-label="Delete conversation"
                   >
                     <X className="h-3.5 w-3.5" />
@@ -139,10 +139,10 @@ export const ConversationSidebar = ({
       </div>
 
       {/* Footer: user + settings */}
-      <div className="border-t border-[#E8DDB0] p-2">
+      <div className="border-t border-[#EDEBE6] p-2">
         <button
           onClick={() => navigate("/settings")}
-          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#1A1A1A]/70 hover:bg-[#FBF7E9] hover:text-[#1A1A1A] text-sm transition-colors ${
+          className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[#1C1B19]/70 hover:bg-[#F4F3F0] hover:text-[#1C1B19] text-sm transition-colors ${
             isCollapsed ? "justify-center" : ""
           }`}
         >
@@ -151,11 +151,11 @@ export const ConversationSidebar = ({
         </button>
         <button
           onClick={() => navigate("/profile")}
-          className={`w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-lg text-[#1A1A1A] hover:bg-[#FBF7E9] text-sm transition-colors ${
+          className={`w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-lg text-[#1C1B19] hover:bg-[#F4F3F0] text-sm transition-colors ${
             isCollapsed ? "justify-center" : ""
           }`}
         >
-          <div className="w-6 h-6 rounded-full bg-[#1A1A1A] text-white flex items-center justify-center text-[10px] font-medium flex-shrink-0">
+          <div className="w-6 h-6 rounded-full bg-[#1C1B19] text-white flex items-center justify-center text-[10px] font-medium flex-shrink-0">
             {initials}
           </div>
           {!isCollapsed && (
@@ -164,7 +164,7 @@ export const ConversationSidebar = ({
                 {currentUser?.displayName || "Profile"}
               </div>
               {currentUser?.email && (
-                <div className="truncate text-xs text-[#1A1A1A]/50">
+                <div className="truncate text-xs text-[#1C1B19]/50">
                   {currentUser.email}
                 </div>
               )}

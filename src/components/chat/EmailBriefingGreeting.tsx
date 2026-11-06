@@ -98,29 +98,29 @@ export const EmailBriefingGreeting = () => {
 
   return (
     <div className="mx-3 md:mx-6 mt-3">
-      <div className="rounded-xl border border-[#E8DDB0] bg-[#FBF7E9]/70 shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-[#E5E3DE] bg-[#F4F3F0]/70 shadow-sm overflow-hidden">
         <div className="px-4 py-3 flex items-start gap-3">
-          <div className="mt-0.5 h-8 w-8 rounded-full bg-[#D4AF37] flex items-center justify-center flex-shrink-0">
-            <Mail className="h-4 w-4 text-[#1A1A1A]" />
+          <div className="mt-0.5 h-8 w-8 rounded-full bg-[#B8952B] flex items-center justify-center flex-shrink-0">
+            <Mail className="h-4 w-4 text-[#1C1B19]" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#B8941F]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#8A6A16]">
                 Your email briefing
               </span>
               {briefing?.email_count !== undefined && (
-                <span className="text-[10px] text-[#1A1A1A]/50">
+                <span className="text-[10px] text-[#1C1B19]/50">
                   {briefing.email_count} recent email{briefing.email_count === 1 ? "" : "s"}
                 </span>
               )}
             </div>
             {loading ? (
-              <div className="flex items-center gap-2 text-sm text-[#1A1A1A]/60 mt-1">
+              <div className="flex items-center gap-2 text-sm text-[#1C1B19]/60 mt-1">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 Checking your inbox…
               </div>
             ) : (
-              <p className="text-sm text-[#1A1A1A]/90 leading-relaxed mt-1">
+              <p className="text-sm text-[#1C1B19]/90 leading-relaxed mt-1">
                 {briefing?.briefing}
               </p>
             )}
@@ -129,7 +129,7 @@ export const EmailBriefingGreeting = () => {
             {!loading && voiceOn && speechSupported() && (
               <button
                 onClick={handlePlayStop}
-                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#E8DDB0]/60 text-[#1A1A1A]/70"
+                className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#E5E3DE]/60 text-[#1C1B19]/70"
                 aria-label={speaking ? "Stop reading" : "Read aloud"}
                 title={speaking ? "Stop reading" : "Read aloud"}
               >
@@ -137,11 +137,11 @@ export const EmailBriefingGreeting = () => {
               </button>
             )}
             {speaking && (
-              <Volume2 className="h-4 w-4 text-[#B8941F] animate-pulse" aria-hidden />
+              <Volume2 className="h-4 w-4 text-[#8A6A16] animate-pulse" aria-hidden />
             )}
             <button
               onClick={handleDismiss}
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#E8DDB0]/60 text-[#1A1A1A]/50"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#E5E3DE]/60 text-[#1C1B19]/50"
               aria-label="Dismiss briefing"
             >
               <X className="h-4 w-4" />
