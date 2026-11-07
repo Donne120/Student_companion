@@ -207,10 +207,12 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
     body: [
       paragraph(`Dear ${esc(uni.name)} admissions team,`),
       paragraph(
-        `<strong>${esc(lead.name)}</strong> explored their options on ` +
-          `<a href="${LINKS.pathfinder}" style="color:#B8941F">Pathfinder</a>, the free course and university ` +
-          `guide on <a href="${LINKS.chat}" style="color:#B8941F">Student Companion AI</a>, and asked us to ` +
-          `introduce them to you. Replying to this email reaches ${esc(first)} directly.`
+        `<strong>${esc(lead.name)}</strong> used ` +
+          `<a href="${LINKS.pathfinder}" style="color:#B8941F">Pathfinder</a> on ` +
+          `<a href="${LINKS.chat}" style="color:#B8941F">Student Companion AI</a>, our student support platform. ` +
+          `Pathfinder helps high school students find the universities and programmes that match their skills ` +
+          `and learning profile, and it suggested your institution. ${esc(first)} asked us to introduce them to ` +
+          `you. Replying to this email reaches ${esc(first)} directly.`
       ),
       detailCard(details),
       lead.message ? heading("Their question") + paragraph(esc(lead.message)) : "",
@@ -233,8 +235,10 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
   const text = [
     `Dear ${uni.name} admissions team,`,
     "",
-    `${lead.name} explored their options on Pathfinder (${LINKS.pathfinder}), the free course and university ` +
-      `guide on Student Companion AI, and asked us to introduce them to you. Replying to this email reaches them directly.`,
+    `${lead.name} used Pathfinder (${LINKS.pathfinder}) on Student Companion AI, our student support platform. ` +
+      `Pathfinder helps high school students find the universities and programmes that match their skills and ` +
+      `learning profile, and it suggested your institution. They asked us to introduce them to you. ` +
+      `Replying to this email reaches them directly.`,
     "",
     `Name: ${lead.name}`,
     `Email: ${lead.email}`,
@@ -246,7 +250,8 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
     profileText(profile),
     uni.referral ? `\nReferral: referred by Student Companion AI through your referral programme: ${uni.referral}` : "",
     "",
-    "About Student Companion AI: an AI student assistant, Pathfinder, opportunities, free courses, and housing " +
+    "About Student Companion AI, our student support platform: an AI student assistant, Pathfinder (matching " +
+      "high school students with the right universities), opportunities, free courses, and housing " +
       `and travel support for students. Bring it to your institution: ${LINKS.email}`,
     "",
     textFooter(note),

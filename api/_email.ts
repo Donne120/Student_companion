@@ -143,7 +143,7 @@ export function callout(html: string): string {
 function servicesList(): string {
   const items: Array<[string, string, string]> = [
     ["AI student assistant", LINKS.chat, "answers students' questions from their own university's handbooks, policies and student life pages, with links to the source, any time of day."],
-    ["Pathfinder", LINKS.pathfinder, "free course and university guidance for high school leavers across Africa, with no account needed."],
+    ["Pathfinder", LINKS.pathfinder, "helps high school students find the universities and programmes that match their skills and learning profile, free and with no account needed."],
     ["Opportunities", LINKS.opportunities, "verified internships, jobs, scholarships, fellowships and competitions for African students."],
     ["Free courses", LINKS.courses, "short courses on practical skills for study and work."],
     ["Housing and travel", LINKS.housing, `help finding a place to live in Kigali (KigaliHouz) and getting around (${a(LINKS.travel, "Itike")}).`],
@@ -160,7 +160,7 @@ function servicesList(): string {
 /** The introduction to the platform, for institutions. */
 export function forInstitutions(): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:30px 0 0;border:1px solid ${LINE};border-radius:12px;border-collapse:separate"><tr><td style="padding:20px 22px">
-    <p style="margin:0 0 4px;${FONT}font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${GOLD}">About Student Companion AI</p>
+    <p style="margin:0 0 4px;${FONT}font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${GOLD}">Student Companion AI: the student support platform</p>
     <p style="margin:0 0 12px;${SERIF}font-size:19px;line-height:1.3;color:${INK}">Supporting students from their first question to their first job</p>
     ${servicesList()}
     <p style="margin:14px 0 0;${FONT}font-size:14px;line-height:1.6;color:${INK}">
