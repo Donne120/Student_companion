@@ -497,7 +497,12 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
   const [err, setErr] = useState("");
   // Universities from the report the student can send their enquiry to.
   // Nothing is ticked for them: sharing their details is their choice.
-  const contactable = report.schools.filter((s) => s.contactable).slice(0, 6);
+  // One row per university: the report can suggest two programmes at the
+  // same one, and the request goes to its admissions office once.
+  const contactable = report.schools
+    .filter((s) => s.contactable)
+    .filter((s, i, all) => all.findIndex((t) => t.url === s.url || t.name === s.name) === i)
+    .slice(0, 6);
   const [chosen, setChosen] = useState<string[]>([]);
   const toggle = (url: string) =>
     setChosen((prev) =>
