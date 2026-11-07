@@ -10,7 +10,7 @@
  *
  * Required environment variables (set in Vercel):
  *   RESEND_API_KEY            — resend.com, free tier is ample
- *   LEAD_NOTIFY_EMAIL         — defaults to studentcompanionai@gmail.com
+ *   LEAD_NOTIFY_EMAIL         — team inbox(es), comma-separated for several
  *   FIREBASE_PROJECT_ID       — optional; storage is skipped if absent
  *   FIREBASE_CLIENT_EMAIL     — service-account email
  *   FIREBASE_PRIVATE_KEY      — service-account key ("\n" escapes are handled)
@@ -54,7 +54,13 @@ const UNIVERSITY_CC = (() => {
  * resend.com/domains, set LEAD_FROM_EMAIL to an address on it and this can
  * point anywhere.
  */
-const NOTIFY_TO = process.env.LEAD_NOTIFY_EMAIL || "d.ngum@alustudent.com";
+const NOTIFY_TO = (process.env.LEAD_NOTIFY_EMAIL || "d.ngum@alustudent.com")
+  // Several team inboxes can get every enquiry: separate them with commas,
+  // e.g. "studentcompanionai@gmail.com, info@studentcompanionai.rw".
+  .split(",")
+  .map((e) => e.trim())
+  .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))
+  .slice(0, 5);
 
 /**
  * Resend's shared onboarding@resend.dev sender works without any setup, but
@@ -238,7 +244,7 @@ async function notify(lead: Lead, profile: string, key: string, sentTo: Universi
   `;
 
   await send(key, {
-    to: [NOTIFY_TO],
+    to: NOTIFY_TO.length ? NOTIFY_TO : ["d.ngum@alustudent.com"],
     // Resend's current API uses replyTo; the older reply_to is rejected
     // with a 422, which is invisible without reading the response body.
     replyTo: lead.email,
