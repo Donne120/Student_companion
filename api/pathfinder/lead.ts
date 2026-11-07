@@ -15,6 +15,8 @@
  *   FIREBASE_CLIENT_EMAIL     — service-account email
  *   FIREBASE_PRIVATE_KEY      — service-account key ("\n" escapes are handled)
  *   UNIVERSITY_CONTACTS       — optional; admissions addresses (see _contacts.ts)
+ *   LEAD_CC_EMAIL             — copied on university emails; defaults to
+ *                               info@studentcompanionai.rw ("off" to stop)
  *
  * Universities: the student can tick universities from their report to send
  * their enquiry to as well. Only universities with a confirmed admissions
@@ -33,6 +35,16 @@ import { contactFor } from "../_contacts.js";
 const PLATFORM_URL = "https://chat.studentcompanionai.rw";
 const PATHFINDER_URL = `${PLATFORM_URL}/pathfinder`;
 const MAX_UNIVERSITIES = 3;
+
+/**
+ * Copied on every enquiry sent to a university, so the team sees each one
+ * that goes out. LEAD_CC_EMAIL in Vercel overrides it; set it to "off" to
+ * stop copying.
+ */
+const UNIVERSITY_CC = (() => {
+  const v = (process.env.LEAD_CC_EMAIL ?? "info@studentcompanionai.rw").trim();
+  return v && v.toLowerCase() !== "off" ? v : "";
+})();
 
 /**
  * Where enquiries are sent. Defaults to the address that owns the Resend
@@ -189,6 +201,7 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
   `;
   await send(key, {
     to: [uni.email],
+    ...(UNIVERSITY_CC && UNIVERSITY_CC.toLowerCase() !== uni.email.toLowerCase() ? { cc: [UNIVERSITY_CC] } : {}),
     replyTo: lead.email,
     subject: `Prospective student enquiry via Student Companion AI: ${lead.name}`,
     html,
