@@ -177,6 +177,9 @@ export interface SchoolSuggestion {
   detail: string;
   /** A real, clickable URL from live search — never invented. */
   url: string;
+  /** The student can send their enquiry to this university (the server
+   *  has a confirmed admissions address for it). */
+  contactable?: boolean;
 }
 
 export interface CareerOutlook {

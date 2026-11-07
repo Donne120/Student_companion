@@ -108,3 +108,18 @@ and then, in code:
 Add a university only when its official domain is certain. Keep the country
 list in `src/pathfinder/questions.ts`, `api/_shared.ts` and `_directory.ts`
 in step (`npm run check:pathfinder` checks the first two).
+
+## Sending an enquiry to universities
+
+On the report, a student asking for advice can also tick up to three of the
+suggested universities to send their request to. Each university gets its own
+email from Student Companion AI, with the platform link, the student's name,
+email, phone, question and Pathfinder answers. Replying reaches the student.
+
+- Only universities with a confirmed admissions address can be ticked. Add
+  them to `CONTACTS` in `api/_contacts.ts`, or set `UNIVERSITY_CONTACTS` in
+  Vercel as JSON (`{"ur.ac.rw": "admissions@…"}`), keyed by the university's
+  website domain. Never add an address you have not confirmed.
+- Emails to universities need a verified sender domain in Resend and
+  `LEAD_FROM_EMAIL` set to an address on it. Until then the team's copy of
+  the enquiry lists the universities the student chose, to forward by hand.

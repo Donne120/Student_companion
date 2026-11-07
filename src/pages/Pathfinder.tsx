@@ -14,7 +14,7 @@ import {
   type Answers,
   type PathfinderReport,
 } from "@/pathfinder/questions";
-import { pathfinderService, PathfinderError } from "@/pathfinder/pathfinderService";
+import { pathfinderService, PathfinderError, type LeadResult } from "@/pathfinder/pathfinderService";
 
 const LOGO = "/logo-icon.png";
 
@@ -493,16 +493,23 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<LeadResult | null>(null);
   const [err, setErr] = useState("");
+  // Universities from the report the student can send their enquiry to.
+  // Nothing is ticked for them: sharing their details is their choice.
+  const contactable = report.schools.filter((s) => s.contactable).slice(0, 6);
+  const [chosen, setChosen] = useState<string[]>([]);
+  const toggle = (url: string) =>
+    setChosen((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : prev.length < 3 ? [...prev, url] : prev
+    );
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
     setSending(true);
     setErr("");
     try {
-      await pathfinderService.submitLead({ name, email, phone, message }, answers, report);
-      setSent(true);
+      setSent(await pathfinderService.submitLead({ name, email, phone, message }, answers, report, chosen));
     } catch (e2) {
       setErr(
         e2 instanceof PathfinderError ? e2.message : "We couldn't send that. Please try again."
@@ -523,6 +530,17 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
           An adviser will contact you on the email or phone number you gave us. In the meantime,
           keep this report — screenshot it, or leave this page open.
         </p>
+        {!!sent.sentTo?.length && (
+          <p className="text-[12.5px] text-[#4A4437] mt-2">
+            Also sent to <strong>{sent.sentTo.join(", ")}</strong>. Their admissions team can reply
+            to you directly.
+          </p>
+        )}
+        {!!sent.passedOn?.length && (
+          <p className="text-[12.5px] text-[#4A4437] mt-2">
+            We'll pass your request on to <strong>{sent.passedOn.join(", ")}</strong>.
+          </p>
+        )}
       </div>
     );
   }
@@ -584,6 +602,42 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
         className="w-full text-[13.5px] px-3 py-2.5 rounded-[9px] border border-[#E8DDB0] bg-white mt-2.5 resize-none focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
       />
 
+      {contactable.length > 0 && (
+        <fieldset className="mt-3.5 rounded-[10px] border border-[#E8DDB0] bg-white p-3">
+          <legend className="px-1 text-[13px] font-semibold">
+            Also send your request to universities <span className="font-normal text-[#6B6355]">(optional, up to 3)</span>
+          </legend>
+          <p className="text-[12px] text-[#6B6355] mb-2">
+            Their admissions team gets your name, email, phone, question and your answers above, and
+            can reply to you directly.
+          </p>
+          <div className="space-y-1.5">
+            {contactable.map((s) => {
+              const on = chosen.includes(s.url);
+              const full = !on && chosen.length >= 3;
+              return (
+                <label
+                  key={s.url}
+                  className={`flex items-start gap-2.5 text-[13px] ${full ? "opacity-50" : "cursor-pointer"}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={full}
+                    onChange={() => toggle(s.url)}
+                    className="mt-0.5 h-4 w-4 accent-[#B8941F]"
+                  />
+                  <span>
+                    {s.name}
+                    {s.programme && <span className="text-[#6B6355]"> · {s.programme}</span>}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
       {err && <p className="text-[12.5px] text-red-700 mt-2">{err}</p>}
 
       <button
@@ -592,11 +646,15 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
         className="mt-3 inline-flex items-center gap-2 text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] bg-[#1A1A1A] text-white hover:bg-black disabled:opacity-50"
       >
         {sending ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-        {sending ? "Sending…" : "Ask for free advice"}
+        {sending
+          ? "Sending…"
+          : chosen.length
+            ? `Ask for advice and send to ${chosen.length} ${chosen.length === 1 ? "university" : "universities"}`
+            : "Ask for free advice"}
       </button>
       <p className="text-[11px] text-[#6B6355] mt-2.5">
         We use this only to contact you about your studies. Your answers are included so we can help
-        properly.
+        properly{chosen.length ? ", and go only to the universities you ticked" : ""}.
       </p>
     </form>
   );
