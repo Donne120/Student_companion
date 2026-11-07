@@ -16,6 +16,14 @@ export interface LeadDetails {
   message?: string;
 }
 
+export interface LeadResult {
+  ok: true;
+  /** Universities the enquiry was emailed to. */
+  sentTo?: string[];
+  /** Universities the team will pass it on to by hand. */
+  passedOn?: string[];
+}
+
 /** Thrown with a message safe to show a student. */
 export class PathfinderError extends Error {}
 
@@ -60,6 +68,8 @@ export const pathfinderService = {
   getRecommendations: (answers: Answers) =>
     post<PathfinderReport>("/api/pathfinder/recommend", { answers }),
 
-  submitLead: (details: LeadDetails, answers: Answers, report?: PathfinderReport) =>
-    post<{ ok: true }>("/api/pathfinder/lead", { details, answers, report }),
+  /** `universities`: website links of the universities the student chose
+   *  to send their enquiry to (only those marked `contactable`). */
+  submitLead: (details: LeadDetails, answers: Answers, report?: PathfinderReport, universities: string[] = []) =>
+    post<LeadResult>("/api/pathfinder/lead", { details, answers, report, universities }),
 };

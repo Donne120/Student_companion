@@ -17,6 +17,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // returns FUNCTION_INVOCATION_FAILED before the handler ever runs.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 import { DIRECTORY, PAN_AFRICAN, PREFERRED_DOMAINS, SCHOLARSHIPS } from "../_directory.js";
+import { contactFor } from "../_contacts.js";
 
 // Groq's free tier runs these comfortably. The job here is summarising real
 // search results into a fixed JSON shape, not open-ended reasoning, so a
@@ -307,7 +308,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const r = report as {
-      schools?: Array<{ url?: string; programme?: string; detail?: string }>;
+      schools?: Array<{ url?: string; programme?: string; detail?: string; contactable?: boolean }>;
       verify?: unknown;
       scholarships?: unknown;
     };
@@ -329,6 +330,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       const alive = await Promise.all(r.schools.map((s) => isReachable(s.url as string)));
       r.schools = r.schools.filter((_, i) => alive[i]);
+      // Whether the student can send their enquiry to this university from
+      // the report (api/_contacts.ts). The address itself stays server-side.
+      r.schools = r.schools.map((s) => ({ ...s, contactable: Boolean(contactFor(s.url as string)) }));
     }
 
     // Where to check a university is accredited and, where there is one, the
