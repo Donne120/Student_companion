@@ -31,9 +31,11 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // See the note in recommend.ts — the .js extension is required under ESM.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
 import { contactFor, referralFor } from "../_contacts.js";
+import {
+  LINKS, button, callout, detailCard, esc, forInstitutions, heading, layout, paragraph,
+  profileRows, profileText, textFooter,
+} from "../_email.js";
 
-const PLATFORM_URL = "https://chat.studentcompanionai.rw";
-const PATHFINDER_URL = `${PLATFORM_URL}/pathfinder`;
 const MAX_UNIVERSITIES = 3;
 
 /**
@@ -147,13 +149,6 @@ function canEmailOutsiders(): boolean {
   return !/@resend\.dev>?$/i.test(FROM_ADDRESS.trim());
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
 
 async function store(lead: Lead, profile: string, universities: string[]) {
   const projectId = process.env.FIREBASE_PROJECT_ID;
@@ -195,61 +190,134 @@ async function send(key: string, email: Record<string, unknown>) {
 
 /** The enquiry, to one university's admissions office, from the platform. */
 async function notifyUniversity(lead: Lead, profile: string, uni: University, key: string) {
-  const html = `
-    <p>Dear ${escapeHtml(uni.name)} admissions team,</p>
-    <p>A prospective student, <strong>${escapeHtml(lead.name)}</strong>, used
-       <a href="${PATHFINDER_URL}">Pathfinder</a> on
-       <a href="${PLATFORM_URL}">Student Companion AI</a>, a free course and university guidance
-       platform for students in Africa, and asked us to share their enquiry with you.
-       Please reply to them directly: replying to this email reaches them.</p>
-    <p><strong>Name:</strong> ${escapeHtml(lead.name)}<br>
-       <strong>Email:</strong> ${escapeHtml(lead.email)}<br>
-       <strong>Phone / WhatsApp:</strong> ${escapeHtml(lead.phone) || "not given"}</p>
-    ${uni.programme ? `<p><strong>Interested in:</strong> ${escapeHtml(uni.programme)}</p>` : ""}
-    ${lead.message ? `<p><strong>Their question:</strong><br>${escapeHtml(lead.message)}</p>` : ""}
-    <h3 style="font-family:Georgia,serif">What they told Pathfinder</h3>
-    <pre style="background:#FBF7E9;padding:12px;border-radius:8px;white-space:pre-wrap;font-family:inherit">${escapeHtml(profile)}</pre>
-    ${uni.referral ? `<p><strong>Referral:</strong> this student was referred by Student Companion AI through
-       your referral programme. Our referral link: <a href="${escapeHtml(uni.referral)}">${escapeHtml(uni.referral)}</a>.
-       We have asked the student to register their interest through it.</p>` : ""}
-    <p style="color:#6B6355;font-size:12px">This enquiry comes from the Student Companion AI platform
-       (<a href="${PLATFORM_URL}">${PLATFORM_URL.replace("https://", "")}</a>). The student chose to share
-       these details with your university. Student Companion AI does not make admission decisions.</p>
-  `;
+  const first = lead.name.split(/\s+/)[0] || lead.name;
+  const note =
+    "This enquiry comes from the Student Companion AI platform. The student chose to share these details " +
+    "with your institution. Student Companion AI gives guidance only and does not make admission decisions.";
+  const details: Array<[string, string]> = [
+    ["Name", lead.name],
+    ["Email", lead.email],
+    ["Phone / WhatsApp", lead.phone || "Not given"],
+    ["Interested in", uni.programme],
+  ];
+  const html = layout({
+    preheader: `${lead.name} would like to hear from ${uni.name}.`,
+    title: "A prospective student would like to hear from you",
+    footerNote: note,
+    body: [
+      paragraph(`Dear ${esc(uni.name)} admissions team,`),
+      paragraph(
+        `<strong>${esc(lead.name)}</strong> used ` +
+          `<a href="${LINKS.pathfinder}" style="color:#B8941F">Pathfinder</a> on ` +
+          `<a href="${LINKS.chat}" style="color:#B8941F">Student Companion AI</a>, our student support platform. ` +
+          `Pathfinder helps high school students find the universities and programmes that match their skills ` +
+          `and learning profile, and it suggested your institution. ${esc(first)} asked us to introduce them to ` +
+          `you. Replying to this email reaches ${esc(first)} directly.`
+      ),
+      detailCard(details),
+      lead.message ? heading("Their question") + paragraph(esc(lead.message)) : "",
+      heading("About them"),
+      detailCard(profileRows(profile)),
+      uni.referral
+        ? callout(
+            `<strong>Referral.</strong> ${esc(first)} was referred by Student Companion AI through your referral ` +
+              `programme, and we have asked them to register through our link: ` +
+              `<a href="${esc(uni.referral)}" style="color:#B8941F">${esc(uni.referral)}</a>`
+          )
+        : "",
+      button(
+        `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(`Your enquiry to ${uni.name}`)}`,
+        `Reply to ${esc(first)}`
+      ),
+      forInstitutions(),
+    ].join(""),
+  });
+  const text = [
+    `Dear ${uni.name} admissions team,`,
+    "",
+    `${lead.name} used Pathfinder (${LINKS.pathfinder}) on Student Companion AI, our student support platform. ` +
+      `Pathfinder helps high school students find the universities and programmes that match their skills and ` +
+      `learning profile, and it suggested your institution. They asked us to introduce them to you. ` +
+      `Replying to this email reaches them directly.`,
+    "",
+    `Name: ${lead.name}`,
+    `Email: ${lead.email}`,
+    `Phone / WhatsApp: ${lead.phone || "Not given"}`,
+    uni.programme ? `Interested in: ${uni.programme}` : "",
+    lead.message ? `\nTheir question:\n${lead.message}` : "",
+    "",
+    "About them:",
+    profileText(profile),
+    uni.referral ? `\nReferral: referred by Student Companion AI through your referral programme: ${uni.referral}` : "",
+    "",
+    "About Student Companion AI, our student support platform: an AI student assistant, Pathfinder (matching " +
+      "high school students with the right universities), opportunities, free courses, and housing " +
+      `and travel support for students. Bring it to your institution: ${LINKS.email}`,
+    "",
+    textFooter(note),
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
   await send(key, {
     to: [uni.email],
     ...(UNIVERSITY_CC && UNIVERSITY_CC.toLowerCase() !== uni.email.toLowerCase() ? { cc: [UNIVERSITY_CC] } : {}),
     replyTo: lead.email,
     subject: `Prospective student enquiry via Student Companion AI: ${lead.name}`,
     html,
+    text,
   });
 }
 
 async function notify(lead: Lead, profile: string, key: string, sentTo: University[], pending: University[]) {
-  const list = (unis: University[]) => unis.map((u) => escapeHtml(u.name)).join(", ");
+  const names = (unis: University[]) => unis.map((u) => esc(u.name)).join(", ");
   const referred = [...sentTo, ...pending].filter((u) => u.referral);
-  const body = `
-    <h2 style="font-family:Georgia,serif">New Pathfinder enquiry</h2>
-    ${sentTo.length ? `<p><strong>Also sent to:</strong> ${list(sentTo)}</p>` : ""}
-    ${referred.length ? `<p><strong>Referral:</strong> ${referred.map((u) => `${escapeHtml(u.name)} (<a href="${escapeHtml(u.referral)}">our referral link</a>)`).join(", ")}.
-       When forwarding by hand, include the link.</p>` : ""}
-    ${pending.length ? `<p><strong>The student asked us to pass this on to:</strong> ${list(pending)}
-       (${pending.map((u) => escapeHtml(u.email)).join(", ")}). It was not sent automatically: please forward it.</p>` : ""}
-    <p><strong>Name:</strong> ${escapeHtml(lead.name)}<br>
-       <strong>Email:</strong> ${escapeHtml(lead.email)}<br>
-       <strong>Phone:</strong> ${escapeHtml(lead.phone) || "—"}</p>
-    ${lead.message ? `<p><strong>Message:</strong><br>${escapeHtml(lead.message)}</p>` : ""}
-    <h3>Their answers</h3>
-    <pre style="background:#FBF7E9;padding:12px;border-radius:8px;white-space:pre-wrap;font-family:inherit">${escapeHtml(profile)}</pre>
-  `;
-
+  const body = [
+    paragraph(`<strong>${esc(lead.name)}</strong> asked for free advice on Pathfinder. Reply to this email to reach them.`),
+    detailCard([
+      ["Name", lead.name],
+      ["Email", lead.email],
+      ["Phone / WhatsApp", lead.phone || "Not given"],
+    ]),
+    sentTo.length ? callout(`<strong>Sent to:</strong> ${names(sentTo)}. You were copied on each.`) : "",
+    pending.length
+      ? callout(
+          `<strong>Please forward to:</strong> ${pending.map((u) => `${esc(u.name)} (${esc(u.email)})`).join(", ")}. ` +
+            "The student chose these universities, but the email could not be sent automatically."
+        )
+      : "",
+    referred.length
+      ? callout(
+          `<strong>Referral:</strong> ${referred.map((u) => `${esc(u.name)}, <a href="${esc(u.referral)}" style="color:#B8941F">our referral link</a>`).join("; ")}. ` +
+            "Include the link when forwarding by hand."
+        )
+      : "",
+    lead.message ? heading("Their question") + paragraph(esc(lead.message)) : "",
+    heading("Their answers"),
+    detailCard(profileRows(profile)),
+    button(`mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent("Your Pathfinder request")}`, `Reply to ${esc(lead.name.split(/\s+/)[0] || lead.name)}`),
+  ].join("");
+  const note = "Sent by Pathfinder to the Student Companion AI team.";
   await send(key, {
     to: NOTIFY_TO.length ? NOTIFY_TO : ["d.ngum@alustudent.com"],
     // Resend's current API uses replyTo; the older reply_to is rejected
     // with a 422, which is invisible without reading the response body.
     replyTo: lead.email,
     subject: `Pathfinder enquiry — ${lead.name}`,
-    html: body,
+    html: layout({ preheader: `${lead.name} asked for free advice.`, title: "New Pathfinder request", body, footerNote: note }),
+    text: [
+      `${lead.name} asked for free advice on Pathfinder.`,
+      `Email: ${lead.email}`,
+      `Phone / WhatsApp: ${lead.phone || "Not given"}`,
+      sentTo.length ? `Sent to: ${sentTo.map((u) => u.name).join(", ")}` : "",
+      pending.length ? `Please forward to: ${pending.map((u) => `${u.name} (${u.email})`).join(", ")}` : "",
+      referred.length ? `Referral links: ${referred.map((u) => `${u.name}: ${u.referral}`).join("; ")}` : "",
+      lead.message ? `\nTheir question:\n${lead.message}` : "",
+      "",
+      "Their answers:",
+      profileText(profile),
+      "",
+      textFooter(note),
+    ].filter((l) => l !== "").join("\n"),
   });
 }
 
