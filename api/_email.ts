@@ -21,19 +21,17 @@ export const LINKS = {
 };
 
 /**
- * Social media and WhatsApp, shown in every email's footer. Fill these in,
- * or set SOCIAL_LINKS in Vercel as JSON, e.g.
+ * Social media and WhatsApp, shown in every email's footer. To change or add
+ * one without a code change, set SOCIAL_LINKS in Vercel as JSON, e.g.
  *   {"WhatsApp": "https://wa.me/2507...", "LinkedIn": "https://www.linkedin.com/company/..."}
  * Empty entries are left out.
  */
 const SOCIAL_DEFAULTS: Record<string, string> = {
-  WhatsApp: "",
-  LinkedIn: "",
-  Instagram: "",
-  Facebook: "",
-  X: "",
-  TikTok: "",
-  YouTube: "",
+  // As linked from studentcompanionai.rw.
+  "WhatsApp channel": "https://whatsapp.com/channel/0029VajtyR71SWt02iOsLK2l",
+  LinkedIn: "https://www.linkedin.com/company/student-companion-ai",
+  Instagram: "https://www.instagram.com/studentcompanionai/",
+  X: "https://x.com/SCAI_P",
 };
 
 export function socialLinks(): Array<[string, string]> {
@@ -172,19 +170,19 @@ export function forInstitutions(): string {
 }
 
 function footer(note: string): string {
-  const social = socialLinks();
-  const links: Array<[string, string]> = [
+  const join = (links: Array<[string, string]>) =>
+    links.map(([label, href]) => a(href, esc(label), `color:${MUTED};white-space:nowrap`)).join("&nbsp;&nbsp;· ");
+  const platform: Array<[string, string]> = [
     ["Website", LINKS.website],
     ["Student assistant", LINKS.chat],
     ["Pathfinder", LINKS.pathfinder],
     ["Opportunities", LINKS.opportunities],
-    ...social,
   ];
+  const social = socialLinks();
   return `<tr><td style="padding:22px 32px 28px;border-top:1px solid ${LINE}">
-    <p style="margin:0 0 8px;${FONT}font-size:13px;line-height:1.8;color:${MUTED}">
-      ${links.map(([label, href]) => a(href, esc(label), `color:${MUTED};white-space:nowrap`)).join("&nbsp;&nbsp;· ")}
-    </p>
-    <p style="margin:0 0 8px;${FONT}font-size:13px;color:${MUTED}">
+    <p style="margin:0 0 6px;${FONT}font-size:13px;line-height:1.8;color:${MUTED}">${join(platform)}</p>
+    ${social.length ? `<p style="margin:0 0 6px;${FONT}font-size:13px;line-height:1.8;color:${MUTED}">Follow us:&nbsp; ${join(social)}</p>` : ""}
+    <p style="margin:0 0 10px;${FONT}font-size:13px;color:${MUTED}">
       ${a(`mailto:${LINKS.email}`, LINKS.email, `color:${MUTED}`)}&nbsp;&nbsp;·&nbsp;&nbsp;Kigali, Rwanda</p>
     <p style="margin:0;${FONT}font-size:12px;line-height:1.55;color:${MUTED}">${note}</p>
   </td></tr>`;
