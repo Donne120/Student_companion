@@ -527,20 +527,20 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
           Your request has been sent
         </h4>
         <p className="text-[12.5px] text-[#6B6355]">
-          An adviser will contact you on the email or phone number you gave us. In the meantime,
-          keep this report — screenshot it, or leave this page open.
+          An adviser from Student Companion AI will contact you at <strong>{email}</strong>
+          {phone ? <> or on {phone}</> : null}. You can close this page now.
         </p>
-        {!!sent.sentTo?.length && (
+        {(!!sent.sentTo?.length || !!sent.passedOn?.length) && (
           <p className="text-[12.5px] text-[#4A4437] mt-2">
-            Also sent to <strong>{sent.sentTo.join(", ")}</strong>. Their admissions team can reply
-            to you directly.
+            Your request is also going to{" "}
+            <strong>{[...(sent.sentTo ?? []), ...(sent.passedOn ?? [])].join(", ")}</strong>. Their
+            admissions team can reply to you by email.
           </p>
         )}
-        {!!sent.passedOn?.length && (
-          <p className="text-[12.5px] text-[#4A4437] mt-2">
-            We'll pass your request on to <strong>{sent.passedOn.join(", ")}</strong>.
-          </p>
-        )}
+        <p className="text-[12px] text-[#6B6355] mt-2">
+          Check your inbox and spam folder over the next few days. You can come back to Pathfinder
+          any time to see your options again.
+        </p>
       </div>
     );
   }
