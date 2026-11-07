@@ -15,6 +15,8 @@
  *   FIREBASE_CLIENT_EMAIL     — service-account email
  *   FIREBASE_PRIVATE_KEY      — service-account key ("\n" escapes are handled)
  *   UNIVERSITY_CONTACTS       — optional; admissions addresses (see _contacts.ts)
+ *   LEAD_CC_EMAIL             — copied on university emails; defaults to
+ *                               info@studentcompanionai.rw ("off" to stop)
  *
  * Universities: the student can tick universities from their report to send
  * their enquiry to as well. Only universities with a confirmed admissions
@@ -28,11 +30,21 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 // See the note in recommend.ts — the .js extension is required under ESM.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
-import { contactFor } from "../_contacts.js";
+import { contactFor, referralFor } from "../_contacts.js";
 
 const PLATFORM_URL = "https://chat.studentcompanionai.rw";
 const PATHFINDER_URL = `${PLATFORM_URL}/pathfinder`;
 const MAX_UNIVERSITIES = 3;
+
+/**
+ * Copied on every enquiry sent to a university, so the team sees each one
+ * that goes out. LEAD_CC_EMAIL in Vercel overrides it; set it to "off" to
+ * stop copying.
+ */
+const UNIVERSITY_CC = (() => {
+  const v = (process.env.LEAD_CC_EMAIL ?? "info@studentcompanionai.rw").trim();
+  return v && v.toLowerCase() !== "off" ? v : "";
+})();
 
 /**
  * Where enquiries are sent. Defaults to the address that owns the Resend
@@ -81,6 +93,8 @@ interface University {
   url: string;
   programme: string;
   email: string;
+  /** Student Companion AI's referral link for this university, if any. */
+  referral: string;
 }
 
 /**
@@ -111,7 +125,13 @@ function parseUniversities(raw: unknown, report: unknown): University[] {
     } catch {
       /* keep the raw url */
     }
-    out.push({ name: str(school.name, 160) || host, url, programme: str(school.programme, 200), email });
+    out.push({
+      name: str(school.name, 160) || host,
+      url,
+      programme: str(school.programme, 200),
+      email,
+      referral: referralFor(url) || "",
+    });
   }
   return out;
 }
@@ -183,12 +203,16 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
     ${lead.message ? `<p><strong>Their question:</strong><br>${escapeHtml(lead.message)}</p>` : ""}
     <h3 style="font-family:Georgia,serif">What they told Pathfinder</h3>
     <pre style="background:#FBF7E9;padding:12px;border-radius:8px;white-space:pre-wrap;font-family:inherit">${escapeHtml(profile)}</pre>
+    ${uni.referral ? `<p><strong>Referral:</strong> this student was referred by Student Companion AI through
+       your referral programme. Our referral link: <a href="${escapeHtml(uni.referral)}">${escapeHtml(uni.referral)}</a>.
+       We have asked the student to register their interest through it.</p>` : ""}
     <p style="color:#6B6355;font-size:12px">This enquiry comes from the Student Companion AI platform
        (<a href="${PLATFORM_URL}">${PLATFORM_URL.replace("https://", "")}</a>). The student chose to share
        these details with your university. Student Companion AI does not make admission decisions.</p>
   `;
   await send(key, {
     to: [uni.email],
+    ...(UNIVERSITY_CC && UNIVERSITY_CC.toLowerCase() !== uni.email.toLowerCase() ? { cc: [UNIVERSITY_CC] } : {}),
     replyTo: lead.email,
     subject: `Prospective student enquiry via Student Companion AI: ${lead.name}`,
     html,
@@ -197,9 +221,12 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
 
 async function notify(lead: Lead, profile: string, key: string, sentTo: University[], pending: University[]) {
   const list = (unis: University[]) => unis.map((u) => escapeHtml(u.name)).join(", ");
+  const referred = [...sentTo, ...pending].filter((u) => u.referral);
   const body = `
     <h2 style="font-family:Georgia,serif">New Pathfinder enquiry</h2>
     ${sentTo.length ? `<p><strong>Also sent to:</strong> ${list(sentTo)}</p>` : ""}
+    ${referred.length ? `<p><strong>Referral:</strong> ${referred.map((u) => `${escapeHtml(u.name)} (<a href="${escapeHtml(u.referral)}">our referral link</a>)`).join(", ")}.
+       When forwarding by hand, include the link.</p>` : ""}
     ${pending.length ? `<p><strong>The student asked us to pass this on to:</strong> ${list(pending)}
        (${pending.map((u) => escapeHtml(u.email)).join(", ")}). It was not sent automatically: please forward it.</p>` : ""}
     <p><strong>Name:</strong> ${escapeHtml(lead.name)}<br>
@@ -282,7 +309,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // If the record was saved, or a university already has it, we can still
     // follow up, so don't tell the student their submission failed.
     if (stored || sentTo.length) {
-      return res.status(200).json({ ok: true, sentTo: sentTo.map((u) => u.name), passedOn: pending.map((u) => u.name) });
+      return res.status(200).json(result(sentTo, pending));
     }
 
     const body: Record<string, string> = {
@@ -296,5 +323,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(502).json(body);
   }
 
-  return res.status(200).json({ ok: true, sentTo: sentTo.map((u) => u.name), passedOn: pending.map((u) => u.name) });
+  return res.status(200).json(result(sentTo, pending));
+}
+
+/** What the student is told: who has their request, and where to start an
+ *  application so a referral is credited. */
+function result(sentTo: University[], pending: University[]) {
+  return {
+    ok: true,
+    sentTo: sentTo.map((u) => u.name),
+    passedOn: pending.map((u) => u.name),
+    referrals: [...sentTo, ...pending]
+      .filter((u) => u.referral)
+      .map((u) => ({ name: u.name, url: u.referral })),
+  };
 }

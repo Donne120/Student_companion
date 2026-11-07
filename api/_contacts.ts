@@ -96,6 +96,17 @@ export const CONTACTS: Record<string, string> = {
   "aucegypt.edu": "enrolauc@aucegypt.edu",
 };
 
+/**
+ * Student Companion AI's own referral links, by university website domain.
+ * An enquiry sent to that university includes the link, and the student is
+ * asked to register their interest through it, so the referral is credited
+ * to Student Companion AI.
+ */
+export const REFERRAL_LINKS: Record<string, string> = {
+  // ALU referral programme (Referral Factory), Student Companion AI's link.
+  "alueducation.com": "https://african-leadership-university.referral-factory.com/uZ8lxWuT",
+};
+
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 function fromEnv(): Record<string, string> {
@@ -114,21 +125,35 @@ function fromEnv(): Record<string, string> {
   }
 }
 
-/** The admissions address for a university website, if the team has one. */
-export function contactFor(url: string): string | null {
-  let host: string;
+function hostOf(url: string): string | null {
   try {
-    host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, "");
   } catch {
     return null;
   }
-  const all = { ...CONTACTS, ...fromEnv() };
-  // admissions.ur.ac.rw -> ur.ac.rw: a page on a subdomain still belongs to
-  // the same university.
+}
+
+/** Looks a university website up in a table keyed by domain, parent
+ *  domains included (admissions.ur.ac.rw -> ur.ac.rw). */
+function lookup(table: Record<string, string>, url: string): string | null {
+  const host = hostOf(url);
+  if (!host) return null;
   const parts = host.split(".");
   for (let i = 0; i < parts.length - 1; i++) {
-    const email = all[parts.slice(i).join(".")];
-    if (email && EMAIL.test(email)) return email;
+    const hit = table[parts.slice(i).join(".")];
+    if (hit) return hit;
   }
   return null;
+}
+
+/** Student Companion AI's referral link for this university, if it has one. */
+export function referralFor(url: string): string | null {
+  const link = lookup(REFERRAL_LINKS, url);
+  return link && /^https:\/\//.test(link) ? link : null;
+}
+
+/** The admissions address for a university website, if the team has one. */
+export function contactFor(url: string): string | null {
+  const email = lookup({ ...CONTACTS, ...fromEnv() }, url);
+  return email && EMAIL.test(email) ? email : null;
 }

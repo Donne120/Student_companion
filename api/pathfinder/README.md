@@ -115,6 +115,9 @@ On the report, a student asking for advice can also tick up to three of the
 suggested universities to send their request to. Each university gets its own
 email from Student Companion AI, with the platform link, the student's name,
 email, phone, question and Pathfinder answers. Replying reaches the student.
+Every email to a university is copied to info@studentcompanionai.rw
+(`LEAD_CC_EMAIL` in Vercel changes it), so the team sees each request that
+goes out.
 
 - Only universities with a confirmed admissions address can be ticked. Add
   them to `CONTACTS` in `api/_contacts.ts`, or set `UNIVERSITY_CONTACTS` in
