@@ -497,7 +497,12 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
   const [err, setErr] = useState("");
   // Universities from the report the student can send their enquiry to.
   // Nothing is ticked for them: sharing their details is their choice.
-  const contactable = report.schools.filter((s) => s.contactable).slice(0, 6);
+  // One row per university: the report can suggest two programmes at the
+  // same one, and the request goes to its admissions office once.
+  const contactable = report.schools
+    .filter((s) => s.contactable)
+    .filter((s, i, all) => all.findIndex((t) => t.url === s.url || t.name === s.name) === i)
+    .slice(0, 6);
   const [chosen, setChosen] = useState<string[]>([]);
   const toggle = (url: string) =>
     setChosen((prev) =>
@@ -527,8 +532,7 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
           Your request has been sent
         </h4>
         <p className="text-[12.5px] text-[#6B6355]">
-          An adviser from Student Companion AI will contact you at <strong>{email}</strong>
-          {phone ? <> or on {phone}</> : null}. You can close this page now.
+          An adviser from Student Companion AI will be in touch soon. You can close this page now.
         </p>
         {(!!sent.sentTo?.length || !!sent.passedOn?.length) && (
           <p className="text-[12.5px] text-[#4A4437] mt-2">
@@ -553,8 +557,12 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
           </p>
         ))}
         <p className="text-[12px] text-[#6B6355] mt-2">
-          Check your inbox and spam folder over the next few days. You can come back to Pathfinder
-          any time to see your options again.
+          Look out for an email from <strong>info@studentcompanionai.rw</strong> over the next few
+          days, and check your spam folder too. Questions in the meantime? Write to us at{" "}
+          <a href="mailto:info@studentcompanionai.rw" className="underline underline-offset-2">
+            info@studentcompanionai.rw
+          </a>
+          . You can come back to Pathfinder any time to see your options again.
         </p>
       </div>
     );
