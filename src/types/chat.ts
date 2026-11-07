@@ -19,6 +19,8 @@ export interface Message {
   sources?: MessageSource[];
   /** Related topic chips shown below an AI response. */
   relatedTopics?: string[];
+  /** While an answer is being prepared: what the Companion is doing. */
+  status?: string;
 }
 
 export interface Conversation {

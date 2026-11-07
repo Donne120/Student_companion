@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { speak, stopSpeaking, isSpeaking } from "@/utils/speech";
 import { stripSourceMarkers } from "@/lib/citations";
 import { sendQuickReply, splitQuickReplies } from "@/lib/quickReplies";
+import { ThinkingIndicator } from "./chat/ThinkingIndicator";
 
 interface ChatMessageProps {
   message: string;
@@ -23,6 +24,9 @@ interface ChatMessageProps {
   onFeedback?: (type: "positive" | "negative", details?: string) => void;
   /** The newest answer: only its quick replies are shown as buttons. */
   isLatest?: boolean;
+  /** The answer is still being prepared (no words yet): show progress. */
+  pending?: boolean;
+  status?: string;
 }
 
 interface CodeProps {
@@ -40,6 +44,8 @@ export const ChatMessage = ({
   onEdit,
   onFeedback,
   isLatest = false,
+  pending = false,
+  status,
 }: ChatMessageProps) => {
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -147,6 +153,8 @@ export const ChatMessage = ({
                 </button>
               </div>
             </div>
+          ) : isAi && pending && !text.trim() ? (
+            <ThinkingIndicator status={status} />
           ) : (
             <div className={cn("text-left text-[15px] text-[#262521] [overflow-wrap:anywhere] min-w-0 max-w-full", isAi ? "leading-[1.7]" : "leading-[1.6]")}>
               <ReactMarkdown
@@ -354,7 +362,7 @@ export const ChatMessage = ({
           )}
 
           {/* Action bar (under a question it sits outside the bubble) */}
-          {!isEditing && (
+          {!isEditing && !(isAi && !text.trim()) && (
             <div className={cn(
               "flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity",
               isAi ? "pt-1 -ml-1.5" : "absolute -bottom-8 right-0"

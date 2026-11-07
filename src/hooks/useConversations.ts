@@ -210,7 +210,7 @@ export const useConversations = () => {
     convId: string,
     messageId: string,
     newText: string,
-    options: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[] } = {}
+    options: { silent?: boolean; sources?: Message["sources"]; relatedTopics?: string[]; status?: string } = {}
   ) => {
     setConversations(prev => prev.map(conv => {
       if (conv.id === convId) {
@@ -224,6 +224,7 @@ export const useConversations = () => {
                   timestamp: Date.now(),
                   ...(options.sources !== undefined ? { sources: options.sources } : {}),
                   ...(options.relatedTopics !== undefined ? { relatedTopics: options.relatedTopics } : {}),
+                  ...(options.status !== undefined ? { status: options.status } : {}),
                 }
               : msg
           ),

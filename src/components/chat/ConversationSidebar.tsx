@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Conversation } from "@/types/chat";
 import {
   ChevronLeft,
+  Briefcase,
+  Bus,
+  Home,
   MessageSquarePlus,
   Settings,
   User,
@@ -10,6 +13,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+
+const SERVICES = [
+  { label: "Careers", hint: "opportunities & courses", url: "https://career.studentcompanionai.rw", Icon: Briefcase },
+  { label: "KigaliHouz", hint: "housing", url: "https://www.kigalihouz.com", Icon: Home },
+  { label: "Itike", hint: "travel", url: "https://play.google.com/store/apps/details?id=rw.itike.app", Icon: Bus },
+];
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
@@ -136,6 +145,30 @@ export const ConversationSidebar = ({
             );
           })}
         </div>
+      </div>
+
+      {/* Services from the Student Companion team */}
+      <div className="px-2 pb-2">
+        {!isCollapsed && <div className="px-3 pt-2 pb-1.5 text-xs text-[#8C887F]">Student services</div>}
+        {SERVICES.map(({ label, hint, url, Icon }) => (
+          <a
+            key={url}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`${label}: ${hint}`}
+            className={`w-full flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] text-[#4A4843] hover:bg-[#F1F0EC] hover:text-[#1C1B19] transition-colors ${
+              isCollapsed ? "justify-center" : ""
+            }`}
+          >
+            <Icon className="h-4 w-4 flex-shrink-0 text-[#8C887F]" />
+            {!isCollapsed && (
+              <span className="truncate">
+                {label} <span className="text-[#9C978C]">· {hint}</span>
+              </span>
+            )}
+          </a>
+        ))}
       </div>
 
       {/* Footer: user + settings */}

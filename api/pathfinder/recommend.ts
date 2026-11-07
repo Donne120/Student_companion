@@ -16,6 +16,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // way CommonJS did. Without it the module fails to load and every request
 // returns FUNCTION_INVOCATION_FAILED before the handler ever runs.
 import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
+import { DIRECTORY, PAN_AFRICAN, PREFERRED_DOMAINS, SCHOLARSHIPS } from "../_directory.js";
 
 // Groq's free tier runs these comfortably. The job here is summarising real
 // search results into a fixed JSON shape, not open-ended reasoning, so a
@@ -32,24 +33,6 @@ const MODEL_CANDIDATES = [
   "openai/gpt-oss-20b",
 ];
 
-/**
- * Bias search toward official institutional sources, away from blog spam.
- *
- * These are matched as domain suffixes by Tavily. The first attempt uses them;
- * if that returns nothing (a narrow filter easily can) the caller retries
- * without any restriction, so this improves quality without risking an empty
- * report.
- */
-const PREFERRED_DOMAINS = [
-  "ac.rw",
-  "ur.ac.rw",
-  "ines.ac.rw",
-  "mineduc.gov.rw",
-  "hec.gov.rw",
-  "ac.ke",
-  "ac.ug",
-  "ac.tz",
-];
 
 interface TavilyResult {
   title: string;
@@ -144,15 +127,16 @@ async function pickModel(key: string): Promise<string> {
   }
 }
 
-const SYSTEM =`You advise students in East Africa who are finishing secondary school and choosing what to study.
+const SYSTEM =`You advise students across Africa who are finishing secondary school and choosing what to study.
 
-You will be given a student's profile and a set of real web search results about universities and programmes.
+You will be given a student's profile, a VERIFIED DIRECTORY of established universities with their official websites, and real web search results about universities, programmes and scholarships.
 
 Rules you must follow:
 - UNDERGRADUATE ONLY. This student has not been to university yet. Recommend only first-degree programmes they can enter straight from secondary school: Bachelor's degrees, BSc, BA, diplomas, certificates, TVET. NEVER recommend a Master's, MSc, MA, MEd, PhD, postgraduate diploma or any programme requiring a prior degree — they cannot apply, and suggesting it wastes their time. If the search results contain postgraduate programmes, ignore them completely.
 - Recommend fields that genuinely follow from the student's subjects, strengths and interests. Do not flatter; if a field is a stretch, label it "Worth exploring" and say why.
-- Only name universities and programmes that appear in the supplied search results. Never invent an institution, a programme name, or a URL.
-- Copy each school's URL exactly from the search results. If you have no URL for a school, omit that school entirely.
+- Only name universities that appear in the VERIFIED DIRECTORY or the search results, and only programmes the search results or your general knowledge of that university make clear it offers at undergraduate level; when unsure a specific programme exists there, name the faculty or field ("Engineering at the University of Nairobi") rather than inventing a programme title. Never invent an institution or a URL.
+- For a school's url, prefer its official website from the VERIFIED DIRECTORY; otherwise copy a URL exactly from the search results. If you have no URL for a school, omit that school entirely.
+- Mix public and private institutions where the directory allows, and say which is which in "kind" (e.g. "Public university").
 - Never state fees, deadlines or exact entry cut-offs as fact — those change and being wrong about them harms the student. Refer them to the university's page instead.
 - Respect the student's stated constraint. If they need a scholarship or low fees, do not lead with expensive private or overseas universities. If they said they want to stay close to home, prefer institutions in their own country. Advice that ignores what they told you is useless.
 - Prefer universities in the student's own country unless they said they want to study abroad. A student in Rwanda who needs low fees is not helped by a private university in Germany.
@@ -167,7 +151,51 @@ Return ONLY valid JSON, no markdown fence, matching exactly:
   "schools": [{ "name": string, "location": string, "kind": string, "programme": string, "detail": string, "url": string }],
   "careers": { "summary": string, "roles": string[] }
 }
-Give 2-3 fields, 2-4 schools, and 3-6 career roles.`;
+Give 2-3 fields, 3-5 schools, and 3-6 career roles.`;
+
+/** Keywords that steer the search toward programmes the student can enter. */
+const TRACK_KEYWORDS: Record<string, string> = {
+  "Sciences with Maths & Physics (e.g. MPC, PCM)": "engineering computer science physics mathematics",
+  "Sciences with Biology & Chemistry (e.g. PCB, MCB)": "medicine nursing pharmacy public health biology agriculture",
+  "Maths with Economics or Business (e.g. MEG, Commerce)": "business economics accounting finance",
+  "Humanities & social sciences (e.g. HEG, History, Geography)": "law social sciences international relations education",
+  "Languages & literature": "languages communication journalism education",
+  "Arts, music or design": "design architecture fine art music film",
+  "TVET or technical school": "polytechnic diploma technical engineering",
+};
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Is the page there? A school or regulator link that is dead is worse than
+ * none. Only a clear failure (no such host, 404/410) counts as dead: many
+ * university sites refuse bots (403) or are slow, and those links usually
+ * work in a student's browser.
+ */
+async function isReachable(url: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: { "User-Agent": "StudentCompanionAI-Pathfinder/1.0 (+https://chat.studentcompanionai.rw)" },
+    });
+    return res.status !== 404 && res.status !== 410;
+  } catch (err) {
+    // A timeout is not proof the site is gone; a DNS or connection failure is.
+    return err instanceof Error && err.name === "AbortError";
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!methodGuard(req, res)) return;
@@ -190,24 +218,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!answers) return res.status(400).json({ error: "Please answer the questions again." });
 
   const profile = summarise(answers);
-  const country = (answers.country as string) || "Rwanda";
+  const country = (answers.country as string) || "Somewhere else";
   const track = (answers.track as string) || "";
+  const constraint = (answers.constraint as string) || "";
+  const abroad = constraint.startsWith("I want to study abroad");
+  const needsFunding = constraint.startsWith("I need a scholarship");
+  const known = DIRECTORY[country];
+  const place = known && !abroad ? country : "Africa";
+  const fieldWords = TRACK_KEYWORDS[track] ?? "undergraduate degree programmes";
+
+  // The directory for this student: their country's universities, plus a
+  // spread across the continent when they want to study abroad or their
+  // country isn't listed.
+  const directory = [
+    ...(known?.universities ?? []).map((x) => ({ ...x, country })),
+    ...(abroad || !known || known.universities.length < 2 ? PAN_AFRICAN : []),
+  ];
 
   try {
-    const results = await searchWithFallback(
-      `universities in ${country} undergraduate degree programmes admission ${track}`,
-      tavilyKey
-    );
+    const [programmes, funding] = await Promise.all([
+      searchWithFallback(`${fieldWords} undergraduate bachelor's degree admission requirements universities in ${place}`, tavilyKey),
+      needsFunding || abroad
+        ? search(`undergraduate scholarships for students from ${country === "Somewhere else" ? "Africa" : country} to study in Africa`, tavilyKey, false).catch(() => [])
+        : Promise.resolve([] as TavilyResult[]),
+    ]);
+    const seen = new Set<string>();
+    const results = [...programmes, ...funding].filter((r) => {
+      if (seen.has(r.url)) return false;
+      seen.add(r.url);
+      return true;
+    });
 
-    if (results.length === 0) {
+    if (results.length === 0 && directory.length === 0) {
       return res.status(502).json({
         error: "We couldn't find current university information just now. Please try again shortly.",
       });
     }
 
     const sources = results
-      .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 900)}`)
+      .map((r, i) => `[${i + 1}] ${r.title}\nURL: ${r.url}\n${r.content.slice(0, 800)}`)
       .join("\n\n");
+    const directoryText = directory
+      .map((d) => `- ${d.name} (${d.kind}, ${d.city}, ${d.country}) — official website: ${d.url}`)
+      .join("\n");
 
     const model = await pickModel(modelKey);
 
@@ -228,7 +281,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           { role: "system", content: SYSTEM },
           {
             role: "user",
-            content: `STUDENT PROFILE\n${profile}\n\nSEARCH RESULTS\n${sources}`,
+            content: `STUDENT PROFILE\n${profile}\n\nVERIFIED DIRECTORY\n${directoryText || "(none for this country)"}\n\nSEARCH RESULTS\n${sources || "(none)"}`,
           },
         ],
       }),
@@ -255,18 +308,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const r = report as {
       schools?: Array<{ url?: string; programme?: string; detail?: string }>;
+      verify?: unknown;
+      scholarships?: unknown;
     };
+    // Links the model may use: official sites from the directory and pages
+    // the search actually returned. Anything else is a guess.
+    const allowedHosts = new Set(
+      [...directory.map((d) => d.url), ...results.map((x) => x.url)].map(hostOf).filter(Boolean)
+    );
     if (Array.isArray(r.schools)) {
       r.schools = r.schools.filter((s) => {
         // Drop schools without a usable link rather than rendering a dead end.
         if (typeof s.url !== "string" || !s.url.startsWith("http")) return false;
+        if (!allowedHosts.has(hostOf(s.url))) return false;
         // Enforce undergraduate-only in code, not just in the prompt. This
         // student cannot apply to a Master's or PhD straight from secondary
         // school, and a model that slips here sends them somewhere they'll be
         // rejected. The prompt says the same thing; this is the guarantee.
         return !isPostgraduate(`${s.programme ?? ""} ${s.detail ?? ""}`);
       });
+      const alive = await Promise.all(r.schools.map((s) => isReachable(s.url as string)));
+      r.schools = r.schools.filter((_, i) => alive[i]);
     }
+
+    // Where to check a university is accredited and, where there is one, the
+    // national application portal. Added here, never by the model.
+    const checks = [
+      known?.regulator && { label: "Check accreditation", ...known.regulator },
+      known?.applyVia && { label: "Apply through", ...known.applyVia },
+    ].filter(Boolean) as Array<{ label: string; name: string; url: string }>;
+    const checksAlive = await Promise.all(checks.map((c) => isReachable(c.url)));
+    r.verify = checks.filter((_, i) => checksAlive[i]);
+    r.scholarships = needsFunding || abroad ? SCHOLARSHIPS : [];
 
     return res.status(200).json(report);
   } catch (err) {

@@ -181,7 +181,7 @@ export default function Pathfinder() {
                   </h3>
                   <p className="text-[12.5px] text-[#6B6355] mb-5">{question.why}</p>
 
-                  <div className="grid gap-2">
+                  <div className={`grid gap-2 ${question.options.length > 10 ? "sm:grid-cols-2" : ""}`}>
                     {question.options.map((opt) => {
                       const selected = Array.isArray(current)
                         ? current.includes(opt)
@@ -378,6 +378,43 @@ function Report({
           )}
         </div>
       ))}
+
+      {((report.verify?.length ?? 0) > 0 || (report.scholarships?.length ?? 0) > 0) && (
+        <>
+          <SectionLabel>Before you apply</SectionLabel>
+          <div className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5 mb-2.5 space-y-2.5">
+            {report.verify?.map((v) => (
+              <p key={v.url} className="text-[13px] text-[#3C372E] leading-relaxed">
+                <span className="font-medium">{v.label}:</span>{" "}
+                <a
+                  href={v.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#B8941F] hover:underline underline-offset-4"
+                >
+                  {v.name}
+                </a>
+                {v.label === "Check accreditation" &&
+                  " — confirm the university and the programme are accredited before you pay anything."}
+              </p>
+            ))}
+            {report.scholarships?.map((sc) => (
+              <p key={sc.url} className="text-[13px] text-[#3C372E] leading-relaxed">
+                <a
+                  href={sc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-[#B8941F] hover:underline underline-offset-4"
+                >
+                  {sc.name}
+                </a>
+                {" — "}
+                {sc.detail}
+              </p>
+            ))}
+          </div>
+        </>
+      )}
 
       <SectionLabel>What this could make you</SectionLabel>
       <div className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5">
