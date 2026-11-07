@@ -13,7 +13,8 @@
  * class of prompt-injection and abuse risk.
  */
 
-export type QuestionType = "choice" | "multi";
+/** "select": one choice from a long list, shown as a dropdown. */
+export type QuestionType = "choice" | "multi" | "select";
 
 export interface Question {
   key: string;
@@ -32,9 +33,9 @@ export const QUESTIONS: Question[] = [
   {
     key: "country",
     label: "Where you are",
-    prompt: "Where are you finishing school?",
+    prompt: "Where are you finishing high school?",
     why: "This decides which national system, entry rules and scholarships actually apply to you.",
-    type: "choice",
+    type: "select",
     options: [
       "Rwanda",
       "Kenya",
