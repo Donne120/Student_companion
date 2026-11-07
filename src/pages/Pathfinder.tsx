@@ -537,6 +537,21 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
             admissions team can reply to you by email.
           </p>
         )}
+        {sent.referrals?.map((r) => (
+          <p key={r.url} className="text-[12.5px] text-[#4A4437] mt-2">
+            Interested in {r.name}? Register your interest through our link so their admissions
+            team can follow up with you:{" "}
+            <a
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-semibold text-[#8A6D12] underline underline-offset-2"
+            >
+              Register with {r.name}
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </p>
+        ))}
         <p className="text-[12px] text-[#6B6355] mt-2">
           Check your inbox and spam folder over the next few days. You can come back to Pathfinder
           any time to see your options again.

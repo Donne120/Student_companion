@@ -22,6 +22,9 @@ export interface LeadResult {
   sentTo?: string[];
   /** Universities the team will pass it on to by hand. */
   passedOn?: string[];
+  /** Where to start an application so Student Companion AI's referral is
+   *  credited (e.g. ALU). */
+  referrals?: Array<{ name: string; url: string }>;
 }
 
 /** Thrown with a message safe to show a student. */
