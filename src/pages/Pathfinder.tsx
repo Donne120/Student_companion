@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Check, ExternalLink, Loader, Send } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ExternalLink, Loader, Send } from "lucide-react";
 import {
   QUESTIONS,
   NOTE_KEY,
@@ -120,11 +120,11 @@ export default function Pathfinder() {
             Free · No account needed
           </p>
           <h1 className="font-serif text-3xl md:text-[2.75rem] leading-[1.08] tracking-tight text-balance max-w-2xl">
-            Finishing school? Let's find the course that fits you.
+            Finishing high school? Let's discover the right course and college or university for you.
           </h1>
           <p className="mt-3 text-[#5C5647] max-w-xl leading-relaxed">
             Answer six short questions. We'll suggest fields worth considering,
-            real universities you can apply to, and where each path can lead.
+            real colleges and universities you can apply to, and where each path can lead.
           </p>
         </div>
 
@@ -132,7 +132,7 @@ export default function Pathfinder() {
           {/* Progress rail */}
           <aside className="hidden lg:flex flex-col bg-[#1A1A1A] text-white p-6">
             <h2 className="font-serif text-xl mb-1">Pathfinder</h2>
-            <p className="text-xs text-white/60 mb-6">Free guidance for school leavers</p>
+            <p className="text-xs text-white/60 mb-6">Free guidance for high school leavers</p>
             <ol className="space-y-1">
               {QUESTIONS.map((q, i) => {
                 const done = i < step || phase === "report";
@@ -181,6 +181,34 @@ export default function Pathfinder() {
                   </h3>
                   <p className="text-[12.5px] text-[#6B6355] mb-5">{question.why}</p>
 
+                  {question.type === "select" ? (
+                    <div className="relative max-w-md">
+                      <label htmlFor={`pathfinder-${question.key}`} className="sr-only">
+                        {question.prompt}
+                      </label>
+                      <select
+                        id={`pathfinder-${question.key}`}
+                        value={typeof current === "string" ? current : ""}
+                        onChange={(e) => e.target.value && pick(e.target.value)}
+                        className={`w-full appearance-none rounded-[10px] border bg-white pl-3.5 pr-10 py-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#D4AF37] ${
+                          current ? "border-[#B8941F] text-[#1A1A1A]" : "border-[#E8DDB0] text-[#6B6355]"
+                        }`}
+                      >
+                        <option value="" disabled>
+                          Choose your country
+                        </option>
+                        {question.options.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6B6355]"
+                      />
+                    </div>
+                  ) : (
                   <div className={`grid gap-2 ${question.options.length > 10 ? "sm:grid-cols-2" : ""}`}>
                     {question.options.map((opt) => {
                       const selected = Array.isArray(current)
@@ -209,6 +237,7 @@ export default function Pathfinder() {
                       );
                     })}
                   </div>
+                  )}
 
                   {/* On the last question, let the student say anything the
                       fixed options couldn't capture. Without this, someone
