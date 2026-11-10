@@ -8,8 +8,8 @@
 // served that exact old file, even through a hard refresh, until the cache
 // happened to be evicted. Network-first with a cache fallback (for offline
 // use) fixes that while keeping the offline shell working.
-const CACHE = 'sca-v3';
-const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo.png'];
+const CACHE = 'sca-v4';
+const APP_SHELL = ['/', '/index.html', '/manifest.webmanifest', '/logo.png', '/icon-192.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { InstallAppBanner } from "@/components/mobile/InstallAppBanner";
 
 const COMPANION_LOGO = "/logo-icon.png";
 
@@ -330,7 +331,14 @@ export default function LandingPage() {
               Student Companion AI
             </span>
           </button>
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1.5 md:gap-4">
+            <button
+              onClick={() => navigate("/pathfinder")}
+              className="inline-flex items-center gap-1.5 h-9 px-2.5 md:px-3 rounded-full border border-[#E8DDB0] bg-white/70 text-[13px] font-medium text-[#1A1A1A] hover:bg-white transition-colors"
+            >
+              <CompassIcon className="h-4 w-4 text-[#B8941F]" />
+              Pathfinder
+            </button>
             <Button
               variant="ghost"
               size="sm"
@@ -434,6 +442,21 @@ export default function LandingPage() {
                   I already have an account
                 </Button>
               </div>
+              <button
+                onClick={() => navigate("/pathfinder")}
+                className="hero-item mt-5 inline-flex items-center gap-2 text-left text-sm text-[#1A1A1A]/75 hover:text-[#1A1A1A]"
+                style={{ transitionDelay: "450ms" }}
+                data-in={heroIn}
+              >
+                <CompassIcon className="h-4 w-4 flex-none text-[#B8941F]" />
+                <span>
+                  Finishing high school?{" "}
+                  <span className="font-semibold text-[#1A1A1A] underline decoration-[#D4AF37] underline-offset-4">
+                    Find your course with Pathfinder
+                  </span>
+                </span>
+                <ArrowRight className="h-3.5 w-3.5 flex-none" />
+              </button>
 
               <div
                 ref={videoCardRef}
@@ -815,9 +838,10 @@ export default function LandingPage() {
           account and never will. Fixed so it's reachable from anywhere on
           the page, which is the point: they arrive from a school or a
           ministry link, not from our signup funnel. */}
+      <div className="fixed z-40 bottom-3 inset-x-3 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-w-[340px] flex flex-col gap-2 safe-bottom">
+      <InstallAppBanner />
       {!pathfinderDismissed && (
-        <div className="fixed bottom-4 right-4 z-40 max-w-[340px] hidden sm:block">
-          <div className="relative flex items-center gap-3 bg-white border border-[#E8DDB0] border-l-4 border-l-[#D4AF37] rounded-2xl shadow-[0_12px_34px_rgba(26,26,26,0.14)] pl-4 pr-9 py-3.5">
+          <div className="relative hidden sm:flex items-center gap-3 bg-white border border-[#E8DDB0] border-l-4 border-l-[#D4AF37] rounded-2xl shadow-[0_12px_34px_rgba(26,26,26,0.14)] pl-4 pr-9 py-3.5">
             <button
               onClick={() => {
                 setPathfinderDismissed(true);
@@ -845,8 +869,8 @@ export default function LandingPage() {
               </span>
             </button>
           </div>
-        </div>
       )}
+      </div>
 
       <footer className="bg-[#1A1A1A] text-white">
         <div className="max-w-6xl mx-auto px-6 lg:px-10 pt-16 pb-10">
@@ -877,6 +901,14 @@ export default function LandingPage() {
                     className="text-white/70 hover:text-[#D4AF37] transition-colors"
                   >
                     Get started
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => navigate("/pathfinder")}
+                    className="text-white/70 hover:text-[#D4AF37] transition-colors"
+                  >
+                    Pathfinder: find your university
                   </button>
                 </li>
                 <li>

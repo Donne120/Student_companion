@@ -10,6 +10,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider as NextThemeProvider } from "next-themes";
 import { MobileTabBar } from "./components/mobile/MobileTabBar";
+import { InstallAppBanner } from "./components/mobile/InstallAppBanner";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import "./App.css";
 
@@ -81,6 +82,12 @@ const Chrome = () => {
   return (
     <>
       {showTabs && <MobileTabBar />}
+      {/* Not on /chat, where it would sit over the message box. */}
+      {(pathname === "/opportunities" || pathname === "/profile") && (
+        <div className="fixed z-40 inset-x-3 bottom-[calc(64px+env(safe-area-inset-bottom))]">
+          <InstallAppBanner />
+        </div>
+      )}
     </>
   );
 };
