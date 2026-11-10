@@ -1,15 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ExternalLink,
-  Bookmark,
-  BookmarkCheck,
-  MessageCircle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 import { opportunitiesService, type Opportunity } from "@/services/opportunitiesService";
 import { bookmarkService } from "@/services/bookmarkService";
 import { BookmarksPanel } from "./BookmarksPanel";
+import { OpportunityRow } from "./OpportunityRow";
+import { dateBlock } from "@/lib/opportunityFormat";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
@@ -34,89 +29,8 @@ interface OpportunityWidgetProps {
   compact?: boolean;
 }
 
-interface OpportunityCardProps {
-  opportunity: Opportunity;
-  compact: boolean;
-  bookmarked: boolean;
-  onToggleBookmark: (opp: Opportunity) => void;
-}
-
-const OpportunityCard = ({
-  opportunity,
-  compact,
-  bookmarked,
-  onToggleBookmark,
-}: OpportunityCardProps) => {
-  const meta = [opportunity.category, opportunity.location].filter(Boolean).join(" · ");
-  return (
-    <div className="group/card rounded-lg border border-[#E5E3DE] bg-white p-4 hover:border-[#C8C4BA] transition-colors">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[12px] text-[#8C887F] truncate">{meta}</p>
-        <button
-          onClick={() => onToggleBookmark(opportunity)}
-          className="-mt-1 -mr-1 p-1 rounded hover:bg-[#F4F3F0] transition-colors flex-shrink-0"
-          aria-label={bookmarked ? "Remove bookmark" : "Save opportunity"}
-          title={bookmarked ? "Remove from saved" : "Save for later"}
-        >
-          {bookmarked ? (
-            <BookmarkCheck className="h-3.5 w-3.5 text-[#1C1B19]" />
-          ) : (
-            <Bookmark className="h-3.5 w-3.5 text-[#B5B0A5] group-hover/card:text-[#6B6862]" />
-          )}
-        </button>
-      </div>
-      <a href={opportunity.url} target="_blank" rel="noopener noreferrer" className="block group/link mt-1">
-        <h3
-          className={`font-semibold text-[#1C1B19] leading-snug group-hover/link:underline underline-offset-2 ${
-            compact ? "text-[13px]" : "text-[14px]"
-          }`}
-        >
-          {opportunity.title}
-        </h3>
-        {opportunity.organization && (
-          <p className="text-[12px] text-[#6B6862] mt-0.5">{opportunity.organization}</p>
-        )}
-        <p className="text-[13px] text-[#4A4843] mt-2 leading-relaxed line-clamp-2">
-          {opportunity.description}
-        </p>
-      </a>
-      <div className="mt-3 flex items-center justify-between gap-2 text-[12px]">
-        <span className="text-[#6B6862] truncate">
-          {opportunity.deadline ? `Deadline: ${opportunity.deadline}` : ""}
-        </span>
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Fills the chat box with a question the backend answers from the live career feed. */}
-          <button
-            type="button"
-            onClick={() =>
-              window.dispatchEvent(
-                new CustomEvent("companion:suggest", {
-                  detail: `Tell me about ${opportunity.title}${
-                    opportunity.organization ? ` (${opportunity.organization})` : ""
-                  }: am I eligible, when is the deadline, and how do I apply?`,
-                })
-              )
-            }
-            className="inline-flex items-center gap-1 font-medium text-[#4A4843] hover:text-[#1C1B19]"
-          >
-            <MessageCircle className="h-3 w-3" /> Ask
-          </button>
-          <a
-            href={opportunity.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium text-[#1C1B19] hover:underline underline-offset-2"
-          >
-            Apply <ExternalLink className="h-3 w-3" />
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const SkeletonCard = () => (
-  <div className="rounded-xl border border-[#E5E3DE] bg-white p-4">
+  <div className="border-b border-[#E5E3DE] py-4">
     <div className="h-3 w-1/3 bg-[#F4F3F0] rounded animate-pulse mb-3" />
     <div className="space-y-2">
       <div className="h-3 w-2/3 bg-[#F4F3F0] rounded animate-pulse" />
@@ -140,7 +54,9 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
   useEffect(() => {
     let cancelled = false;
     opportunitiesService.getOpportunities().then((list) => {
-      if (!cancelled) setAllOpportunities(list);
+      // Like the career site ("Hide closed" is on by default), only what
+      // a student can still apply to.
+      if (!cancelled) setAllOpportunities(list.filter((o) => dateBlock(o.deadline).tone !== "closed"));
     });
     return () => { cancelled = true; };
   }, []);
@@ -292,15 +208,15 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
       {tab === "browse" && (
         <>
           {/* Filter pills */}
-          <div className="flex flex-wrap gap-1.5 mb-3">
+          <div className="flex flex-wrap gap-1 mb-3">
             {availableFilters.map((cat) => (
               <button
                 key={cat}
                 onClick={() => handleFilter(cat)}
-                className={`px-2.5 py-1 rounded-md text-[12px] border transition-colors ${
+                className={`px-2 py-0.5 rounded text-[12px] transition-colors ${
                   activeFilter === cat
-                    ? "bg-[#1C1B19] border-[#1C1B19] text-white"
-                    : "bg-white border-[#E5E3DE] text-[#4A4843] hover:border-[#C8C4BA] hover:text-[#1C1B19]"
+                    ? "bg-[#1C1B19] text-white"
+                    : "text-[#4A4843] hover:bg-[#F4F3F0] hover:text-[#1C1B19]"
                 }`}
               >
                 {cat}
@@ -328,15 +244,15 @@ export const OpportunityWidget = ({ compact = false }: OpportunityWidgetProps) =
             </div>
           ) : (
             <div
-              className={`space-y-3 transition-opacity duration-200 ${
+              className={`border-t border-[#1C1B19] transition-opacity duration-200 ${
                 isFading ? "opacity-0" : "opacity-100"
               }`}
             >
               {visible.map((opp) => (
-                <OpportunityCard
+                <OpportunityRow
                   key={opp.id}
                   opportunity={opp}
-                  compact={compact}
+                  showSummary={!compact}
                   bookmarked={bookmarkedIds.has(opp.id)}
                   onToggleBookmark={handleToggleBookmark}
                 />
