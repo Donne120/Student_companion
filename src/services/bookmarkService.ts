@@ -28,8 +28,12 @@ export const addBookmark = async (
   uid: string,
   opportunity: Opportunity
 ): Promise<void> => {
+  // Firestore refuses undefined values, and most Sheet columns are optional.
+  const fields = Object.fromEntries(
+    Object.entries(opportunity).filter(([, v]) => v !== undefined)
+  );
   await setDoc(bookmarkDoc(uid, opportunity.id), {
-    ...opportunity,
+    ...fields,
     savedAt: serverTimestamp(),
   });
 };

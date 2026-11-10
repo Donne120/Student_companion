@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Bookmark, ExternalLink, Trash2, BookmarkX } from "lucide-react";
+import { BookmarkX } from "lucide-react";
+import { OpportunityRow } from "./OpportunityRow";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   bookmarkService,
@@ -76,47 +77,13 @@ export const BookmarksPanel = () => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="border-t border-[#1C1B19]">
       {bookmarks.map((opp) => (
-        <div
+        <OpportunityRow
           key={opp.id}
-          className="rounded-xl border border-[#E5E3DE] bg-white p-4 hover:border-[#C8C4BA] transition-all group"
-        >
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F4F3F0] border border-[#E5E3DE] text-[10px] font-medium text-[#8A6A16]">
-              {opp.category}
-            </span>
-            <button
-              onClick={() => handleRemove(opp.id, opp.title)}
-              className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-red-50 text-[#1C1B19]/40 hover:text-red-500 transition-all flex-shrink-0"
-              aria-label="Remove bookmark"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-
-          <a
-            href={opp.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block group/link"
-          >
-            <h3 className="text-sm font-semibold text-[#1C1B19] leading-snug group-hover/link:text-[#8A6A16] transition-colors">
-              {opp.title}
-            </h3>
-            {opp.organization && (
-              <p className="text-xs text-[#1C1B19]/60 mt-0.5">{opp.organization}</p>
-            )}
-            {opp.deadline && (
-              <p className="mt-1 text-[10px] text-[#8A6A16] font-medium">
-                Deadline: {opp.deadline}
-              </p>
-            )}
-            <span className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[#8A6A16]">
-              Open link <ExternalLink className="h-3 w-3" />
-            </span>
-          </a>
-        </div>
+          opportunity={opp}
+          onRemove={() => handleRemove(opp.id, opp.title)}
+        />
       ))}
     </div>
   );

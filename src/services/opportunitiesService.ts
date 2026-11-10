@@ -9,6 +9,10 @@ export type Opportunity = {
   url: string;
   deadline?: string;
   location?: string;
+  /** The Sheet's "remote" column (Yes / No / Some). */
+  remote?: string;
+  /** The Sheet's "eligibility_year" column, e.g. "Year 3 / Final Year". */
+  eligibility?: string;
 };
 
 const OPPORTUNITIES_ENDPOINT = `${API_URL}/api/opportunities`;
@@ -44,6 +48,8 @@ interface CareerSiteEntry {
   apply_link: string;
   deadline?: string;
   location?: string;
+  remote?: string;
+  eligibility_year?: string;
   status?: string;
   date_added?: string;
 }
@@ -66,6 +72,8 @@ const normaliseCareer = (e: CareerSiteEntry): Opportunity => {
     url: text(e.apply_link) ?? "",
     deadline: text(e.deadline),
     location: text(e.location),
+    remote: text(e.remote),
+    eligibility: text(e.eligibility_year),
   };
 };
 
