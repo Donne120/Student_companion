@@ -38,8 +38,16 @@ export interface TrackedLead {
   report: PathfinderReport;
   /** Website links of the universities the student ticked. */
   chosen: string[];
-  result: { sentTo?: string[]; passedOn?: string[]; referrals?: Array<{ name: string; url: string }> };
   consentMarketing: boolean;
+}
+
+/** One-click links the backend issues for a saved request: they go into the
+ *  university emails ("We've contacted this student") and the student's
+ *  follow-ups. */
+export interface LeadLinks {
+  followup_state?: string;
+  stop?: string;
+  universities?: Array<{ name: string; url: string | null; respond: string; outcome: string; apply: string | null }>;
 }
 
 export interface LeadDetails {
@@ -106,28 +114,30 @@ export const pathfinderService = {
 
   /** `universities`: website links of the universities the student chose
    *  to send their enquiry to (only those marked `contactable`). */
-  submitLead: (details: LeadDetails, answers: Answers, report?: PathfinderReport, universities: string[] = []) =>
-    post<LeadResult>("/api/pathfinder/lead", { details, answers, report, universities }),
+  submitLead: (
+    details: LeadDetails,
+    answers: Answers,
+    report?: PathfinderReport,
+    universities: string[] = [],
+    links?: LeadLinks | null
+  ) => post<LeadResult>("/api/pathfinder/lead", { details, answers, report, universities, links: links ?? undefined }),
 
   /**
-   * Keep a copy of a sent request in Student Companion AI's records (the
-   * backend on AWS), so the team can follow up, see which universities
-   * responded and report on Pathfinder. Best effort: the student's request
-   * has already been emailed, so a failure here never shows to them.
+   * Save the request in Student Companion AI's records (the backend on AWS)
+   * before it is emailed, and get back the one-click links that go into the
+   * emails, so universities and the student can record what happened
+   * without anyone typing it in. Best effort: if the backend is slow or
+   * down, the request is still emailed, just without the links.
    */
-  trackLead: async ({ details, answers, report, chosen, result, consentMarketing }: TrackedLead) => {
-    const sent = new Set(result.sentTo ?? []);
-    const passed = new Set(result.passedOn ?? []);
+  trackLead: async ({ details, answers, report, chosen, consentMarketing }: TrackedLead): Promise<LeadLinks | null> => {
     const universities = report.schools
       .filter((s) => chosen.includes(s.url))
       .filter((s, i, all) => all.findIndex((t) => t.url === s.url) === i)
-      .map((s) => ({
-        name: s.name,
-        url: s.url,
-        delivery: sent.has(s.name) ? "emailed" : passed.has(s.name) ? "passed_on" : "requested",
-      }));
+      .map((s) => ({ name: s.name, url: s.url, delivery: "requested" }));
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
     try {
-      await fetch(`${API_URL}/api/pathfinder/leads`, {
+      const res = await fetch(`${API_URL}/api/pathfinder/leads`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,14 +148,19 @@ export const pathfinderService = {
           answers,
           interests: report.fields.map((f) => f.name).slice(0, 10),
           universities,
-          referral_alu: !!result.referrals?.length,
+          referral_alu: universities.some((u) => /alueducation\.com|alu\.edu/i.test(u.url)),
           source: currentSource(),
           consent_marketing: consentMarketing,
         }),
-        keepalive: true,
+        signal: ctrl.signal,
       });
+      if (!res.ok) return null;
+      const data = (await res.json()) as { links?: LeadLinks };
+      return data.links ?? null;
     } catch {
-      /* best effort */
+      return null;
+    } finally {
+      clearTimeout(timer);
     }
   },
 };

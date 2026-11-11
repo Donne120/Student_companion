@@ -144,6 +144,43 @@ function parseUniversities(raw: unknown, report: unknown): University[] {
   return out;
 }
 
+/** Where Student Companion AI's backend issues one-click links. Links from
+ *  the request body are only used if they point here, so a crafted request
+ *  can't put another site's link in an email. */
+const LINK_BASE = (process.env.PATHFINDER_LINK_BASE || "https://api.studentcompanionai.rw/api/pathfinder/").replace(/\/?$/, "/");
+
+function linkOk(v: unknown): v is string {
+  return typeof v === "string" && v.length < 400 && v.startsWith(LINK_BASE) && /^[\w:/.\-=]+$/.test(v);
+}
+
+/** The "We've contacted this student" link for each university, by website. */
+function respondLinks(raw: unknown): Map<string, string> {
+  const out = new Map<string, string>();
+  const unis = raw && typeof raw === "object" ? (raw as { universities?: unknown }).universities : null;
+  if (!Array.isArray(unis)) return out;
+  for (const u of unis.slice(0, 6)) {
+    const url = u && typeof u === "object" ? (u as { url?: unknown }).url : null;
+    const respond = u && typeof u === "object" ? (u as { respond?: unknown }).respond : null;
+    if (typeof url === "string" && linkOk(respond)) out.set(url, respond);
+  }
+  return out;
+}
+
+/** Tell the backend how the enquiry reached each university. Best effort. */
+async function reportDelivery(respond: string | undefined, delivery: "emailed" | "passed_on") {
+  if (!respond) return;
+  try {
+    await fetch(`${respond}/delivery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delivery }),
+      signal: AbortSignal.timeout(4000),
+    });
+  } catch {
+    /* the request is already saved; the team can correct delivery by hand */
+  }
+}
+
 /** Sending outside the team needs a verified domain in Resend. */
 function canEmailOutsiders(): boolean {
   return !/@resend\.dev>?$/i.test(FROM_ADDRESS.trim());
@@ -189,7 +226,7 @@ async function send(key: string, email: Record<string, unknown>) {
 }
 
 /** The enquiry, to one university's admissions office, from the platform. */
-async function notifyUniversity(lead: Lead, profile: string, uni: University, key: string) {
+async function notifyUniversity(lead: Lead, profile: string, uni: University, key: string, respond?: string) {
   const first = lead.name.split(/\s+/)[0] || lead.name;
   const note =
     "This enquiry comes from the Student Companion AI platform. The student chose to share these details " +
@@ -229,6 +266,13 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
         `mailto:${encodeURIComponent(lead.email)}?subject=${encodeURIComponent(`Your enquiry to ${uni.name}`)}`,
         `Reply to ${esc(first)}`
       ),
+      respond
+        ? paragraph(
+            `Once you've been in touch, please <a href="${esc(respond)}" style="color:#B8941F;font-weight:600">` +
+              `confirm you've contacted ${esc(first)}</a>. It takes one click and helps us show students ` +
+              `which universities follow up.`
+          )
+        : "",
       forInstitutions(),
     ].join(""),
   });
@@ -249,6 +293,7 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
     "About them:",
     profileText(profile),
     uni.referral ? `\nReferral: referred by Student Companion AI through your referral programme: ${uni.referral}` : "",
+    respond ? `\nOnce you've been in touch, please confirm you've contacted ${first} (one click): ${respond}` : "",
     "",
     "About Student Companion AI, our student support platform: an AI student assistant, Pathfinder (matching " +
       "high school students with the right universities), opportunities, free courses, and housing " +
@@ -329,13 +374,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Too many submissions. Please wait a few minutes." });
   }
 
-  const body = req.body as { details?: unknown; answers?: unknown; universities?: unknown; report?: unknown };
+  const body = req.body as { details?: unknown; answers?: unknown; universities?: unknown; report?: unknown; links?: unknown };
   const lead = parseLead(body?.details);
   if (!lead) return res.status(400).json({ error: "Please check your name and email address." });
 
   const answers = parseAnswers(body?.answers);
   const profile = answers ? summarise(answers) : "(answers unavailable)";
   const universities = parseUniversities(body?.universities, body?.report);
+  const respondFor = respondLinks(body?.links);
 
   const resendKey = process.env.RESEND_API_KEY;
   if (!resendKey) {
@@ -368,13 +414,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       continue;
     }
     try {
-      await notifyUniversity(lead, profile, uni, resendKey);
+      await notifyUniversity(lead, profile, uni, resendKey, respondFor.get(uni.url));
       sentTo.push(uni);
     } catch (err) {
       console.error("[pathfinder/lead] university email", uni.name, err);
       pending.push(uni);
     }
   }
+
+  await Promise.all([
+    ...sentTo.map((u) => reportDelivery(respondFor.get(u.url), "emailed")),
+    ...pending.map((u) => reportDelivery(respondFor.get(u.url), "passed_on")),
+  ]);
 
   try {
     await notify(lead, profile, resendKey, sentTo, pending);

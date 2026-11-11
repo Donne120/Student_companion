@@ -14,7 +14,7 @@ import {
   type Answers,
   type PathfinderReport,
 } from "@/pathfinder/questions";
-import { pathfinderService, PathfinderError, rememberSource, type LeadResult } from "@/pathfinder/pathfinderService";
+import { pathfinderService, PathfinderError, rememberSource, type LeadResult, type LeadLinks } from "@/pathfinder/pathfinderService";
 
 const LOGO = "/logo-icon.png";
 
@@ -508,6 +508,9 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
   const [chosen, setChosen] = useState<string[]>([]);
   // Unticked: hearing from us again is the student's choice.
   const [consent, setConsent] = useState(false);
+  // The saved request's one-click links (undefined until saved; null if
+  // the backend couldn't be reached).
+  const [tracked, setTracked] = useState<LeadLinks | null | undefined>(undefined);
   const toggle = (url: string) =>
     setChosen((prev) =>
       prev.includes(url) ? prev.filter((u) => u !== url) : prev.length < 3 ? [...prev, url] : prev
@@ -518,16 +521,27 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
     setSending(true);
     setErr("");
     try {
-      const result = await pathfinderService.submitLead({ name, email, phone, message }, answers, report, chosen);
-      setSent(result);
-      void pathfinderService.trackLead({
-        details: { name, email, phone, message },
+      // Saved once, even if the email step has to be retried, so a retry
+      // doesn't count the request twice.
+      let links = tracked;
+      if (links === undefined) {
+        links = await pathfinderService.trackLead({
+          details: { name, email, phone, message },
+          answers,
+          report,
+          chosen,
+          consentMarketing: consent,
+        });
+        setTracked(links);
+      }
+      const result = await pathfinderService.submitLead(
+        { name, email, phone, message },
         answers,
         report,
         chosen,
-        result,
-        consentMarketing: consent,
-      });
+        links
+      );
+      setSent(result);
     } catch (e2) {
       setErr(
         e2 instanceof PathfinderError ? e2.message : "We couldn't send that. Please try again."
@@ -704,6 +718,9 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
       <p className="text-[11px] text-[#6B6355] mt-2.5">
         We use this to advise you about your studies, and keep it for two years. Your answers are
         included so we can help properly{chosen.length ? ", and go only to the universities you ticked" : ""}.
+        {chosen.length
+          ? " We'll check in by email a few times to ask how your applications went (you can stop that in one click)."
+          : ""}{" "}
         To have your details removed sooner, email info@studentcompanionai.rw.
       </p>
     </form>
