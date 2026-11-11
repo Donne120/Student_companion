@@ -283,6 +283,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function refreshUser(): Promise<boolean> {
     if (!auth.currentUser) return false;
     await auth.currentUser.reload();
+    if (auth.currentUser.emailVerified) {
+      // The saved sign-in token still says "not verified" until it expires
+      // (up to an hour), and the backend refuses unverified tokens. Get a
+      // fresh one now so the student isn't turned away right after verifying.
+      await auth.currentUser.getIdToken(true);
+    }
     setCurrentUser({ ...auth.currentUser });
     return auth.currentUser.emailVerified;
   }

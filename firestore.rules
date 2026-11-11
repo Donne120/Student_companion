@@ -36,6 +36,23 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
+    // A signed-in account whose email address has been proven. Firebase lets
+    // anyone register ANY address with a password, so an unverified token's
+    // email says nothing about who is behind it.
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // The people who review answer suggestions. Firestore rules cannot read
+    // the backend's ADMIN_EMAILS secret, so the reviewers are listed here;
+    // add a reviewer's address and redeploy the rules to grant access.
+    function isReviewer() {
+      return isVerified() && request.auth.token.email.lower() in [
+        "a.boima@studentcompanionai.rw",
+        "d.ngum@alustudent.com"
+      ];
+    }
+
     // ---------------------------------------------------------------------
     // users/{uid} — the profile document written by userService.ts on every
     // signup/login. A user may only ever read or write their OWN document.
@@ -85,16 +102,21 @@ service cloud.firestore {
     // of the app already uses for admin gating.
     // ---------------------------------------------------------------------
     match /answer_suggestions/{suggestionId} {
-      allow read: if isSignedIn();
+      // A student sees only their own suggestions; reviewers see the queue.
+      // (This used to be any signed-in account, which exposed every
+      // student's question to anyone who registered an address.)
+      allow read: if isReviewer()
+        || (isVerified() && resource.data.submittedBy == request.auth.uid);
 
-      allow create: if isSignedIn()
+      allow create: if isVerified()
         && request.resource.data.submittedBy == request.auth.uid
         && request.resource.data.status == "pending"
         && request.resource.data.suggestedAnswer is string
         && request.resource.data.suggestedAnswer.size() >= 10
         && request.resource.data.suggestedAnswer.size() <= 2000;
 
-      allow update: if isSignedIn()
+      // Approving or rejecting is for reviewers only.
+      allow update: if isReviewer()
         && request.resource.data.status in ["approved", "rejected"]
         && request.resource.data.submittedBy == resource.data.submittedBy
         && request.resource.data.questionText == resource.data.questionText
@@ -114,11 +136,11 @@ service cloud.firestore {
     match /trending_topics/{week}/topics/{slug} {
       allow read: if isSignedIn();
 
-      allow create: if isSignedIn()
+      allow create: if isVerified()
         && request.resource.data.keys().hasOnly(["label", "slug", "count", "createdAt"])
         && request.resource.data.count == 1;
 
-      allow update: if isSignedIn()
+      allow update: if isVerified()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["count"])
         && request.resource.data.count == resource.data.count + 1;
 
