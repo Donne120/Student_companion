@@ -14,7 +14,7 @@ import {
   type Answers,
   type PathfinderReport,
 } from "@/pathfinder/questions";
-import { pathfinderService, PathfinderError, type LeadResult } from "@/pathfinder/pathfinderService";
+import { pathfinderService, PathfinderError, rememberSource, type LeadResult } from "@/pathfinder/pathfinderService";
 
 const LOGO = "/logo-icon.png";
 
@@ -28,6 +28,8 @@ const LOADING_LINES = [
 ];
 
 export default function Pathfinder() {
+  // Credit requests to the campaign link the student arrived from.
+  useEffect(() => rememberSource(), []);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
   const [phase, setPhase] = useState<Phase>("form");
@@ -504,6 +506,8 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
     .filter((s, i, all) => all.findIndex((t) => t.url === s.url || t.name === s.name) === i)
     .slice(0, 6);
   const [chosen, setChosen] = useState<string[]>([]);
+  // Unticked: hearing from us again is the student's choice.
+  const [consent, setConsent] = useState(false);
   const toggle = (url: string) =>
     setChosen((prev) =>
       prev.includes(url) ? prev.filter((u) => u !== url) : prev.length < 3 ? [...prev, url] : prev
@@ -514,7 +518,16 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
     setSending(true);
     setErr("");
     try {
-      setSent(await pathfinderService.submitLead({ name, email, phone, message }, answers, report, chosen));
+      const result = await pathfinderService.submitLead({ name, email, phone, message }, answers, report, chosen);
+      setSent(result);
+      void pathfinderService.trackLead({
+        details: { name, email, phone, message },
+        answers,
+        report,
+        chosen,
+        result,
+        consentMarketing: consent,
+      });
     } catch (e2) {
       setErr(
         e2 instanceof PathfinderError ? e2.message : "We couldn't send that. Please try again."
@@ -661,6 +674,19 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
         </fieldset>
       )}
 
+      <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
+        />
+        <span>
+          Keep me updated about scholarships, opportunities and news from Student Companion AI. You
+          can unsubscribe at any time.
+        </span>
+      </label>
+
       {err && <p className="text-[12.5px] text-red-700 mt-2">{err}</p>}
 
       <button
@@ -676,8 +702,9 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
             : "Ask for free advice"}
       </button>
       <p className="text-[11px] text-[#6B6355] mt-2.5">
-        We use this only to contact you about your studies. Your answers are included so we can help
-        properly{chosen.length ? ", and go only to the universities you ticked" : ""}.
+        We use this to advise you about your studies, and keep it for two years. Your answers are
+        included so we can help properly{chosen.length ? ", and go only to the universities you ticked" : ""}.
+        To have your details removed sooner, email info@studentcompanionai.rw.
       </p>
     </form>
   );
