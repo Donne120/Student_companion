@@ -26,10 +26,17 @@
  * sender domain (LEAD_FROM_EMAIL): Resend's shared sender can only deliver
  * to the account owner, so until then the team is told which universities
  * the student chose and passes the enquiry on.
+ *
+ * Undergraduate route: no universities are contacted. The student ticks
+ * opportunities to track; the team's email lists them, and (once a sender
+ * domain is verified) the student gets their list by email with tracked
+ * application links. That list is read back from the backend's follow-up
+ * state, so its names and links are the backend's, never the request's.
  */
+import { createHash } from "node:crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 // See the note in recommend.ts — the .js extension is required under ESM.
-import { methodGuard, parseAnswers, rateLimit, summarise } from "../_shared.js";
+import { methodGuard, parseAnswers, rateLimit, stageOf, summarise } from "../_shared.js";
 import { contactFor, referralFor } from "../_contacts.js";
 import {
   LINKS, button, callout, detailCard, esc, forInstitutions, heading, layout, paragraph,
@@ -181,6 +188,127 @@ async function reportDelivery(respond: string | undefined, delivery: "emailed" |
   }
 }
 
+/** The opportunities the student ticked, for the team's email only (titles
+ *  as shown in their report). */
+interface TrackedOpportunity {
+  title: string;
+  organization: string;
+  deadline: string;
+}
+
+function parseOpportunities(raw: unknown, report: unknown): TrackedOpportunity[] {
+  if (!Array.isArray(raw)) return [];
+  const list =
+    report && typeof report === "object" && Array.isArray((report as { opportunities?: unknown }).opportunities)
+      ? ((report as { opportunities: unknown[] }).opportunities as Array<Record<string, unknown>>)
+      : [];
+  const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  return raw
+    .slice(0, 6)
+    .map((id) => list.find((o) => o && o.id === id))
+    .filter((o): o is Record<string, unknown> => !!o)
+    .map((o) => ({ title: str(o.title, 160), organization: str(o.organization, 120), deadline: str(o.deadline, 80) }))
+    .filter((o) => o.title);
+}
+
+interface StateItem {
+  name: string;
+  organization?: string | null;
+  deadline?: string | null;
+  outcome: string;
+  apply: string | null;
+}
+
+/**
+ * The student's tracked opportunities, read from the backend (names, dates
+ * and links as stored there), and only if the address matches the request.
+ */
+async function trackedFromBackend(links: unknown, email: string): Promise<{ items: StateItem[]; stop: string | null }> {
+  const state = links && typeof links === "object" ? (links as { followup_state?: unknown }).followup_state : null;
+  if (!linkOk(state)) return { items: [], stop: null };
+  const r = await fetch(state, { signal: AbortSignal.timeout(6000) });
+  if (!r.ok) return { items: [], stop: null };
+  const data = (await r.json()) as { email_check?: string; stop?: string; universities?: Array<Record<string, unknown>> };
+  const token = state.slice(state.lastIndexOf("/") + 1);
+  const check = createHash("sha256").update(`${token}:${email.trim().toLowerCase()}`).digest("hex");
+  if (data.email_check !== check) return { items: [], stop: null };
+  const items = (data.universities ?? [])
+    .filter((u) => u.kind === "opportunity" && typeof u.name === "string" && linkOk(u.outcome))
+    .slice(0, 6)
+    .map((u) => ({
+      name: String(u.name).slice(0, 160),
+      organization: typeof u.organization === "string" ? u.organization.slice(0, 120) : null,
+      deadline: typeof u.deadline === "string" ? u.deadline : null,
+      outcome: u.outcome as string,
+      apply: linkOk(u.apply) ? (u.apply as string) : null,
+    }));
+  return { items, stop: linkOk(data.stop) ? data.stop : null };
+}
+
+const longDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+/** The student's own copy of what they're tracking. Best effort. */
+async function emailTracked(lead: Lead, links: unknown, key: string, remind: boolean) {
+  const { items, stop } = await trackedFromBackend(links, lead.email);
+  if (!items.length) return;
+  const first = lead.name.split(/\s+/)[0] || lead.name;
+  const blocks = items
+    .map((u) => {
+      const when = u.deadline ? `Deadline: ${esc(longDate(u.deadline))}` : "Deadline: rolling or see the page";
+      return (
+        heading(esc(u.name)) +
+        paragraph(`${u.organization ? `${esc(u.organization)} · ` : ""}${when}`) +
+        (u.apply ? button(u.apply, "Open the application") : "") +
+        paragraph(
+          `Applied already? <a href="${esc(u.outcome)}?a=applied" style="color:#B8941F">Tell us in one click</a>.`
+        )
+      );
+    })
+    .join("");
+  const note =
+    "You're getting this because you asked Pathfinder on Student Companion AI to track these opportunities. " +
+    (stop ? `<a href="${esc(stop)}" style="color:#6B6355">Stop these emails</a>.` : "");
+  const html = layout({
+    preheader: "The opportunities you're tracking, with their deadlines.",
+    title: "Your opportunities",
+    body:
+      paragraph(`Hi ${esc(first)}, here are the opportunities you chose on Pathfinder.`) +
+      (remind ? paragraph("We'll remind you 5 days before each fixed deadline.") : "") +
+      blocks +
+      paragraph(
+        `More open opportunities: <a href="${LINKS.opportunities}" style="color:#B8941F">SCA career site</a>. ` +
+          "Questions? Reply to this email.",
+        "margin-top:24px"
+      ),
+    footerNote: note,
+  });
+  const text = [
+    `Hi ${first}, here are the opportunities you chose on Pathfinder.`,
+    remind ? "We'll remind you 5 days before each fixed deadline." : "",
+    "",
+    ...items.flatMap((u) => [
+      `${u.name}${u.organization ? ` (${u.organization})` : ""}`,
+      `  Deadline: ${u.deadline ? longDate(u.deadline) : "rolling or see the page"}`,
+      ...(u.apply ? [`  Apply: ${u.apply}`] : []),
+      `  Applied already? ${u.outcome}?a=applied`,
+      "",
+    ]),
+    `More open opportunities: ${LINKS.opportunities}`,
+    textFooter(`You asked Pathfinder to track these.${stop ? ` Stop these emails: ${stop}` : ""}`),
+  ]
+    .filter((l, i, all) => l !== "" || all[i - 1] !== "")
+    .join("\n");
+  await send(key, {
+    to: [lead.email],
+    replyTo: "info@studentcompanionai.rw",
+    subject: items.length === 1 ? `Your opportunity: ${items[0].name}` : "The opportunities you're tracking",
+    html,
+    text,
+    headers: stop ? { "List-Unsubscribe": `<${stop}>` } : undefined,
+  });
+}
+
 /** Sending outside the team needs a verified domain in Resend. */
 function canEmailOutsiders(): boolean {
   return !/@resend\.dev>?$/i.test(FROM_ADDRESS.trim());
@@ -313,11 +441,22 @@ async function notifyUniversity(lead: Lead, profile: string, uni: University, ke
   });
 }
 
-async function notify(lead: Lead, profile: string, key: string, sentTo: University[], pending: University[]) {
+async function notify(
+  lead: Lead,
+  profile: string,
+  key: string,
+  sentTo: University[],
+  pending: University[],
+  tracking: TrackedOpportunity[] = [],
+  undergrad = false
+) {
   const names = (unis: University[]) => unis.map((u) => esc(u.name)).join(", ");
   const referred = [...sentTo, ...pending].filter((u) => u.referral);
   const body = [
-    paragraph(`<strong>${esc(lead.name)}</strong> asked for free advice on Pathfinder. Reply to this email to reach them.`),
+    paragraph(
+      `<strong>${esc(lead.name)}</strong> asked for free advice on Pathfinder` +
+        `${undergrad ? " (university student or recent graduate)" : ""}. Reply to this email to reach them.`
+    ),
     detailCard([
       ["Name", lead.name],
       ["Email", lead.email],
@@ -328,6 +467,13 @@ async function notify(lead: Lead, profile: string, key: string, sentTo: Universi
       ? callout(
           `<strong>Please forward to:</strong> ${pending.map((u) => `${esc(u.name)} (${esc(u.email)})`).join(", ")}. ` +
             "The student chose these universities, but the email could not be sent automatically."
+        )
+      : "",
+    tracking.length
+      ? callout(
+          `<strong>Tracking:</strong> ${tracking
+            .map((o) => `${esc(o.title)}${o.organization ? ` (${esc(o.organization)})` : ""}, deadline ${esc(o.deadline)}`)
+            .join("; ")}.`
         )
       : "",
     referred.length
@@ -347,7 +493,7 @@ async function notify(lead: Lead, profile: string, key: string, sentTo: Universi
     // Resend's current API uses replyTo; the older reply_to is rejected
     // with a 422, which is invisible without reading the response body.
     replyTo: lead.email,
-    subject: `Pathfinder enquiry — ${lead.name}`,
+    subject: `Pathfinder ${undergrad ? "undergraduate " : ""}enquiry — ${lead.name}`,
     html: layout({ preheader: `${lead.name} asked for free advice.`, title: "New Pathfinder request", body, footerNote: note }),
     text: [
       `${lead.name} asked for free advice on Pathfinder.`,
@@ -355,6 +501,7 @@ async function notify(lead: Lead, profile: string, key: string, sentTo: Universi
       `Phone / WhatsApp: ${lead.phone || "Not given"}`,
       sentTo.length ? `Sent to: ${sentTo.map((u) => u.name).join(", ")}` : "",
       pending.length ? `Please forward to: ${pending.map((u) => `${u.name} (${u.email})`).join(", ")}` : "",
+      tracking.length ? `Tracking: ${tracking.map((o) => `${o.title} (${o.organization}), deadline ${o.deadline}`).join("; ")}` : "",
       referred.length ? `Referral links: ${referred.map((u) => `${u.name}: ${u.referral}`).join("; ")}` : "",
       lead.message ? `\nTheir question:\n${lead.message}` : "",
       "",
@@ -374,13 +521,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Too many submissions. Please wait a few minutes." });
   }
 
-  const body = req.body as { details?: unknown; answers?: unknown; universities?: unknown; report?: unknown; links?: unknown };
+  const body = req.body as {
+    details?: unknown;
+    answers?: unknown;
+    universities?: unknown;
+    report?: unknown;
+    links?: unknown;
+    opportunities?: unknown;
+  };
   const lead = parseLead(body?.details);
   if (!lead) return res.status(400).json({ error: "Please check your name and email address." });
 
   const answers = parseAnswers(body?.answers);
   const profile = answers ? summarise(answers) : "(answers unavailable)";
-  const universities = parseUniversities(body?.universities, body?.report);
+  const undergrad = !!answers && stageOf(answers) === "undergraduate";
+  // Undergraduates contact no universities: they track opportunities.
+  const universities = undergrad ? [] : parseUniversities(body?.universities, body?.report);
+  const tracking = undergrad ? parseOpportunities(body?.opportunities, body?.report) : [];
   const respondFor = respondLinks(body?.links);
 
   const resendKey = process.env.RESEND_API_KEY;
@@ -427,8 +584,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ...pending.map((u) => reportDelivery(respondFor.get(u.url), "passed_on")),
   ]);
 
+  if (undergrad && tracking.length && canEmailOutsiders()) {
+    const remind = Array.isArray((body?.links as { universities?: unknown[] } | undefined)?.universities)
+      ? ((body.links as { universities: Array<{ reminder?: unknown }> }).universities.some((u) => linkOk(u?.reminder)))
+      : false;
+    try {
+      await emailTracked(lead, body?.links, resendKey, remind);
+    } catch (err) {
+      console.error("[pathfinder/lead] tracked list email", err);
+    }
+  }
+
   try {
-    await notify(lead, profile, resendKey, sentTo, pending);
+    await notify(lead, profile, resendKey, sentTo, pending, tracking, undergrad);
   } catch (err) {
     console.error("[pathfinder/lead] email", err);
     // If the record was saved, or a university already has it, we can still

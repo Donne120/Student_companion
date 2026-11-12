@@ -20,48 +20,61 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
  * reword an option there, mirror it here or the server will reject it as
  * invalid. `npm run check:pathfinder` verifies the two agree.
  */
-const QUESTIONS: Array<{
+type ServerQuestion = {
   key: string;
   label: string;
   type: "choice" | "multi" | "text";
   max?: number;
   options: string[];
-}> = [
-  {
-    key: "country",
-    label: "Where you are",
-    type: "choice",
-    options: [
-      "Rwanda",
-      "Kenya",
-      "Uganda",
-      "Tanzania",
-      "Burundi",
-      "DR Congo",
-      "Ethiopia",
-      "South Sudan",
-      "Nigeria",
-      "Ghana",
-      "Senegal",
-      "Côte d'Ivoire",
-      "Cameroon",
-      "Sierra Leone",
-      "Liberia",
-      "The Gambia",
-      "South Africa",
-      "Zambia",
-      "Zimbabwe",
-      "Malawi",
-      "Botswana",
-      "Namibia",
-      "Mozambique",
-      "Mauritius",
-      "Egypt",
-      "Morocco",
-      "Tunisia",
-      "Somewhere else",
-    ],
-  },
+};
+
+/** The first question, which picks the route. */
+const STAGE: ServerQuestion = {
+  key: "stage",
+  label: "Where they are now",
+  type: "choice",
+  options: ["Finishing high school or secondary school", "At university", "Graduated in the last 2 years"],
+};
+const UNDERGRAD_STAGES = ["At university", "Graduated in the last 2 years"];
+
+const COUNTRY: ServerQuestion = {
+  key: "country",
+  label: "Where you are",
+  type: "choice",
+  options: [
+    "Rwanda",
+    "Kenya",
+    "Uganda",
+    "Tanzania",
+    "Burundi",
+    "DR Congo",
+    "Ethiopia",
+    "South Sudan",
+    "Nigeria",
+    "Ghana",
+    "Senegal",
+    "Côte d'Ivoire",
+    "Cameroon",
+    "Sierra Leone",
+    "Liberia",
+    "The Gambia",
+    "South Africa",
+    "Zambia",
+    "Zimbabwe",
+    "Malawi",
+    "Botswana",
+    "Namibia",
+    "Mozambique",
+    "Mauritius",
+    "Egypt",
+    "Morocco",
+    "Tunisia",
+    "Somewhere else",
+  ],
+};
+
+const HIGH_SCHOOL: ServerQuestion[] = [
+  COUNTRY,
   {
     // The student's school, typed (with suggestions on the page). Free text,
     // so it is cleaned and capped below rather than checked against a list.
@@ -137,6 +150,110 @@ const QUESTIONS: Array<{
   },
 ];
 
+/** University students and recent graduates. The backend's matching
+ *  (pathfinder_opportunities.py in student-companion-api) uses the same
+ *  wording, so keep the three in step. */
+const UNDERGRAD: ServerQuestion[] = [
+  COUNTRY,
+  {
+    // Typed with suggestions, like the school.
+    key: "university",
+    label: "University",
+    type: "text",
+    options: [],
+  },
+  {
+    key: "field",
+    label: "What they study",
+    type: "choice",
+    options: [
+      "Computing, IT or software",
+      "Engineering",
+      "Business, economics or finance",
+      "Health sciences",
+      "Agriculture or environment",
+      "Law, social sciences or policy",
+      "Education",
+      "Arts, media or design",
+      "Natural sciences or maths",
+      "Something else",
+    ],
+  },
+  {
+    key: "year",
+    label: "Year",
+    type: "choice",
+    options: [
+      "1st year",
+      "2nd year",
+      "3rd year",
+      "Final year",
+      "Graduated less than a year ago",
+      "Graduated 1–2 years ago",
+    ],
+  },
+  {
+    key: "goals",
+    label: "Looking for",
+    type: "multi",
+    max: 2,
+    options: [
+      "An internship",
+      "My first job",
+      "A scholarship or master's",
+      "A fellowship or leadership programme",
+      "Funding to start a business",
+      "Competitions or hackathons",
+    ],
+  },
+  {
+    key: "skills",
+    label: "Where they do well",
+    type: "multi",
+    max: 3,
+    options: [
+      "Analysing data",
+      "Writing and communicating",
+      "Building software",
+      "Leading and organising people",
+      "Research",
+      "Design and creative work",
+      "Selling and negotiating",
+      "Teaching or caring for people",
+    ],
+  },
+  {
+    key: "needs",
+    label: "What's realistic",
+    type: "choice",
+    options: [
+      "I need paid work or a stipend",
+      "Remote or close to home",
+      "Open to moving abroad",
+      "It must fit around my classes",
+      "None of these",
+    ],
+  },
+  {
+    key: "when",
+    label: "How soon",
+    type: "choice",
+    options: ["In the next 3 months", "This year", "Just exploring"],
+  },
+];
+
+export type Stage = "high_school" | "undergraduate";
+
+/** The route an answer set is on. No stage answer means high school, as
+ *  before the stage question existed. */
+export function stageOf(answers: Record<string, unknown> | null | undefined): Stage {
+  return typeof answers?.stage === "string" && UNDERGRAD_STAGES.includes(answers.stage) ? "undergraduate" : "high_school";
+}
+
+function questionsFor(stage: Stage): ServerQuestion[] {
+  return [STAGE, ...(stage === "undergraduate" ? UNDERGRAD : HIGH_SCHOOL)];
+}
+
 /**
  * In-memory per-IP rate limit.
  *
@@ -195,6 +312,8 @@ export function parseAnswers(raw: unknown): Record<string, string | string[]> | 
   if (!raw || typeof raw !== "object") return null;
   const input = raw as Record<string, unknown>;
   const clean: Record<string, string | string[]> = {};
+  if (input.stage != null && (typeof input.stage !== "string" || !STAGE.options.includes(input.stage))) return null;
+  const QUESTIONS = questionsFor(stageOf(input));
 
   for (const q of QUESTIONS) {
     const value = input[q.key];
@@ -244,12 +363,12 @@ export function parseAnswers(raw: unknown): Record<string, string | string[]> | 
 
   // Require a usable brief; a near-empty set produces a worthless report.
   // The note alone isn't enough, so count only the fixed answers.
-  const fixedAnswered = QUESTIONS.filter((q) => q.type !== "text" && clean[q.key] != null).length;
+  const fixedAnswered = QUESTIONS.filter((q) => q.type !== "text" && q.key !== "stage" && clean[q.key] != null).length;
   return fixedAnswered >= 4 ? clean : null;
 }
 
 export function summarise(answers: Record<string, string | string[]>): string {
-  const lines = QUESTIONS.map((q) => {
+  const lines = questionsFor(stageOf(answers)).map((q) => {
     const v = answers[q.key];
     // Typed by the student: quoted and labelled as information, like the note.
     if (q.type === "text") return v ? `${q.label} (as the student typed it): "${v}"` : null;

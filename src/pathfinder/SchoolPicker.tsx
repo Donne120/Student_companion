@@ -11,6 +11,10 @@ import { SCHOOL_MAX } from "./questions";
  * countries build their list from the schools students type (see the
  * backend's schools.py). A school that isn't suggested is always accepted as
  * typed, so the list never blocks anyone.
+ *
+ * With kind="university" it is the undergraduate route's university step:
+ * suggestions come from the universities Pathfinder recommends from, plus
+ * the ones students type.
  */
 export interface PickedSchool {
   name: string;
@@ -23,13 +27,15 @@ interface Props {
   country: string;
   value: PickedSchool | null;
   onChange: (school: PickedSchool | null) => void;
+  kind?: "school" | "university";
 }
 
 const where = (s: SchoolSuggestion) => [s.sector, s.district, s.province].filter(Boolean).join(", ");
 const levels = (s: SchoolSuggestion) =>
   s.levels.map((l) => l.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())).join(" · ");
 
-export function SchoolPicker({ country, value, onChange }: Props) {
+export function SchoolPicker({ country, value, onChange, kind = "school" }: Props) {
+  const noun = kind === "university" ? "university" : "school";
   const [text, setText] = useState(value?.name ?? "");
   const [results, setResults] = useState<SchoolSuggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -50,7 +56,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
     const ctrl = new AbortController();
     setLoading(true);
     const t = setTimeout(async () => {
-      const found = await pathfinderService.searchSchools(country, q, ctrl.signal);
+      const found = await pathfinderService.searchSchools(country, q, ctrl.signal, kind);
       if (!ctrl.signal.aborted) {
         setResults(found);
         setActive(-1);
@@ -61,7 +67,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
       clearTimeout(t);
       ctrl.abort();
     };
-  }, [text, country, value?.id, value?.name]);
+  }, [text, country, value?.id, value?.name, kind]);
 
   // Close the list when clicking elsewhere.
   useEffect(() => {
@@ -113,7 +119,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
   return (
     <div ref={boxRef} className="relative max-w-md">
       <label htmlFor={`${listId}-input`} className="sr-only">
-        Your school
+        Your {noun}
       </label>
       <div
         className={`flex items-center gap-2 rounded-[10px] border bg-white pl-3 pr-3 focus-within:ring-2 focus-within:ring-[#D4AF37] ${
@@ -131,7 +137,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
           autoComplete="off"
           value={text}
           maxLength={SCHOOL_MAX}
-          placeholder={country === "Somewhere else" ? "Type your school's name" : `Start typing your school in ${country}`}
+          placeholder={country === "Somewhere else" ? `Type your ${noun}'s name` : `Start typing your ${noun} in ${country}`}
           onChange={(e) => {
             setText(e.target.value);
             setOpen(true);
@@ -143,7 +149,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
           className="w-full py-3 text-[14px] bg-transparent focus:outline-none"
         />
         {loading && <Loader aria-hidden="true" className="h-4 w-4 flex-none animate-spin text-[#B8941F]" />}
-        {!loading && value?.id && <Check aria-label="School selected" className="h-4 w-4 flex-none text-[#B8941F]" />}
+        {!loading && value?.id && <Check aria-label={`${kind === "university" ? "University" : "School"} selected`} className="h-4 w-4 flex-none text-[#B8941F]" />}
       </div>
 
       {showList && (
@@ -186,7 +192,7 @@ export function SchoolPicker({ country, value, onChange }: Props) {
                   Use “<span className="font-medium">{typed}</span>”
                 </p>
                 <p className="text-[11.5px] text-[#6B6355] mt-0.5">
-                  {results.length ? "My school isn't in the list" : "No match yet. We'll add your school."}
+                  {results.length ? `My ${noun} isn't in the list` : `No match yet. We'll add your ${noun}.`}
                 </p>
               </li>
             )

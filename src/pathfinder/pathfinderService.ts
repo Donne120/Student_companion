@@ -7,7 +7,7 @@
  * keys must never reach the browser: anything in a Vite bundle is public, and
  * scraped keys get abused and billed within days.
  */
-import type { Answers, PathfinderReport } from "./questions";
+import { stageOf, type AnyReport, type Answers, type PathfinderReport } from "./questions";
 import { API_URL } from "@/config/api";
 
 const SOURCE_KEY = "pf_source";
@@ -35,12 +35,16 @@ function currentSource(): string | undefined {
 export interface TrackedLead {
   details: { name: string; email: string; phone?: string; message?: string };
   answers: Answers;
-  report: PathfinderReport;
-  /** Website links of the universities the student ticked. */
+  report: AnyReport;
+  /** Website links of the universities the student ticked (high school). */
   chosen: string[];
   consentMarketing: boolean;
   /** The school, picked from the suggestions (with its id) or typed. */
   school?: { name: string; id?: string } | null;
+  /** Undergraduate route: their university, and the opportunities they
+   *  chose to track (and whether to be reminded before each deadline). */
+  university?: { name: string; id?: string } | null;
+  opportunities?: Array<{ id: string; remind: boolean }>;
 }
 
 /** One-click links the backend issues for a saved request: they go into the
@@ -49,7 +53,16 @@ export interface TrackedLead {
 export interface LeadLinks {
   followup_state?: string;
   stop?: string;
-  universities?: Array<{ name: string; url: string | null; respond: string; outcome: string; apply: string | null }>;
+  universities?: Array<{
+    name: string;
+    url: string | null;
+    kind?: "university" | "opportunity";
+    respond?: string;
+    outcome: string;
+    apply: string | null;
+    deadline?: string | null;
+    reminder?: string | null;
+  }>;
 }
 
 export interface LeadDetails {
@@ -120,15 +133,22 @@ export interface SchoolSuggestion {
   levels: string[];
   combinations: string[];
   listed: boolean;
+  /** Universities: their website. */
+  url?: string | null;
 }
 
 export const pathfinderService = {
   /** Schools in `country` matching what the student has typed. Empty on any
    *  failure: the student can always type their school instead. */
-  searchSchools: async (country: string, q: string, signal?: AbortSignal): Promise<SchoolSuggestion[]> => {
+  searchSchools: async (
+    country: string,
+    q: string,
+    signal?: AbortSignal,
+    kind: "school" | "university" = "school"
+  ): Promise<SchoolSuggestion[]> => {
     try {
       const res = await fetch(
-        `${API_URL}/api/schools/search?country=${encodeURIComponent(country)}&q=${encodeURIComponent(q)}`,
+        `${API_URL}/api/schools/search?country=${encodeURIComponent(country)}&q=${encodeURIComponent(q)}&kind=${kind}`,
         { signal }
       );
       if (!res.ok) return [];
@@ -139,17 +159,26 @@ export const pathfinderService = {
   },
 
   getRecommendations: (answers: Answers) =>
-    post<PathfinderReport>("/api/pathfinder/recommend", { answers }),
+    post<AnyReport>("/api/pathfinder/recommend", { answers }),
 
   /** `universities`: website links of the universities the student chose
    *  to send their enquiry to (only those marked `contactable`). */
   submitLead: (
     details: LeadDetails,
     answers: Answers,
-    report?: PathfinderReport,
+    report?: AnyReport,
     universities: string[] = [],
-    links?: LeadLinks | null
-  ) => post<LeadResult>("/api/pathfinder/lead", { details, answers, report, universities, links: links ?? undefined }),
+    links?: LeadLinks | null,
+    opportunities: string[] = []
+  ) =>
+    post<LeadResult>("/api/pathfinder/lead", {
+      details,
+      answers,
+      report,
+      universities,
+      opportunities,
+      links: links ?? undefined,
+    }),
 
   /**
    * Save the request in Student Companion AI's records (the backend on AWS)
@@ -158,8 +187,20 @@ export const pathfinderService = {
    * without anyone typing it in. Best effort: if the backend is slow or
    * down, the request is still emailed, just without the links.
    */
-  trackLead: async ({ details, answers, report, chosen, consentMarketing, school }: TrackedLead): Promise<LeadLinks | null> => {
-    const universities = report.schools
+  trackLead: async ({
+    details,
+    answers,
+    report,
+    chosen,
+    consentMarketing,
+    school,
+    university,
+    opportunities,
+  }: TrackedLead): Promise<LeadLinks | null> => {
+    const undergrad = stageOf(answers) === "undergraduate";
+    const interests =
+      "directions" in report ? report.directions.map((f) => f.name) : (report as PathfinderReport).fields.map((f) => f.name);
+    const universities = ("schools" in report ? report.schools : [])
       .filter((s) => chosen.includes(s.url))
       .filter((s, i, all) => all.findIndex((t) => t.url === s.url) === i)
       .map((s) => ({ name: s.name, url: s.url, delivery: "requested" }));
@@ -175,13 +216,17 @@ export const pathfinderService = {
           phone: details.phone || null,
           message: details.message || null,
           answers,
-          interests: report.fields.map((f) => f.name).slice(0, 10),
+          interests: interests.slice(0, 10),
           universities,
           referral_alu: universities.some((u) => /alueducation\.com|alu\.edu/i.test(u.url)),
           source: currentSource(),
           consent_marketing: consentMarketing,
-          school_name: school?.name || null,
-          school_id: school?.id || null,
+          school_name: undergrad ? null : school?.name || null,
+          school_id: undergrad ? null : school?.id || null,
+          stage: undergrad ? "undergraduate" : "high_school",
+          university_name: undergrad ? university?.name || null : null,
+          university_id: undergrad ? university?.id || null : null,
+          opportunities: undergrad ? (opportunities ?? []).slice(0, 6) : [],
         }),
         signal: ctrl.signal,
       });
