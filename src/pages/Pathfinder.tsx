@@ -1,18 +1,25 @@
 /**
- * Pathfinder — free course & university guidance for high-school leavers.
+ * Pathfinder — free guidance for high-school leavers (course and university)
+ * and for university students and recent graduates (internships, jobs,
+ * scholarships, fellowships, funding and competitions). One first question
+ * picks the route; see src/pathfinder/questions.ts.
  *
  * Public: no account, no login, no organization. Deliberately isolated from
  * the rest of the platform (see src/pathfinder/questions.ts for why).
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Check, ChevronDown, ExternalLink, Loader, Send } from "lucide-react";
+import { ArrowLeft, Bell, CalendarClock, Check, ChevronDown, ExternalLink, Loader, Send } from "lucide-react";
 import {
-  QUESTIONS,
+  questionsFor,
+  stageOf,
+  isUndergradReport,
   NOTE_KEY,
   NOTE_MAX,
+  type AnyReport,
   type Answers,
   type PathfinderReport,
+  type UndergradReport,
 } from "@/pathfinder/questions";
 import { pathfinderService, PathfinderError, rememberSource, type LeadResult, type LeadLinks } from "@/pathfinder/pathfinderService";
 import { SchoolPicker, type PickedSchool } from "@/pathfinder/SchoolPicker";
@@ -27,6 +34,12 @@ const LOADING_LINES = [
   "Checking what these paths lead to…",
   "Building your report…",
 ];
+const LOADING_LINES_UNDERGRAD = [
+  "Checking which opportunities are open now…",
+  "Matching them to your year and field…",
+  "Working out the skills that would help most…",
+  "Building your report…",
+];
 
 export default function Pathfinder() {
   // Credit requests to the campaign link the student arrived from.
@@ -35,16 +48,24 @@ export default function Pathfinder() {
   const [answers, setAnswers] = useState<Answers>({});
   // The school step: picked from the suggestions (with an id) or typed.
   const [school, setSchool] = useState<PickedSchool | null>(null);
+  // The undergraduate route's university step, the same way.
+  const [university, setUniversity] = useState<PickedSchool | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
-  const [report, setReport] = useState<PathfinderReport | null>(null);
+  const [report, setReport] = useState<AnyReport | null>(null);
   const [error, setError] = useState("");
   const [loadingLine, setLoadingLine] = useState(0);
   const paneRef = useRef<HTMLDivElement>(null);
 
-  const question = QUESTIONS[step];
+  // The questions for the route chosen at the first question.
+  const questions = questionsFor(answers);
+  const undergrad = stageOf(answers) === "undergraduate";
+  const loadingLines = undergrad ? LOADING_LINES_UNDERGRAD : LOADING_LINES;
+  const question = questions[step];
   const current = answers[question?.key];
-  // The school step is optional: Continue (or Skip) is always available.
-  const answered = question?.type === "school" || (Array.isArray(current) ? current.length > 0 : !!current);
+  const typed = question?.type === "school" || question?.type === "university";
+  // The school and university steps are optional: Continue (or Skip) is always available.
+  const answered = typed || (Array.isArray(current) ? current.length > 0 : !!current);
+  const last = step === questions.length - 1;
 
   // Scroll the question pane back to the top on each step — otherwise a long
   // question list leaves the next question scrolled halfway down.
@@ -56,7 +77,7 @@ export default function Pathfinder() {
     if (phase !== "loading") return;
     setLoadingLine(0);
     const id = setInterval(() => {
-      setLoadingLine((n) => Math.min(n + 1, LOADING_LINES.length - 1));
+      setLoadingLine((n) => Math.min(n + 1, LOADING_LINES_UNDERGRAD.length - 1));
     }, 1400);
     return () => clearInterval(id);
   }, [phase]);
@@ -70,10 +91,18 @@ export default function Pathfinder() {
         else if (list.length < (question.max ?? 3)) list.push(option);
         return { ...prev, [question.key]: list };
       }
+      if (question.key === "stage" && prev.stage !== option) {
+        // A different route: its questions differ, so start them afresh
+        // (keeping the country, which both routes ask).
+        setSchool(null);
+        setUniversity(null);
+        return prev.country ? { stage: option, country: prev.country } : { stage: option };
+      }
       if (question.key === "country" && prev.country !== option) {
         // A different country: the school picked for the old one no longer applies.
         setSchool(null);
-        const { school: _dropped, ...rest } = prev;
+        setUniversity(null);
+        const { school: _dropped, university: _alsoDropped, ...rest } = prev;
         return { ...rest, [question.key]: option };
       }
       return { ...prev, [question.key]: option };
@@ -85,6 +114,14 @@ export default function Pathfinder() {
     setAnswers((prev) => {
       const { school: _old, ...rest } = prev;
       return s ? { ...rest, school: s.name } : rest;
+    });
+  };
+
+  const pickUniversity = (u: PickedSchool | null) => {
+    setUniversity(u);
+    setAnswers((prev) => {
+      const { university: _old, ...rest } = prev;
+      return u ? { ...rest, university: u.name } : rest;
     });
   };
 
@@ -107,6 +144,7 @@ export default function Pathfinder() {
   const restart = () => {
     setAnswers({});
     setSchool(null);
+    setUniversity(null);
     setStep(0);
     setReport(null);
     setError("");
@@ -141,11 +179,12 @@ export default function Pathfinder() {
             Free · No account needed
           </p>
           <h1 className="font-serif text-3xl md:text-[2.75rem] leading-[1.08] tracking-tight text-balance max-w-2xl">
-            Finishing high school? Let's discover the right course and college or university for you.
+            Finishing high school, or already at university? Let's find your next step.
           </h1>
           <p className="mt-3 text-[#5C5647] max-w-xl leading-relaxed">
-            Answer a few short questions. We'll suggest fields worth considering,
-            real colleges and universities you can apply to, and where each path can lead.
+            Answer a few short questions. Finishing high school: we'll suggest courses and real
+            colleges and universities you can apply to. At university or recently graduated: we'll
+            match you with open internships, jobs, scholarships and fellowships.
           </p>
         </div>
 
@@ -153,9 +192,9 @@ export default function Pathfinder() {
           {/* Progress rail */}
           <aside className="hidden lg:flex flex-col bg-[#1A1A1A] text-white p-6">
             <h2 className="font-serif text-xl mb-1">Pathfinder</h2>
-            <p className="text-xs text-white/60 mb-6">Free guidance for high school leavers</p>
+            <p className="text-xs text-white/60 mb-6">Free guidance for students and graduates</p>
             <ol className="space-y-1">
-              {QUESTIONS.map((q, i) => {
+              {questions.map((q, i) => {
                 const done = i < step || phase === "report";
                 const now = i === step && phase === "form";
                 return (
@@ -195,7 +234,7 @@ export default function Pathfinder() {
               <>
                 <div ref={paneRef} className="flex-1 overflow-y-auto min-h-0 px-6 md:px-8 pt-7 pb-4">
                   <p className="text-[11px] uppercase tracking-[0.09em] text-[#B8941F] font-bold">
-                    Question {step + 1} of {QUESTIONS.length}
+                    Question {step + 1} of {questions.length}
                   </p>
                   <h3 className="font-serif text-2xl md:text-[1.65rem] leading-tight mt-2 mb-1.5 text-balance">
                     {question.prompt}
@@ -207,6 +246,14 @@ export default function Pathfinder() {
                       country={typeof answers.country === "string" ? answers.country : "Somewhere else"}
                       value={school}
                       onChange={pickSchool}
+                    />
+                  ) : question.type === "university" ? (
+                    <SchoolPicker
+                      key="university"
+                      kind="university"
+                      country={typeof answers.country === "string" ? answers.country : "Somewhere else"}
+                      value={university}
+                      onChange={pickUniversity}
                     />
                   ) : question.type === "select" ? (
                     <div className="relative max-w-md">
@@ -270,7 +317,7 @@ export default function Pathfinder() {
                       fixed options couldn't capture. Without this, someone
                       whose situation doesn't fit the boxes has no way to tell
                       us — and gets advice built on a poor approximation. */}
-                  {step === QUESTIONS.length - 1 && (
+                  {last && (
                     <div className="mt-6 pt-5 border-t border-[#E8DDB0]">
                       <label
                         htmlFor="pathfinder-note"
@@ -293,7 +340,11 @@ export default function Pathfinder() {
                         }
                         rows={3}
                         maxLength={NOTE_MAX}
-                        placeholder="For example: I studied a different subject combination, I'm repeating a year, I already work, I have a disability I need supported…"
+                        placeholder={
+                          undergrad
+                            ? "For example: I'm switching fields, I already work part-time, I need a visa sponsor, I have a disability I need supported…"
+                            : "For example: I studied a different subject combination, I'm repeating a year, I already work, I have a disability I need supported…"
+                        }
                         className="w-full text-[13.5px] px-3 py-2.5 rounded-[10px] border border-[#E8DDB0] bg-white resize-none focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
                       />
                       <p className="mt-1.5 text-[11px] text-[#6B6355] tabular-nums">
@@ -314,12 +365,12 @@ export default function Pathfinder() {
                   )}
                   <button
                     disabled={!answered}
-                    onClick={() => (step === QUESTIONS.length - 1 ? submit() : setStep((s) => s + 1))}
+                    onClick={() => (last ? submit() : setStep((s) => s + 1))}
                     className="text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] bg-[#1A1A1A] text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {step === QUESTIONS.length - 1
+                    {last
                       ? "See my options"
-                      : question.type === "school" && !school
+                      : (question.type === "school" && !school) || (question.type === "university" && !university)
                         ? "Skip"
                         : "Continue"}
                   </button>
@@ -336,7 +387,7 @@ export default function Pathfinder() {
               <div className="flex-1 grid place-items-center px-6 text-center">
                 <div>
                   <Loader className="h-6 w-6 animate-spin text-[#B8941F] mx-auto mb-4" />
-                  <p className="text-[13.5px] text-[#6B6355]">{LOADING_LINES[loadingLine]}</p>
+                  <p className="text-[13.5px] text-[#6B6355]">{loadingLines[loadingLine]}</p>
                 </div>
               </div>
             )}
@@ -358,7 +409,11 @@ export default function Pathfinder() {
 
             {phase === "report" && report && (
               <div ref={paneRef} className="flex-1 overflow-y-auto min-h-0 px-6 md:px-8 py-7">
-                <Report report={report} answers={answers} school={school} onRestart={restart} />
+                {isUndergradReport(report) ? (
+                  <UndergradReportView report={report} answers={answers} university={university} onRestart={restart} />
+                ) : (
+                  <Report report={report} answers={answers} school={school} onRestart={restart} />
+                )}
               </div>
             )}
           </section>
@@ -762,6 +817,387 @@ function LeadForm({
           ? " We'll check in by email a few times to ask how your applications went (you can stop that in one click)."
           : ""}{" "}
         To have your details removed sooner, email info@studentcompanionai.rw.
+      </p>
+    </form>
+  );
+}
+
+// ── Undergraduate report ─────────────────────────────────────────────────────
+
+/** "10 Dec 2026 · in 5 days" for a date deadline; the Sheet's text otherwise. */
+function deadlineText(deadline: string, iso: string | null): string {
+  if (!iso) return deadline;
+  const d = new Date(`${iso}T00:00:00`);
+  const days = Math.round((d.getTime() - new Date(new Date().toDateString()).getTime()) / 86_400_000);
+  const date = d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  if (days === 0) return `${date} · today`;
+  if (days > 0 && days <= 30) return `${date} · in ${days} day${days === 1 ? "" : "s"}`;
+  return date;
+}
+
+function Chips({ items }: { items: string[] }) {
+  if (!items?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2.5">
+      {items.map((t) => (
+        <span key={t} className="text-[11.5px] px-2.5 py-1 rounded-full bg-[#FBF7E9] border border-[#E8DDB0] text-[#4A4437]">
+          {t}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function UndergradReportView({
+  report,
+  answers,
+  university,
+  onRestart,
+}: {
+  report: UndergradReport;
+  answers: Answers;
+  university: PickedSchool | null;
+  onRestart: () => void;
+}) {
+  const main = report.opportunities.filter((o) => !o.also);
+  const also = report.opportunities.filter((o) => o.also);
+  const card = (o: UndergradReport["opportunities"][number]) => (
+    <div key={o.id} className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5 mb-2.5">
+      <div className="flex items-baseline gap-2.5 flex-wrap">
+        <span className="font-semibold text-[14.5px]">{o.title}</span>
+        <span className="text-[11.5px] text-[#6B6355]">{[o.organization, o.category].filter(Boolean).join(" · ")}</span>
+      </div>
+      <p className="mt-1.5 text-[12px] text-[#4A4437] flex items-center gap-1.5 flex-wrap">
+        <CalendarClock aria-hidden="true" className="h-3.5 w-3.5 text-[#B8941F]" />
+        <span>Deadline: {deadlineText(o.deadline, o.deadline_date)}</span>
+        {o.location && <span className="text-[#6B6355]">· {o.location}</span>}
+      </p>
+      {o.why && <p className="text-[13px] text-[#3C372E] mt-1.5 leading-relaxed">{o.why}</p>}
+      {(o.eligibility_year || o.eligibility_nationality) && (
+        <p className="text-[11.5px] text-[#6B6355] mt-1.5">
+          Who can apply: {[o.eligibility_year, o.eligibility_nationality].filter(Boolean).join(" · ")}
+        </p>
+      )}
+      <Chips items={o.tags} />
+      <a
+        href={o.apply_link}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#B8941F] hover:underline underline-offset-4 mt-2.5"
+      >
+        Open the application page
+        <ExternalLink className="h-3.5 w-3.5" />
+      </a>
+    </div>
+  );
+
+  return (
+    <>
+      <h3 className="font-serif text-[1.45rem] leading-tight text-balance">{report.headline}</h3>
+      {report.summary && <p className="text-[13px] text-[#6B6355] mt-1 mb-5">{report.summary}</p>}
+
+      <SectionLabel>Open opportunities for you</SectionLabel>
+      {main.length ? (
+        main.map(card)
+      ) : (
+        <div className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5 mb-2.5 text-[13px] text-[#3C372E] leading-relaxed">
+          Nothing open right now matches exactly what you asked for. New opportunities are added every week, so check
+          back soon, or browse everything that's open on the{" "}
+          <a href={report.browse} target="_blank" rel="noopener noreferrer" className="text-[#B8941F] hover:underline underline-offset-4">
+            SCA career site
+          </a>
+          .
+        </div>
+      )}
+      {also.length > 0 && (
+        <>
+          <SectionLabel>Also worth a look</SectionLabel>
+          {also.map(card)}
+        </>
+      )}
+      <p className="text-[12px] text-[#6B6355] mb-1">
+        Browse every open opportunity on the{" "}
+        <a href={report.browse} target="_blank" rel="noopener noreferrer" className="text-[#B8941F] hover:underline underline-offset-4">
+          SCA career site
+        </a>
+        .
+      </p>
+
+      {report.directions.length > 0 && (
+        <>
+          <SectionLabel>Directions that fit you</SectionLabel>
+          {report.directions.map((f, i) => (
+            <div
+              key={f.name}
+              className={`rounded-[11px] border p-3.5 mb-2.5 ${
+                i === 0 ? "border-[#E8DDB0] border-l-4 border-l-[#D4AF37] bg-[#FFFDF6]" : "border-[#E8DDB0] bg-white"
+              }`}
+            >
+              <div className="flex items-baseline gap-2.5 flex-wrap">
+                <span className="font-semibold text-[14.5px]">{f.name}</span>
+                <span className="text-[11.5px] text-[#6B6355]">{f.strength}</span>
+              </div>
+              <p className="text-[13px] text-[#3C372E] mt-1.5 leading-relaxed">{f.reason}</p>
+              <Chips items={f.tags} />
+            </div>
+          ))}
+        </>
+      )}
+
+      {report.skills.length > 0 && (
+        <>
+          <SectionLabel>Skills to build next</SectionLabel>
+          <div className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5 mb-2.5 space-y-3">
+            {report.skills.map((k) => (
+              <div key={k.name}>
+                <p className="font-semibold text-[13.5px]">{k.name}</p>
+                {k.why && <p className="text-[13px] text-[#3C372E] mt-0.5 leading-relaxed">{k.why}</p>}
+                {k.how && (
+                  <p className="text-[12.5px] text-[#6B6355] mt-0.5 leading-relaxed">
+                    <span className="font-medium text-[#4A4437]">How: </span>
+                    {k.how}
+                  </p>
+                )}
+              </div>
+            ))}
+            <p className="text-[12px] text-[#6B6355]">
+              Free courses to get started:{" "}
+              <a
+                href="https://career.studentcompanionai.rw/courses.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#B8941F] hover:underline underline-offset-4"
+              >
+                SCA free courses
+              </a>
+            </p>
+          </div>
+        </>
+      )}
+
+      {(report.careers.summary || report.careers.roles.length > 0) && (
+        <>
+          <SectionLabel>Where this can lead</SectionLabel>
+          <div className="rounded-[11px] border border-[#E8DDB0] bg-white p-3.5">
+            {report.careers.summary && <p className="text-[13px] text-[#3C372E] leading-relaxed">{report.careers.summary}</p>}
+            <Chips items={report.careers.roles} />
+          </div>
+        </>
+      )}
+
+      <UndergradLeadForm answers={answers} report={report} university={university} />
+
+      <div className="mt-4 pt-3 border-t border-[#E8DDB0] flex items-center gap-3 flex-wrap">
+        <p className="text-[11.5px] text-[#6B6355] flex-1 min-w-[240px]">
+          This is guidance. Always check eligibility, deadlines and requirements on the opportunity's own page before you
+          apply, and never pay to apply for an internship or job.
+        </p>
+        <button onClick={onRestart} className="text-[12px] font-medium text-[#B8941F] hover:underline underline-offset-4">
+          Start over
+        </button>
+      </div>
+    </>
+  );
+}
+
+const MAX_TRACKED = 5;
+
+function UndergradLeadForm({
+  answers,
+  report,
+  university,
+}: {
+  answers: Answers;
+  report: UndergradReport;
+  university: PickedSchool | null;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  // Nothing ticked for them: what they track, and hearing from us, is their choice.
+  const [chosen, setChosen] = useState<string[]>([]);
+  const [remind, setRemind] = useState(false);
+  const [consent, setConsent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState("");
+  const [tracked, setTracked] = useState<LeadLinks | null | undefined>(undefined);
+  const withDates = report.opportunities.filter((o) => chosen.includes(o.id) && o.deadline_date);
+  const toggle = (id: string) =>
+    setChosen((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < MAX_TRACKED ? [...prev, id] : prev
+    );
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    setErr("");
+    try {
+      let links = tracked;
+      if (links === undefined) {
+        links = await pathfinderService.trackLead({
+          details: { name, email, phone, message },
+          answers,
+          report,
+          chosen: [],
+          consentMarketing: consent,
+          university,
+          opportunities: chosen.map((id) => ({ id, remind })),
+        });
+        setTracked(links);
+      }
+      await pathfinderService.submitLead({ name, email, phone, message }, answers, report, [], links, chosen);
+      setSent(true);
+    } catch (e2) {
+      setErr(e2 instanceof PathfinderError ? e2.message : "We couldn't send that. Please try again.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="mt-5 rounded-xl border border-[#D4AF37] bg-[#FBF7E9] p-4">
+        <h4 className="font-semibold text-[14.5px] mb-1 flex items-center gap-2">
+          <Check className="h-4 w-4 text-[#B8941F]" />
+          {chosen.length ? "Saved. We'll keep track with you" : "Your request has been sent"}
+        </h4>
+        <p className="text-[12.5px] text-[#6B6355]">
+          {chosen.length
+            ? `We'll check in by email to ask how your ${chosen.length === 1 ? "application" : "applications"} went${
+                remind && withDates.length ? ", and remind you 5 days before each deadline" : ""
+              }. You can stop the emails in one click.`
+            : "An adviser from Student Companion AI will be in touch soon."}
+        </p>
+        <p className="text-[12px] text-[#6B6355] mt-2">
+          Look out for emails from <strong>info@studentcompanionai.rw</strong>, and check your spam folder too. Questions?
+          Write to{" "}
+          <a href="mailto:info@studentcompanionai.rw" className="underline underline-offset-2">
+            info@studentcompanionai.rw
+          </a>
+          .
+        </p>
+      </div>
+    );
+  }
+
+  const input =
+    "w-full text-[13.5px] px-3 py-2.5 rounded-[9px] border border-[#E8DDB0] bg-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]";
+  return (
+    <form onSubmit={send} className="mt-5 rounded-xl border border-[#D4AF37] bg-[#FBF7E9] p-4">
+      <h4 className="font-semibold text-[14.5px] mb-1">Keep track, and get free advice</h4>
+      <p className="text-[12.5px] text-[#6B6355] mb-3.5">
+        Tick the opportunities you plan to apply for. We'll check in to ask how it went, and can remind you before each
+        deadline. You can also ask an adviser about your CV, applications or next steps. It costs nothing.
+      </p>
+
+      {report.opportunities.length > 0 && (
+        <fieldset className="mb-3 rounded-[10px] border border-[#E8DDB0] bg-white p-3">
+          <legend className="px-1 text-[13px] font-semibold">
+            Opportunities to track <span className="font-normal text-[#6B6355]">(optional, up to {MAX_TRACKED})</span>
+          </legend>
+          <div className="space-y-1.5">
+            {report.opportunities.map((o) => {
+              const on = chosen.includes(o.id);
+              const full = !on && chosen.length >= MAX_TRACKED;
+              return (
+                <label key={o.id} className={`flex items-start gap-2.5 text-[13px] ${full ? "opacity-50" : "cursor-pointer"}`}>
+                  <input
+                    type="checkbox"
+                    checked={on}
+                    disabled={full}
+                    onChange={() => toggle(o.id)}
+                    className="mt-0.5 h-4 w-4 accent-[#B8941F]"
+                  />
+                  <span>
+                    {o.title}
+                    <span className="text-[#6B6355]"> · {deadlineText(o.deadline, o.deadline_date)}</span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+          {chosen.length > 0 && (
+            <label className="mt-3 pt-2.5 border-t border-[#F1EAD0] flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={remind}
+                onChange={(e) => setRemind(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
+              />
+              <span className="flex items-start gap-1.5">
+                <Bell aria-hidden="true" className="h-3.5 w-3.5 mt-0.5 text-[#B8941F] flex-none" />
+                <span>
+                  Email me 5 days before each deadline
+                  {withDates.length < chosen.length && (
+                    <span className="text-[#6B6355]"> (only for those with a fixed date)</span>
+                  )}
+                </span>
+              </span>
+            </label>
+          )}
+        </fieldset>
+      )}
+
+      <div className="grid sm:grid-cols-2 gap-2.5">
+        <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={input} />
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email address"
+          className={input}
+        />
+      </div>
+      <input
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        placeholder="Phone or WhatsApp (optional)"
+        className={`${input} mt-2.5`}
+      />
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        rows={2}
+        maxLength={600}
+        placeholder="What would you like advice on? (optional) For example: my CV, an application, choosing between offers"
+        className={`${input} mt-2.5 resize-none`}
+      />
+
+      <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
+        <input
+          type="checkbox"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
+        />
+        <span>
+          Keep me updated about new opportunities, scholarships and news from Student Companion AI. You can unsubscribe
+          at any time.
+        </span>
+      </label>
+
+      {err && <p className="text-[12.5px] text-red-700 mt-2">{err}</p>}
+
+      <button
+        type="submit"
+        disabled={sending}
+        className="mt-3 inline-flex items-center gap-2 text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] bg-[#1A1A1A] text-white hover:bg-black disabled:opacity-50"
+      >
+        {sending ? <Loader className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+        {sending
+          ? "Sending…"
+          : chosen.length
+            ? `Track ${chosen.length} ${chosen.length === 1 ? "opportunity" : "opportunities"}`
+            : "Ask for free advice"}
+      </button>
+      <p className="text-[11px] text-[#6B6355] mt-2.5">
+        We use this to advise you and follow up on the opportunities you ticked, and keep it for two years. Your details
+        are not shared with the organisations.
+        {chosen.length ? " We'll check in by email a few times (you can stop that in one click)." : ""} To have your
+        details removed sooner, email info@studentcompanionai.rw.
       </p>
     </form>
   );

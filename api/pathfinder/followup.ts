@@ -14,6 +14,11 @@
  * and the address is only used if its check matches. The follow-up is then
  * claimed before sending, so a repeat or forged call sends nothing.
  *
+ * Undergraduate route: the same check-ins about the opportunities the
+ * student tracks (2 weeks, 6 weeks and 3 months, with "I got it" wording),
+ * and deadline reminders: a state link of type "reminder" (/d/<token>) for
+ * one opportunity whose deadline is 5 days away.
+ *
  * Env: RESEND_API_KEY, LEAD_FROM_EMAIL (shared with lead.ts),
  * PATHFINDER_LINK_BASE (optional).
  */
@@ -28,11 +33,21 @@ const LINK_BASE = (process.env.PATHFINDER_LINK_BASE || "https://api.studentcompa
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 interface State {
+  type?: "followup" | "reminder";
+  stage?: "high_school" | "undergraduate";
   due: boolean;
   number: number;
   stop?: string;
   email_check?: string;
-  universities: Array<{ name: string; outcome: string; apply: string | null; status: string }>;
+  universities: Array<{
+    name: string;
+    outcome: string;
+    apply: string | null;
+    status: string;
+    kind?: string;
+    organization?: string | null;
+    deadline?: string | null;
+  }>;
 }
 
 const linkOk = (v: unknown): v is string =>
@@ -54,19 +69,77 @@ const ANSWERS: Array<[string, string]> = [
   ["not_proceeding", "Not going ahead"],
   ["deciding", "Still deciding"],
 ];
+// For an internship, job, scholarship or fellowship ("enrolled" = got it).
+const OPPORTUNITY_ANSWERS: Array<[string, string]> = [
+  ["applied", "I applied"],
+  ["enrolled", "I got it"],
+  ["not_proceeding", "Not going ahead"],
+  ["deciding", "Haven't applied yet"],
+];
+
+const longDate = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+
+/** "Deadline in 5 days": one opportunity whose deadline is close. */
+function reminderEmail(state: State) {
+  const u = state.universities.find((x) => linkOk(x.outcome));
+  if (!u) return null;
+  const when = u.deadline ? longDate(u.deadline) : "soon";
+  const days = u.deadline ? Math.round((Date.parse(`${u.deadline}T00:00:00Z`) - Date.now()) / 86_400_000) : null;
+  const soon = days !== null && days >= 0 ? (days === 0 ? "today" : `in ${days} day${days === 1 ? "" : "s"}`) : "soon";
+  const stop = linkOk(state.stop) ? state.stop : null;
+  const apply = linkOk(u.apply) ? u.apply : null;
+  const html = layout({
+    preheader: `The deadline for ${u.name} is ${when}.`,
+    title: `Deadline ${soon}`,
+    body:
+      paragraph(
+        `You asked us to remind you: the deadline for <strong>${esc(u.name)}</strong>` +
+          `${u.organization ? ` (${esc(u.organization)})` : ""} is <strong>${esc(when)}</strong>.`
+      ) +
+      paragraph("If you haven't applied yet, there's still time. Check the requirements on the page before you start.") +
+      (apply ? `<div>${choice(apply, "Open the application", true)}</div>` : "") +
+      paragraph(
+        `Already applied? <a href="${esc(u.outcome)}?a=applied" style="color:${GOLD}">Tell us in one click</a>. ` +
+          `Decided not to? <a href="${esc(u.outcome)}?a=not_proceeding" style="color:${GOLD}">Let us know</a> and we'll stop asking.`,
+        "margin-top:18px"
+      ),
+    footerNote:
+      "You're getting this because you asked Pathfinder on Student Companion AI for deadline reminders. " +
+      (stop ? `<a href="${esc(stop)}" style="color:#6B6355">Stop these emails</a>.` : ""),
+  });
+  const text = [
+    `Deadline ${soon}: ${u.name}${u.organization ? ` (${u.organization})` : ""}, ${when}.`,
+    "",
+    ...(apply ? [`Open the application: ${apply}`] : []),
+    `Already applied? ${u.outcome}?a=applied`,
+    `Not going ahead? ${u.outcome}?a=not_proceeding`,
+    "",
+    textFooter(`You asked Pathfinder for deadline reminders.${stop ? ` Stop these emails: ${stop}` : ""}`),
+  ].join("\n");
+  return { html, text, subject: `Deadline ${soon}: ${u.name}`, stop };
+}
 
 function email(state: State) {
-  const unis = state.universities.filter((u) => linkOk(u.outcome)).slice(0, 3);
-  const opening =
-    state.number === 1
+  const undergrad = state.stage === "undergraduate";
+  const unis = state.universities.filter((u) => linkOk(u.outcome)).slice(0, undergrad ? 5 : 3);
+  const opening = undergrad
+    ? state.number === 1
+      ? "A couple of weeks ago you used Pathfinder and chose these opportunities. How is it going?"
+      : "We're checking in again on the opportunities you chose on Pathfinder. Any news?"
+    : state.number === 1
       ? "A few weeks ago you used Pathfinder and asked to hear from these universities. How is it going?"
       : "We're checking in again on the universities you chose on Pathfinder. Any news?";
   const blocks = unis
     .map((u) => {
-      const answers = ANSWERS.map(([a, label], i) => choice(`${u.outcome}?a=${a}`, label, i === 0)).join("");
+      const opp = u.kind === "opportunity";
+      const answers = (opp ? OPPORTUNITY_ANSWERS : ANSWERS)
+        .map(([a, label], i) => choice(`${u.outcome}?a=${a}`, label, i === 0))
+        .join("");
       const apply = linkOk(u.apply)
         ? `<p style="margin:10px 0 0;${FONT}font-size:13.5px"><a href="${esc(u.apply)}" style="color:${GOLD}">` +
-          `Haven't applied yet? Open ${esc(u.name)}'s application page</a></p>`
+          (opp ? "Haven't applied yet? Open the application" : `Haven't applied yet? Open ${esc(u.name)}'s application page`) +
+          `</a></p>`
         : "";
       return heading(`How did it go with ${esc(u.name)}?`) + `<div>${answers}</div>` + apply;
     })
@@ -80,7 +153,11 @@ function email(state: State) {
     title: "How are your applications going?",
     body:
       paragraph(opening) +
-      paragraph("One click is enough. It helps us guide the next students, and shows us which universities follow up.") +
+      paragraph(
+        undergrad
+          ? "One click is enough. It helps us find better opportunities for the next students."
+          : "One click is enough. It helps us guide the next students, and shows us which universities follow up."
+      ) +
       blocks +
       paragraph(`Questions? Reply to this email or write to info@studentcompanionai.rw.`, "margin-top:24px"),
     footerNote: note,
@@ -92,13 +169,18 @@ function email(state: State) {
     "",
     ...unis.flatMap((u) => [
       `${u.name}:`,
-      ...ANSWERS.map(([a, label]) => `  ${label}: ${u.outcome}?a=${a}`),
+      ...(u.kind === "opportunity" ? OPPORTUNITY_ANSWERS : ANSWERS).map(([a, label]) => `  ${label}: ${u.outcome}?a=${a}`),
       ...(linkOk(u.apply) ? [`  Application page: ${u.apply}`] : []),
       "",
     ]),
     textFooter(`You're getting this because you sent a request through Pathfinder.${stop ? ` Stop these emails: ${stop}` : ""}`),
   ].join("\n");
-  return { html, text, unis };
+  const subject = unis.length === 1
+    ? `How did it go with ${unis[0].name}?`
+    : undergrad
+      ? "How are your applications going?"
+      : "How are your university applications going?";
+  return { html, text, unis, subject };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -126,8 +208,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const check = createHash("sha256").update(`${token}:${address}`).digest("hex");
   if (!state.due || state.email_check !== check) return res.status(200).json({ ok: true, sent: false });
 
-  const { html, text, unis } = email(state);
-  if (!unis.length) return res.status(200).json({ ok: true, sent: false });
+  const message =
+    state.type === "reminder"
+      ? reminderEmail(state)
+      : (() => {
+          const m = email(state);
+          return m.unis.length ? m : null;
+        })();
+  if (!message) return res.status(200).json({ ok: true, sent: false });
+  const { html, text, subject } = message;
 
   // Claim this follow-up first: only one caller can, so it is sent once.
   try {
@@ -148,7 +237,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       from: FROM_ADDRESS,
       to: [address],
       replyTo: "info@studentcompanionai.rw",
-      subject: unis.length === 1 ? `How did it go with ${unis[0].name}?` : "How are your university applications going?",
+      subject,
       html,
       text,
       headers: state.stop ? { "List-Unsubscribe": `<${state.stop}>` } : undefined,
