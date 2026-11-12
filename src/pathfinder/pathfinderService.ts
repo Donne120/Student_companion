@@ -39,6 +39,8 @@ export interface TrackedLead {
   /** Website links of the universities the student ticked. */
   chosen: string[];
   consentMarketing: boolean;
+  /** The school, picked from the suggestions (with its id) or typed. */
+  school?: { name: string; id?: string } | null;
 }
 
 /** One-click links the backend issues for a saved request: they go into the
@@ -108,7 +110,34 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** A school suggested as the student types (see SchoolPicker). */
+export interface SchoolSuggestion {
+  id: string;
+  name: string;
+  district: string | null;
+  province: string | null;
+  sector: string | null;
+  levels: string[];
+  combinations: string[];
+  listed: boolean;
+}
+
 export const pathfinderService = {
+  /** Schools in `country` matching what the student has typed. Empty on any
+   *  failure: the student can always type their school instead. */
+  searchSchools: async (country: string, q: string, signal?: AbortSignal): Promise<SchoolSuggestion[]> => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/schools/search?country=${encodeURIComponent(country)}&q=${encodeURIComponent(q)}`,
+        { signal }
+      );
+      if (!res.ok) return [];
+      return ((await res.json()) as { schools?: SchoolSuggestion[] }).schools ?? [];
+    } catch {
+      return [];
+    }
+  },
+
   getRecommendations: (answers: Answers) =>
     post<PathfinderReport>("/api/pathfinder/recommend", { answers }),
 
@@ -129,7 +158,7 @@ export const pathfinderService = {
    * without anyone typing it in. Best effort: if the backend is slow or
    * down, the request is still emailed, just without the links.
    */
-  trackLead: async ({ details, answers, report, chosen, consentMarketing }: TrackedLead): Promise<LeadLinks | null> => {
+  trackLead: async ({ details, answers, report, chosen, consentMarketing, school }: TrackedLead): Promise<LeadLinks | null> => {
     const universities = report.schools
       .filter((s) => chosen.includes(s.url))
       .filter((s, i, all) => all.findIndex((t) => t.url === s.url) === i)
@@ -151,6 +180,8 @@ export const pathfinderService = {
           referral_alu: universities.some((u) => /alueducation\.com|alu\.edu/i.test(u.url)),
           source: currentSource(),
           consent_marketing: consentMarketing,
+          school_name: school?.name || null,
+          school_id: school?.id || null,
         }),
         signal: ctrl.signal,
       });

@@ -13,8 +13,9 @@
  * class of prompt-injection and abuse risk.
  */
 
-/** "select": one choice from a long list, shown as a dropdown. */
-export type QuestionType = "choice" | "multi" | "select";
+/** "select": one choice from a long list, shown as a dropdown.
+ *  "school": the student's school, typed with suggestions (optional). */
+export type QuestionType = "choice" | "multi" | "select" | "school";
 
 export interface Question {
   key: string;
@@ -66,6 +67,14 @@ export const QUESTIONS: Question[] = [
       "Tunisia",
       "Somewhere else",
     ],
+  },
+  {
+    key: "school",
+    label: "Your school",
+    prompt: "Which school are you at, or did you finish at?",
+    why: "Start typing and pick your school, or type its full name if it isn't listed. It helps us understand where students come from. You can skip this.",
+    type: "school",
+    options: [],
   },
   {
     key: "track",
@@ -154,6 +163,8 @@ export const QUESTIONS: Question[] = [
  * instructions.
  */
 export const NOTE_KEY = "note";
+export const SCHOOL_KEY = "school";
+export const SCHOOL_MAX = 120;
 export const NOTE_MAX = 400;
 
 /** A completed answer set. `multi` questions hold an array. */
