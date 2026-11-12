@@ -23,7 +23,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 const QUESTIONS: Array<{
   key: string;
   label: string;
-  type: "choice" | "multi";
+  type: "choice" | "multi" | "text";
   max?: number;
   options: string[];
 }> = [
@@ -61,6 +61,14 @@ const QUESTIONS: Array<{
       "Tunisia",
       "Somewhere else",
     ],
+  },
+  {
+    // The student's school, typed (with suggestions on the page). Free text,
+    // so it is cleaned and capped below rather than checked against a list.
+    key: "school",
+    label: "School",
+    type: "text",
+    options: [],
   },
   {
     key: "track",
@@ -147,6 +155,7 @@ const QUESTIONS: Array<{
  * src/pathfinder/questions.ts.
  */
 const NOTE_KEY = "note";
+const SCHOOL_MAX = 120;
 const NOTE_MAX = 400;
 
 const hits = new Map<string, number[]>();
@@ -191,6 +200,19 @@ export function parseAnswers(raw: unknown): Record<string, string | string[]> | 
     const value = input[q.key];
     if (value == null) continue;
 
+    if (q.type === "text") {
+      // Optional and free text: keep a cleaned, short version; drop anything else.
+      if (typeof value === "string") {
+        const cleaned = value
+          // eslint-disable-next-line no-control-regex
+          .replace(/[\u0000-\u001F\u007F<>{}"`]/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, SCHOOL_MAX);
+        if (cleaned) clean[q.key] = cleaned;
+      }
+      continue;
+    }
     if (q.type === "multi") {
       if (!Array.isArray(value)) return null;
       const picked = value.filter((v): v is string => typeof v === "string" && q.options.includes(v));
@@ -222,13 +244,15 @@ export function parseAnswers(raw: unknown): Record<string, string | string[]> | 
 
   // Require a usable brief; a near-empty set produces a worthless report.
   // The note alone isn't enough, so count only the fixed answers.
-  const fixedAnswered = QUESTIONS.filter((q) => clean[q.key] != null).length;
+  const fixedAnswered = QUESTIONS.filter((q) => q.type !== "text" && clean[q.key] != null).length;
   return fixedAnswered >= 4 ? clean : null;
 }
 
 export function summarise(answers: Record<string, string | string[]>): string {
   const lines = QUESTIONS.map((q) => {
     const v = answers[q.key];
+    // Typed by the student: quoted and labelled as information, like the note.
+    if (q.type === "text") return v ? `${q.label} (as the student typed it): "${v}"` : null;
     const text = Array.isArray(v) ? v.join(", ") : v;
     return text ? `${q.label}: ${text}` : null;
   }).filter(Boolean) as string[];

@@ -15,6 +15,7 @@ import {
   type PathfinderReport,
 } from "@/pathfinder/questions";
 import { pathfinderService, PathfinderError, rememberSource, type LeadResult, type LeadLinks } from "@/pathfinder/pathfinderService";
+import { SchoolPicker, type PickedSchool } from "@/pathfinder/SchoolPicker";
 
 const LOGO = "/logo-icon.png";
 
@@ -32,6 +33,8 @@ export default function Pathfinder() {
   useEffect(() => rememberSource(), []);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Answers>({});
+  // The school step: picked from the suggestions (with an id) or typed.
+  const [school, setSchool] = useState<PickedSchool | null>(null);
   const [phase, setPhase] = useState<Phase>("form");
   const [report, setReport] = useState<PathfinderReport | null>(null);
   const [error, setError] = useState("");
@@ -40,7 +43,8 @@ export default function Pathfinder() {
 
   const question = QUESTIONS[step];
   const current = answers[question?.key];
-  const answered = Array.isArray(current) ? current.length > 0 : !!current;
+  // The school step is optional: Continue (or Skip) is always available.
+  const answered = question?.type === "school" || (Array.isArray(current) ? current.length > 0 : !!current);
 
   // Scroll the question pane back to the top on each step — otherwise a long
   // question list leaves the next question scrolled halfway down.
@@ -66,7 +70,21 @@ export default function Pathfinder() {
         else if (list.length < (question.max ?? 3)) list.push(option);
         return { ...prev, [question.key]: list };
       }
+      if (question.key === "country" && prev.country !== option) {
+        // A different country: the school picked for the old one no longer applies.
+        setSchool(null);
+        const { school: _dropped, ...rest } = prev;
+        return { ...rest, [question.key]: option };
+      }
       return { ...prev, [question.key]: option };
+    });
+  };
+
+  const pickSchool = (s: PickedSchool | null) => {
+    setSchool(s);
+    setAnswers((prev) => {
+      const { school: _old, ...rest } = prev;
+      return s ? { ...rest, school: s.name } : rest;
     });
   };
 
@@ -88,6 +106,7 @@ export default function Pathfinder() {
 
   const restart = () => {
     setAnswers({});
+    setSchool(null);
     setStep(0);
     setReport(null);
     setError("");
@@ -125,7 +144,7 @@ export default function Pathfinder() {
             Finishing high school? Let's discover the right course and college or university for you.
           </h1>
           <p className="mt-3 text-[#5C5647] max-w-xl leading-relaxed">
-            Answer six short questions. We'll suggest fields worth considering,
+            Answer a few short questions. We'll suggest fields worth considering,
             real colleges and universities you can apply to, and where each path can lead.
           </p>
         </div>
@@ -183,7 +202,13 @@ export default function Pathfinder() {
                   </h3>
                   <p className="text-[12.5px] text-[#6B6355] mb-5">{question.why}</p>
 
-                  {question.type === "select" ? (
+                  {question.type === "school" ? (
+                    <SchoolPicker
+                      country={typeof answers.country === "string" ? answers.country : "Somewhere else"}
+                      value={school}
+                      onChange={pickSchool}
+                    />
+                  ) : question.type === "select" ? (
                     <div className="relative max-w-md">
                       <label htmlFor={`pathfinder-${question.key}`} className="sr-only">
                         {question.prompt}
@@ -292,7 +317,11 @@ export default function Pathfinder() {
                     onClick={() => (step === QUESTIONS.length - 1 ? submit() : setStep((s) => s + 1))}
                     className="text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] bg-[#1A1A1A] text-white hover:bg-black disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    {step === QUESTIONS.length - 1 ? "See my options" : "Continue"}
+                    {step === QUESTIONS.length - 1
+                      ? "See my options"
+                      : question.type === "school" && !school
+                        ? "Skip"
+                        : "Continue"}
                   </button>
                   {question.type === "multi" && (
                     <span className="ml-auto text-xs text-[#6B6355] tabular-nums">
@@ -329,7 +358,7 @@ export default function Pathfinder() {
 
             {phase === "report" && report && (
               <div ref={paneRef} className="flex-1 overflow-y-auto min-h-0 px-6 md:px-8 py-7">
-                <Report report={report} answers={answers} onRestart={restart} />
+                <Report report={report} answers={answers} school={school} onRestart={restart} />
               </div>
             )}
           </section>
@@ -344,10 +373,12 @@ export default function Pathfinder() {
 function Report({
   report,
   answers,
+  school,
   onRestart,
 }: {
   report: PathfinderReport;
   answers: Answers;
+  school: PickedSchool | null;
   onRestart: () => void;
 }) {
   return (
@@ -464,7 +495,7 @@ function Report({
         )}
       </div>
 
-      <LeadForm answers={answers} report={report} />
+      <LeadForm answers={answers} report={report} school={school} />
 
       <div className="mt-4 pt-3 border-t border-[#E8DDB0] flex items-center gap-3 flex-wrap">
         <p className="text-[11.5px] text-[#6B6355] flex-1 min-w-[240px]">
@@ -489,7 +520,15 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // ── Lead form ────────────────────────────────────────────────────────────────
 
-function LeadForm({ answers, report }: { answers: Answers; report: PathfinderReport }) {
+function LeadForm({
+  answers,
+  report,
+  school,
+}: {
+  answers: Answers;
+  report: PathfinderReport;
+  school: PickedSchool | null;
+}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -531,6 +570,7 @@ function LeadForm({ answers, report }: { answers: Answers; report: PathfinderRep
           report,
           chosen,
           consentMarketing: consent,
+          school,
         });
         setTracked(links);
       }
