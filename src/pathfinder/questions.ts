@@ -337,6 +337,9 @@ export interface SchoolSuggestion {
   /** The student can send their enquiry to this university (the server
    *  has a confirmed admissions address for it). */
   contactable?: boolean;
+  /** A scholarship from the opportunities Sheet offered at this university
+   *  (e.g. the Mastercard Foundation Scholars Program). */
+  scholarship?: { name: string; url: string; deadline?: string };
 }
 
 export interface CareerOutlook {

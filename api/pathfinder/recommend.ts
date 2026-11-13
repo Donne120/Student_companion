@@ -349,6 +349,65 @@ async function undergraduate(answers: Record<string, string | string[]>, modelKe
   };
 }
 
+// ── Scholarships for school leavers, from the SCA Opportunities Sheet ──────
+// The backend reads the Sheet live and ranks rows open to "High school
+// leavers" (e.g. the Mastercard Foundation Scholars Program at each partner
+// university), the student's own country first. Best effort: on any
+// failure the report keeps the short built-in list.
+
+const NEEDS: Record<string, string> = {
+  "I need a scholarship or very low fees": "I need paid work or a stipend",
+  "I need to stay close to home": "Remote or close to home",
+  "I want to study abroad if I can": "Open to moving abroad",
+};
+
+async function schoolLeaverScholarships(country: string, constraint: string): Promise<Match[]> {
+  try {
+    const r = await fetch(`${API_BASE}/api/pathfinder/opportunities`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        answers: {
+          year: "Finishing high school",
+          goals: ["A scholarship or master's"],
+          country,
+          ...(NEEDS[constraint] ? { needs: NEEDS[constraint] } : {}),
+        },
+        limit: 20,
+      }),
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!r.ok) return [];
+    const data = (await r.json()) as { opportunities?: Match[] };
+    return (data.opportunities ?? []).filter(
+      (o) => !o.also && o.category === "Scholarships" && /^https?:\/\//.test(o.apply_link)
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** "mcf.knust.edu.gh" and "www.knust.edu.gh" are the same institution. */
+function baseDomain(url: string): string {
+  const parts = hostOf(url).split(".");
+  const n = parts.length >= 3 && ["ac", "edu", "co", "gov", "org", "or"].includes(parts[parts.length - 2]) ? 3 : 2;
+  return parts.slice(-n).join(".");
+}
+
+const plainName = (s: string) =>
+  s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+
+/** The Sheet scholarship offered at this recommended university, if any. */
+function scholarshipAt(school: { name?: string; url?: string }, sheet: Match[]): Match | undefined {
+  const domain = school.url ? baseDomain(school.url) : "";
+  const name = plainName(school.name ?? "");
+  return sheet.find((o) => {
+    if (domain && baseDomain(o.apply_link) === domain) return true;
+    const org = plainName(o.organization);
+    return name.length > 5 && org.length > 5 && (org.includes(name) || name.includes(org));
+  });
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!methodGuard(req, res)) return;
 
@@ -512,7 +571,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ].filter(Boolean) as Array<{ label: string; name: string; url: string }>;
     const checksAlive = await Promise.all(checks.map((c) => isReachable(c.url)));
     r.verify = checks.filter((_, i) => checksAlive[i]);
-    r.scholarships = needsFunding || abroad ? SCHOLARSHIPS : [];
+    const sheet = await schoolLeaverScholarships(country, constraint);
+    if (Array.isArray(r.schools)) {
+      r.schools = r.schools.map((s) => {
+        const m = scholarshipAt(s as { name?: string; url?: string }, sheet);
+        return m ? { ...s, scholarship: { name: m.title, url: m.apply_link, deadline: m.deadline } } : s;
+      });
+    }
+    r.scholarships = sheet.length
+      ? sheet.slice(0, 4).map((o) => ({ name: o.title, detail: `${o.location} · ${o.deadline}`, url: o.apply_link }))
+      : needsFunding || abroad
+        ? SCHOLARSHIPS
+        : [];
 
     return res.status(200).json(report);
   } catch (err) {

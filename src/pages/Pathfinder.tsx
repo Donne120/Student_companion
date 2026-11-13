@@ -494,6 +494,20 @@ function Report({
               <ExternalLink className="h-3.5 w-3.5" />
             </a>
           )}
+          {s.scholarship && (
+            <p className="mt-2.5 text-[12.5px] text-[#4A4437] rounded-[8px] bg-[#FBF7E9] border border-[#E8DDB0] px-2.5 py-2">
+              <span className="font-semibold">Scholarship here:</span>{" "}
+              <a
+                href={s.scholarship.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#8A6D12] underline underline-offset-2"
+              >
+                {s.scholarship.name}
+              </a>
+              {s.scholarship.deadline ? <span className="text-[#6B6355]"> · {s.scholarship.deadline}</span> : null}
+            </p>
+          )}
         </div>
       ))}
 
