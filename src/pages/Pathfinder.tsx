@@ -9,7 +9,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Bell, CalendarClock, Check, ChevronDown, ExternalLink, Loader, Send } from "lucide-react";
+import { ArrowLeft, Bell, CalendarClock, Check, ChevronDown, ExternalLink, Loader, MessageCircle, Send } from "lucide-react";
 import {
   questionsFor,
   stageOf,
@@ -23,6 +23,7 @@ import {
 } from "@/pathfinder/questions";
 import { pathfinderService, PathfinderError, rememberSource, type LeadResult, type LeadLinks } from "@/pathfinder/pathfinderService";
 import { SchoolPicker, type PickedSchool } from "@/pathfinder/SchoolPicker";
+import { WHATSAPP_CHANNEL, reportMessage, toWhatsAppNumber, whatsAppLink } from "@/pathfinder/whatsapp";
 
 const LOGO = "/logo-icon.png";
 
@@ -550,6 +551,8 @@ function Report({
         )}
       </div>
 
+      <WhatsAppReport report={report} answers={answers} />
+
       <LeadForm answers={answers} report={report} school={school} />
 
       <div className="mt-4 pt-3 border-t border-[#E8DDB0] flex items-center gap-3 flex-wrap">
@@ -612,6 +615,10 @@ function LeadForm({
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
+    const country = typeof answers.country === "string" ? answers.country : undefined;
+    // A WhatsApp number, when given, is stored in international form.
+    const wa = toWhatsAppNumber(phone, country);
+    const contact = { name, email: email.trim(), phone: wa ? `+${wa}` : phone, message };
     setSending(true);
     setErr("");
     try {
@@ -620,7 +627,7 @@ function LeadForm({
       let links = tracked;
       if (links === undefined) {
         links = await pathfinderService.trackLead({
-          details: { name, email, phone, message },
+          details: contact,
           answers,
           report,
           chosen,
@@ -630,7 +637,7 @@ function LeadForm({
         setTracked(links);
       }
       const result = await pathfinderService.submitLead(
-        { name, email, phone, message },
+        contact,
         answers,
         report,
         chosen,
@@ -686,6 +693,7 @@ function LeadForm({
           </a>
           . You can come back to Pathfinder any time to see your options again.
         </p>
+        <ChannelButton />
       </div>
     );
   }
@@ -733,9 +741,11 @@ function LeadForm({
         />
       </div>
       <input
+        type="tel"
+        inputMode="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        placeholder="Phone or WhatsApp (optional)"
+        placeholder="WhatsApp number (optional)"
         className="w-full text-[13.5px] px-3 py-2.5 rounded-[9px] border border-[#E8DDB0] bg-white mt-2.5 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
       />
       <textarea
@@ -985,6 +995,8 @@ function UndergradReportView({
         </>
       )}
 
+      <WhatsAppReport report={report} answers={answers} />
+
       <UndergradLeadForm answers={answers} report={report} university={university} />
 
       <div className="mt-4 pt-3 border-t border-[#E8DDB0] flex items-center gap-3 flex-wrap">
@@ -1031,13 +1043,17 @@ function UndergradLeadForm({
 
   const send = async (e: React.FormEvent) => {
     e.preventDefault();
+    const country = typeof answers.country === "string" ? answers.country : undefined;
+    // A WhatsApp number, when given, is stored in international form.
+    const wa = toWhatsAppNumber(phone, country);
+    const contact = { name, email: email.trim(), phone: wa ? `+${wa}` : phone, message };
     setSending(true);
     setErr("");
     try {
       let links = tracked;
       if (links === undefined) {
         links = await pathfinderService.trackLead({
-          details: { name, email, phone, message },
+          details: contact,
           answers,
           report,
           chosen: [],
@@ -1047,7 +1063,7 @@ function UndergradLeadForm({
         });
         setTracked(links);
       }
-      await pathfinderService.submitLead({ name, email, phone, message }, answers, report, [], links, chosen);
+      await pathfinderService.submitLead(contact, answers, report, [], links, chosen);
       setSent(true);
     } catch (e2) {
       setErr(e2 instanceof PathfinderError ? e2.message : "We couldn't send that. Please try again.");
@@ -1078,6 +1094,7 @@ function UndergradLeadForm({
           </a>
           .
         </p>
+        <ChannelButton />
       </div>
     );
   }
@@ -1152,9 +1169,11 @@ function UndergradLeadForm({
         />
       </div>
       <input
+        type="tel"
+        inputMode="tel"
         value={phone}
         onChange={(e) => setPhone(e.target.value)}
-        placeholder="Phone or WhatsApp (optional)"
+        placeholder="WhatsApp number (optional)"
         className={`${input} mt-2.5`}
       />
       <textarea
@@ -1200,5 +1219,80 @@ function UndergradLeadForm({
         details removed sooner, email info@studentcompanionai.rw.
       </p>
     </form>
+  );
+}
+
+// ── WhatsApp ─────────────────────────────────────────────────────────────────
+
+function ChannelButton() {
+  return (
+    <a
+      href={WHATSAPP_CHANNEL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 inline-flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-[9px] border border-[#1A1A1A] text-[#1A1A1A] hover:bg-white"
+    >
+      <MessageCircle className="h-4 w-4" />
+      Follow our WhatsApp channel
+    </a>
+  );
+}
+
+/**
+ * Send the report to the student's own WhatsApp: WhatsApp opens their chat
+ * with themselves with the report typed in, and they tap send. Many
+ * high-school students have WhatsApp but no email.
+ */
+function WhatsAppReport({ report, answers }: { report: AnyReport; answers: Answers }) {
+  const [number, setNumber] = useState("");
+  const country = typeof answers.country === "string" ? answers.country : undefined;
+  const wa = toWhatsAppNumber(number, country);
+  const href = wa ? whatsAppLink(wa, reportMessage(report)) : undefined;
+  return (
+    <div className="mt-5 rounded-xl border border-[#E8DDB0] bg-white p-4">
+      <h4 className="font-semibold text-[14.5px] mb-1 flex items-center gap-2">
+        <MessageCircle className="h-4 w-4 text-[#B8941F]" />
+        Keep your report on WhatsApp
+      </h4>
+      <p className="text-[12.5px] text-[#6B6355] mb-3">
+        Type your WhatsApp number. WhatsApp opens with your report ready to send to yourself, so you can come back
+        to it any time. Then follow our channel for new scholarships and opportunities.
+      </p>
+      <div className="flex flex-col sm:flex-row gap-2">
+        <label htmlFor="pf-wa" className="sr-only">
+          Your WhatsApp number
+        </label>
+        <input
+          id="pf-wa"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          placeholder={country === "Rwanda" ? "e.g. 0788 123 456" : "Your WhatsApp number, e.g. +250 788 123 456"}
+          className="flex-1 min-w-0 text-[13.5px] px-3 py-2.5 rounded-[9px] border border-[#E8DDB0] bg-white focus:outline-none focus:ring-2 focus:ring-[#D4AF37]"
+        />
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-disabled={!href}
+          onClick={(e) => !href && e.preventDefault()}
+          className={`inline-flex items-center justify-center gap-2 text-[13.5px] font-semibold px-[18px] py-2.5 rounded-[9px] text-white ${
+            href ? "bg-[#1A1A1A] hover:bg-black" : "bg-[#1A1A1A]/40 cursor-not-allowed"
+          }`}
+        >
+          <Send className="h-4 w-4" />
+          Send to my WhatsApp
+        </a>
+      </div>
+      {number.trim().length > 3 && !wa && (
+        <p className="text-[12px] text-red-700 mt-1.5">Check the number. Include your country code if you are abroad.</p>
+      )}
+      <ChannelButton />
+      <p className="text-[11px] text-[#6B6355] mt-2">
+        Optional. This only opens WhatsApp on your phone: we don't send or keep anything here.
+      </p>
+    </div>
   );
 }
