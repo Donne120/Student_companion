@@ -195,7 +195,7 @@ export const ChatMessage = ({
                   ),
                   hr: () => <hr className="my-8 border-t border-[#E5E3DE]" />,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-2 border-[#B8952B] pl-4 italic my-4 text-[#1C1B19]/75">
+                    <blockquote className="border-l-2 border-brand-link/70 pl-4 italic my-4 text-[#1C1B19]/75">
                       {children}
                     </blockquote>
                   ),
@@ -204,7 +204,7 @@ export const ChatMessage = ({
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[#7A5C12] underline decoration-[#7A5C12]/35 underline-offset-[3px] hover:decoration-[#7A5C12]"
+                      className="text-brand-link underline decoration-brand-link/35 underline-offset-[3px] hover:decoration-brand-link"
                     >
                       {children}
                     </a>

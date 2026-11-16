@@ -30,6 +30,11 @@ export default {
         'alu-gold-border': '#E8DDB0',
         'alu-ink': '#1A1A1A',
         'alu-white': '#FFFFFF',
+        // University branding: defaults to the standard look (index.css).
+        'brand-link': 'rgb(var(--brand-link) / <alpha-value>)',
+        'brand-action': 'rgb(var(--brand-action) / <alpha-value>)',
+        'brand-action-hover': 'rgb(var(--brand-action-hover) / <alpha-value>)',
+        'brand-action-fg': 'rgb(var(--brand-action-fg) / <alpha-value>)',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
