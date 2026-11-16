@@ -21,6 +21,21 @@ const errorDetail = async (res: Response, fallback: string): Promise<string> => 
   return fallback;
 };
 
+/** The daily question limit was reached (backend usage_limits.py): an Error
+ * the caller shows as the answer, not as a failure. */
+const usageLimitError = async (res: Response): Promise<Error | null> => {
+  if (res.status !== 429) return null;
+  try {
+    const data = await res.clone().json();
+    if (data?.detail?.code === "usage_limit" && typeof data.detail.message === "string") {
+      return Object.assign(new Error(data.detail.message), { final: true, usageLimit: true });
+    }
+  } catch {
+    /* not JSON */
+  }
+  return null;
+};
+
 export type StreamCallbacks = {
   onChunk: (text: string) => void;
   onSources?: (sources: MessageSource[]) => void;
@@ -28,6 +43,8 @@ export type StreamCallbacks = {
   onStatus?: (text: string) => void;
   onDone?: () => void;
   onError?: (message: string) => void;
+  /** The student's daily question limit is used up; `message` explains when it resets. */
+  onLimit?: (message: string) => void;
 };
 
 type Personality = {
@@ -78,6 +95,8 @@ const getResponseFromBackend = async (
     attachments.length ? 90_000 : 30_000
   );
 
+  const limit = await usageLimitError(res);
+  if (limit) throw limit;
   if (!res.ok) {
     throw new Error(
       res.status === 400 ? await errorDetail(res, "That file could not be read.") : `Backend response error: ${res.status}`
@@ -122,6 +141,8 @@ const streamResponseFromBackend = async (
     // A file the backend can't read: retrying without streaming won't help.
     throw Object.assign(new Error(await errorDetail(res, "That file could not be read.")), { final: true });
   }
+  const limit = await usageLimitError(res);
+  if (limit) throw limit;
   if (!res.ok || !res.body) {
     throw new Error(`Stream request failed: ${res.status}`);
   }
@@ -211,6 +232,10 @@ export const aiService = {
     try {
       return await streamResponseFromBackend(query, conversationHistory, callbacks, attachments);
     } catch (error) {
+      if ((error as { usageLimit?: boolean })?.usageLimit) {
+        callbacks.onLimit?.((error as Error).message);
+        return "";
+      }
       if ((error as { final?: boolean })?.final) {
         callbacks.onError?.((error as Error).message);
         return "";
@@ -223,6 +248,10 @@ export const aiService = {
         callbacks.onDone?.();
         return full.text;
       } catch (fallbackError) {
+        if ((fallbackError as { usageLimit?: boolean })?.usageLimit) {
+          callbacks.onLimit?.((fallbackError as Error).message);
+          return "";
+        }
         const message =
           fallbackError instanceof Error
             ? fallbackError.message
