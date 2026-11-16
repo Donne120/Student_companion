@@ -13,6 +13,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { useBranding } from "@/hooks/useBranding";
+import { BrandLogo } from "@/components/BrandLogo";
+import { ViewAsBar } from "./ViewAsBar";
 
 const SERVICES = [
   { label: "Careers", hint: "opportunities & courses", url: "https://career.studentcompanionai.rw", Icon: Briefcase },
@@ -38,6 +41,9 @@ export const ConversationSidebar = ({
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  // The university's logo and colours, when its plan includes branding.
+  const branding = useBranding();
+  const darkBand = !!branding?.logo_url && branding.logo_background === "dark" && !isCollapsed;
 
   const getConversationTitle = (conversation: Conversation) => {
     if (conversation.messages.length <= 1) return "New chat";
@@ -66,27 +72,40 @@ export const ConversationSidebar = ({
       className={`fixed left-0 top-0 h-full ${sidebarWidth} bg-[#FAFAF8] border-r border-[#EDEBE6] flex flex-col z-40 transition-all duration-300`}
     >
       {/* Brand */}
-      <div className="h-14 flex items-center px-3 border-b border-[#EDEBE6]">
+      <div
+        className={`h-14 flex items-center px-3 border-b ${darkBand ? "border-transparent" : "border-[#EDEBE6]"}`}
+        style={darkBand ? { backgroundColor: branding?.surface_dark } : undefined}
+      >
         <button
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0"
         >
-          <img
-            src="/logo-icon.png"
-            alt="Student Companion AI"
-            className="w-7 h-7 object-contain flex-shrink-0"
-          />
-          {!isCollapsed && (
-            <span className="font-semibold tracking-tight text-[#1C1B19] text-[14px]">
-              Student Companion
-            </span>
+          {branding?.logo_url && !isCollapsed ? (
+            <BrandLogo branding={branding} />
+          ) : (
+            <>
+              <img
+                src="/logo-icon.png"
+                alt="Student Companion AI"
+                className="w-7 h-7 object-contain flex-shrink-0"
+              />
+              {!isCollapsed && (
+                <span className="font-semibold tracking-tight text-[#1C1B19] text-[14px]">
+                  Student Companion
+                </span>
+              )}
+            </>
           )}
         </button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="ml-auto h-7 w-7 text-[#1C1B19]/50 hover:bg-[#F4F3F0] hover:text-[#1C1B19]"
+          className={`ml-auto h-7 w-7 ${
+            darkBand
+              ? "text-white/60 hover:bg-white/10 hover:text-white"
+              : "text-[#1C1B19]/50 hover:bg-[#F4F3F0] hover:text-[#1C1B19]"
+          }`}
           aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <ChevronLeft
@@ -96,6 +115,9 @@ export const ConversationSidebar = ({
           />
         </Button>
       </div>
+
+      {/* Platform admins: which university to view the chat as. */}
+      {!isCollapsed && <ViewAsBar variant="sidebar" />}
 
       {/* New chat */}
       <div className="p-3">

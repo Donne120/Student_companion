@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { BrandBand } from "./BrandBand";
 
 interface MobileTopBarProps {
   title: string;
@@ -13,6 +14,7 @@ export const MobileTopBar = ({ title, subtitle, back, right }: MobileTopBarProps
   const navigate = useNavigate();
   return (
     <header className="md:hidden sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-[#E8DDB0] safe-top">
+      <BrandBand />
       <div className="h-14 px-3 flex items-center gap-2">
         {back ? (
           <button

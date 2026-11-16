@@ -346,7 +346,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
                 disabled ||
                 isListening
               }
-              className="shrink-0 h-9 w-9 bg-[#1C1B19] hover:bg-black text-white disabled:bg-[#E5E3DE] disabled:text-[#1C1B19]/40 rounded-lg"
+              className="shrink-0 h-9 w-9 bg-brand-action hover:bg-brand-action-hover text-brand-action-fg disabled:bg-[#E5E3DE] disabled:text-[#1C1B19]/40 rounded-lg"
               aria-label="Send message"
             >
               <SendHorizontal className="h-4 w-4" />

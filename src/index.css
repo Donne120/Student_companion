@@ -14,6 +14,14 @@
     --alu-gold-soft: 46 78% 92%;
     --alu-ink: 0 0% 10%;
 
+    /* University branding (Enterprise; see src/lib/branding.ts). "R G B"
+       triplets so Tailwind opacity modifiers work. The defaults are the
+       standard Student Companion look. */
+    --brand-link: 122 92 18;
+    --brand-action: 28 27 25;
+    --brand-action-hover: 0 0 0;
+    --brand-action-fg: 255 255 255;
+
     --background: 0 0% 100%;
     --foreground: var(--alu-ink);
 
