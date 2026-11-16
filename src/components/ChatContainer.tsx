@@ -10,6 +10,7 @@ import { OpportunityWidget } from "./opportunities/OpportunityWidget";
 import { Menu, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { BrandBand } from "./mobile/BrandBand";
+import { ViewAsBar } from "./chat/ViewAsBar";
 
 export const ChatContainer = () => {
   const [accessibilityMode, setAccessibilityMode] = useState(false);
@@ -59,6 +60,8 @@ export const ChatContainer = () => {
       <main className="flex-1 min-w-0 md:pl-64 lg:pr-80 transition-all duration-300 relative overflow-x-clip">
         {/* Mobile top bar */}
         <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E5E3DE] safe-top">
+          {/* Platform admins: which university to view the chat as. */}
+          <ViewAsBar />
           <BrandBand />
           <div className="h-14 px-3 flex items-center gap-2">
             <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>

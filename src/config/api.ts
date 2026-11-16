@@ -39,13 +39,23 @@ export const fetchWithTimeout = async (
  * require_admin (chat, opportunities, essay coach, admin routes). Throws if
  * no user is signed in so callers fail fast instead of getting a 401.
  */
-export const authHeader = async (): Promise<{ Authorization: string }> => {
+export const authHeader = async (): Promise<{ Authorization: string; "X-View-As-Org"?: string }> => {
   const user = auth.currentUser;
   if (!user) {
     throw new Error("Not signed in — auth token unavailable");
   }
   const token = await user.getIdToken();
-  return { Authorization: `Bearer ${token}` };
+  // A platform admin viewing the chat as a university (src/lib/viewAs.ts).
+  // The backend refuses this header from anyone else.
+  let viewAs: string | null = null;
+  try {
+    viewAs = localStorage.getItem("sc_view_as_org");
+  } catch {
+    viewAs = null;
+  }
+  return viewAs
+    ? { Authorization: `Bearer ${token}`, "X-View-As-Org": viewAs }
+    : { Authorization: `Bearer ${token}` };
 };
 
 /**

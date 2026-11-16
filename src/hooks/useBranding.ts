@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { applyBranding, cachedBranding, fetchBranding, type Branding } from "@/lib/branding";
+import { viewAsBranding } from "@/lib/viewAs";
 
 /**
  * The signed-in student's university branding (Enterprise plan), or null.
@@ -34,6 +35,12 @@ export function useBranding(): Branding | null {
   useEffect(() => {
     if (!email) {
       if (current) publish("", null);
+      return;
+    }
+    // A platform admin viewing as a university sees that university's look.
+    const viewing = viewAsBranding();
+    if (viewing !== undefined) {
+      publish(email, viewing);
       return;
     }
     if (current && current.email === email) {

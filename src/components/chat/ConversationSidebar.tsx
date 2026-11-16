@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useBranding } from "@/hooks/useBranding";
 import { BrandLogo } from "@/components/BrandLogo";
+import { ViewAsBar } from "./ViewAsBar";
 
 const SERVICES = [
   { label: "Careers", hint: "opportunities & courses", url: "https://career.studentcompanionai.rw", Icon: Briefcase },
@@ -114,6 +115,9 @@ export const ConversationSidebar = ({
           />
         </Button>
       </div>
+
+      {/* Platform admins: which university to view the chat as. */}
+      {!isCollapsed && <ViewAsBar variant="sidebar" />}
 
       {/* New chat */}
       <div className="p-3">
