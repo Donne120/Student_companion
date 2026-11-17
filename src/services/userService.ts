@@ -110,14 +110,32 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
 
 /**
  * Update mutable fields (displayName, photoURL) after a profile edit.
+ *
+ * If the account has no profile document yet (its first write failed, or
+ * it predates this collection), the document is created in full, the way
+ * upsertUserProfile does: the security rules refuse a new document that
+ * only carries the edited fields.
  */
 export const updateUserProfileFields = async (
   uid: string,
-  updates: Partial<Pick<UserProfile, "displayName" | "photoURL">>
+  updates: Partial<Pick<UserProfile, "displayName" | "photoURL">>,
+  account?: { email: string; provider: "password" | "google.com" }
 ): Promise<void> => {
-  await setDoc(
-    doc(db, "users", uid),
-    { ...updates, updatedAt: serverTimestamp() },
-    { merge: true }
-  );
+  const ref = doc(db, "users", uid);
+  const existing = await getDoc(ref);
+  if (!existing.exists()) {
+    if (!account?.email) throw new Error("Profile record missing");
+    await setDoc(ref, {
+      uid,
+      email: account.email,
+      displayName: updates.displayName ?? "",
+      photoURL: updates.photoURL ?? "",
+      provider: account.provider,
+      role: roleFromEmail(account.email),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+  await setDoc(ref, { ...updates, updatedAt: serverTimestamp() }, { merge: true });
 };
