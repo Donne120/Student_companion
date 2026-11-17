@@ -268,16 +268,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Update Firebase Auth profile + Firestore document */
   async function updateUserProfile(updates: ProfileUpdate): Promise<void> {
-    if (!auth.currentUser) throw new Error("Not signed in");
-    await updateProfile(auth.currentUser, {
-      displayName: updates.name ?? auth.currentUser.displayName ?? undefined,
-      photoURL: updates.picture ?? auth.currentUser.photoURL ?? undefined,
-    });
-    await updateUserProfileFields(auth.currentUser.uid, {
-      displayName: updates.name ?? auth.currentUser.displayName ?? "",
-      photoURL: updates.picture ?? auth.currentUser.photoURL ?? "",
-    });
-    setCurrentUser({ ...auth.currentUser });
+    const user = auth.currentUser;
+    if (!user) throw new Error("Not signed in");
+    const displayName = (updates.name ?? user.displayName ?? "").trim();
+    const photoChanged = updates.picture !== undefined && updates.picture !== (user.photoURL ?? "");
+    let pictureSaved = true;
+    try {
+      await updateProfile(user, {
+        displayName: displayName || null,
+        ...(photoChanged ? { photoURL: updates.picture || null } : {}),
+      });
+    } catch (error) {
+      if (!photoChanged) throw friendlyAuthError(error);
+      console.error("[profile] picture not accepted:", error);
+      // Keep the name change even if the picture is refused.
+      await updateProfile(user, { displayName: displayName || null });
+      pictureSaved = false;
+    }
+    // The Firestore copy is a record, not what the app shows: a failure is
+    // logged, never shown as a failed save.
+    const google = user.providerData.some((p) => p.providerId === "google.com");
+    updateUserProfileFields(
+      user.uid,
+      {
+        displayName,
+        ...(photoChanged && pictureSaved ? { photoURL: updates.picture ?? "" } : {}),
+      },
+      user.email ? { email: user.email.toLowerCase(), provider: google ? "google.com" : "password" } : undefined
+    ).catch((err) => console.error("[Firestore] profile update failed:", err));
+    setCurrentUser({ ...user });
+    if (!pictureSaved) {
+      throw new Error("Your name was saved, but the picture couldn't be. Try a different picture.");
+    }
   }
 
   /** Password reset email */

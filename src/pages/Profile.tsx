@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft, Camera, LogOut, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemePicker } from "@/components/settings/ThemePicker";
+import { shrinkImage } from "@/lib/avatar";
 
 export default function Profile() {
   const { currentUser, updateProfile, logout } = useAuth();
@@ -24,8 +25,8 @@ export default function Profile() {
       await updateProfile({ name, picture: imageUrl });
       setIsEditing(false);
       toast.success("Profile updated");
-    } catch {
-      toast.error("Failed to update profile");
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : "Failed to update profile");
     } finally {
       setIsSaving(false);
     }
@@ -34,9 +35,10 @@ export default function Profile() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setImageUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    e.target.value = "";
+    shrinkImage(file)
+      .then(setImageUrl)
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Couldn't read that picture."));
   };
 
   const handleLogout = async () => {
