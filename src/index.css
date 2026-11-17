@@ -204,3 +204,47 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-photo-zoom { animation: none; }
 }
+
+/* ── Dark theme ─────────────────────────────────────────────────────────────
+   Settings > Theme: Device, Dark or Bright (next-themes puts .dark on <html>).
+   The fixed colours in components are mapped in styles/dark-theme.css
+   (generated); what follows covers the shared styles above. */
+.dark {
+  color-scheme: dark;
+  --brand-link: 227 194 94;
+  --brand-action: 233 230 222;
+  --brand-action-hover: 255 255 255;
+  --brand-action-fg: 26 26 26;
+}
+.dark .prose {
+  color: #ECE9E2;
+  --tw-prose-body: #ECE9E2;
+  --tw-prose-headings: #F4F1EA;
+  --tw-prose-bold: #F4F1EA;
+  --tw-prose-links: #E3C25E;
+  --tw-prose-counters: #B3AEA3;
+  --tw-prose-bullets: #6B675F;
+  --tw-prose-quotes: #D6D2C9;
+  --tw-prose-hr: #3A3833;
+  --tw-prose-code: #ECE9E2;
+  --tw-prose-th-borders: #3E3926;
+  --tw-prose-td-borders: #3A3833;
+}
+.dark .prose a { color: #E3C25E; }
+.dark .prose code { background-color: #2B2719; color: #ECE9E2; }
+.dark .prose pre { background-color: #121210; }
+.dark .prose pre code { color: #ECE9E2; }
+.dark .prose thead { background-color: #2B2719; }
+.dark .prose th, .dark .prose td { border-color: #3E3926; color: #ECE9E2; }
+.dark .prose tr:nth-child(even) { background-color: rgb(43 39 25 / 0.4); }
+.dark .prose tr:hover { background-color: #2B2719; }
+.dark .alu-card { background-color: #1E1D1B; }
+.dark .alu-button-secondary { background-color: #1E1D1B; color: #ECE9E2; }
+.dark .alu-button-secondary:hover { background-color: #2B2719; }
+/* Dark text stays dark on gold buttons and badges. */
+.dark [class*="bg-[#D4AF37]"][class*="text-[#1A1A1A]"],
+.dark [class*="bg-[#D4AF37]"] [class*="text-[#1A1A1A]"],
+.dark [class*="bg-[#B8941F]"][class*="text-[#1A1A1A]"],
+.dark .alu-button-primary { color: #1A1A1A; }
+/* The fade above the message box. */
+.dark .to-white { --tw-gradient-to: #1E1D1B var(--tw-gradient-to-position); }

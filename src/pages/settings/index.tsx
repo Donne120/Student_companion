@@ -28,6 +28,7 @@ import {
   LineChart,
   CalendarClock,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAdmin as isAdminUser, grantAdminSession, getAdminEmail, clearAdminSession } from "@/utils/adminAuth";
@@ -35,6 +36,7 @@ import { API_URL, checkBackendHealth } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmailBriefingSettings } from "@/components/settings/EmailBriefingSettings";
 import { OfficeHoursSummary } from "@/components/settings/OfficeHoursSummary";
+import { ThemePicker } from "@/components/settings/ThemePicker";
 
 // Settings section props
 type SettingsSectionProps = {
@@ -403,6 +405,16 @@ export default function Settings() {
               defaultOpen
             >
               <OfficeHoursSummary />
+            </SettingsSection>
+
+            <SettingsSection
+              title="Theme"
+              description="Device, Dark or Bright"
+              icon={<Palette className="h-5 w-5" />}
+              collapsible
+              defaultOpen
+            >
+              <ThemePicker />
             </SettingsSection>
 
             <SettingsSection
