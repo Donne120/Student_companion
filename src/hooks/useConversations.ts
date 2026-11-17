@@ -8,7 +8,20 @@ import { useAuth } from "@/contexts/AuthContext";
 // and a staff address, or two students on a shared computer) saw the same
 // history.
 const LEGACY_STORAGE_KEY = 'sc_chat_conversations';
-export const storageKeyFor = (uid: string) => `${LEGACY_STORAGE_KEY}:${uid}`;
+// A platform admin viewing the chat as a university (src/lib/viewAs.ts)
+// keeps a separate history per university, so switching shows that
+// university's own conversations, not the previous one's.
+const viewingAs = (): string | null => {
+  try {
+    return localStorage.getItem("sc_view_as_org");
+  } catch {
+    return null;
+  }
+};
+export const storageKeyFor = (uid: string) => {
+  const org = viewingAs();
+  return org ? `${LEGACY_STORAGE_KEY}:${uid}:view:${org}` : `${LEGACY_STORAGE_KEY}:${uid}`;
+};
 
 /** The saved chats for `uid`. The old shared list is handed, once, to the
  *  first account that signs in on this browser after the update (on a
@@ -18,6 +31,7 @@ export function loadSavedConversations(storage: Storage, uid: string): string | 
   const key = storageKeyFor(uid);
   const own = storage.getItem(key);
   if (own !== null) return own;
+  if (viewingAs()) return null; // a new university's history starts empty
   const legacy = storage.getItem(LEGACY_STORAGE_KEY);
   if (legacy !== null) {
     storage.removeItem(LEGACY_STORAGE_KEY);

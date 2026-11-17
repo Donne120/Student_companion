@@ -1,5 +1,6 @@
 import { ACCEPTED_FILES } from "@/lib/attachments";
 import { Button } from "@/components/ui/button";
+import { UsageNote } from "./chat/UsageNote";
 import { Textarea } from "@/components/ui/textarea";
 import {
   SendHorizontal,
@@ -353,6 +354,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
             </Button>
           </div>
 
+          <UsageNote />
           <p className="text-center text-[12px] text-[#9C978C] mt-2">
             Answers can be wrong. Check important details with the relevant office.
           </p>

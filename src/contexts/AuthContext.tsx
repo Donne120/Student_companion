@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -27,8 +27,11 @@ type AuthContextType = {
   confirmSignup: (email: string, code: string, password: string, name?: string) => Promise<User>;
   resendSignupCode: (email: string) => Promise<void>;
   signupWithGoogle: () => Promise<User>;
-  /** Throws an error with code "auth/needs-confirmation" when the email isn't confirmed yet. */
+  /** Throws an error with code "auth/needs-confirmation" when the email isn't
+   * confirmed yet, or "auth/two-step-required" when the account uses an
+   * authenticator app (then call completeTwoStepSignIn with its code). */
   login: (email: string, password: string) => Promise<User>;
+  completeTwoStepSignIn: (code: string) => Promise<User>;
   /** Finish a password reset with the emailed code (Cognito only). */
   confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<void>;
   /** True when password reset and sign-up use emailed codes (Cognito). */
@@ -100,11 +103,37 @@ const friendlyAuthError = (error: unknown): Error => {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  // An email sign-in waiting for the authenticator app's code.
+  const pendingTwoStep = useRef<{ challenge: cognito.TwoStepRequired; email: string; name?: string } | null>(null);
 
   /** Email/password through Cognito, then a Firebase session for the same student. */
   async function cognitoSignIn(email: string, password: string, name?: string): Promise<User> {
-    const idToken = await cognito.signIn(email, password);
-    const { customToken, isNew } = await cognito.exchangeForFirebase(idToken);
+    let tokens: cognito.CognitoTokens;
+    try {
+      tokens = await cognito.signIn(email, password);
+    } catch (error) {
+      if (error instanceof cognito.TwoStepRequired) {
+        pendingTwoStep.current = { challenge: error, email, name };
+        const e = new Error(error.message);
+        (e as { code?: string }).code = "auth/two-step-required";
+        throw e;
+      }
+      throw error;
+    }
+    return finishCognitoSignIn(tokens, email, name);
+  }
+
+  /** Second step of an email sign-in with an authenticator app. */
+  async function completeTwoStepSignIn(code: string): Promise<User> {
+    const pending = pendingTwoStep.current;
+    if (!pending) throw new Error("Please sign in again.");
+    const tokens = await cognito.respondToTwoStep(pending.challenge, code);
+    pendingTwoStep.current = null;
+    return finishCognitoSignIn(tokens, pending.email, pending.name);
+  }
+
+  async function finishCognitoSignIn(tokens: cognito.CognitoTokens, email: string, name?: string): Promise<User> {
+    const { customToken, isNew } = await cognito.exchangeForFirebase(tokens);
     let user: User;
     try {
       ({ user } = await signInWithCustomToken(auth, customToken));
@@ -308,6 +337,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     resendSignupCode,
     signupWithGoogle,
     login,
+    completeTwoStepSignIn,
     confirmPasswordReset,
     usesEmailCodes: cognito.cognitoEnabled,
     logout,

@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Camera, LogOut, User } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { ThemePicker } from "@/components/settings/ThemePicker";
 
 export default function Profile() {
   const { currentUser, updateProfile, logout } = useAuth();
@@ -203,6 +204,12 @@ export default function Profile() {
               )}
             </div>
           </form>
+        </section>
+
+        <section className="mt-6 bg-white border border-[#E8DDB0] rounded-2xl p-5 md:p-8">
+          <h2 className="text-lg font-semibold text-[#1A1A1A]">Theme</h2>
+          <p className="mt-1 mb-5 text-sm text-[#1A1A1A]/70">Choose how the Companion looks on this device.</p>
+          <ThemePicker />
         </section>
       </main>
     </div>

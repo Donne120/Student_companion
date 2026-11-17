@@ -167,6 +167,10 @@ export const useChatMessageHandler = ({
                 sources,
               });
             },
+            onLimit: (message) => {
+              // Daily question limit: the explanation is the answer, not an error.
+              onUpdateMessage(currentConversationId, aiMessageId, message, { silent: true });
+            },
             onError: (message) => {
               toast.error(message);
               if (!accumulated) {
@@ -181,6 +185,9 @@ export const useChatMessageHandler = ({
           },
           attachments
         );
+
+        // Questions left today may have changed (UsageNote).
+        window.dispatchEvent(new Event("sc-usage-changed"));
 
         // Voice mode: a spoken question gets a spoken answer, in the
         // Companion's voice (backend /api/tts, browser voice as fallback).
