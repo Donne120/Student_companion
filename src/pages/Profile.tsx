@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,17 @@ import { ThemePicker } from "@/components/settings/ThemePicker";
 import { shrinkImage } from "@/lib/avatar";
 
 export default function Profile() {
-  const { currentUser, updateProfile, logout } = useAuth();
+  const { currentUser, photoURL, updateProfile, logout } = useAuth();
   const [name, setName] = useState(currentUser?.displayName || "");
-  const [imageUrl, setImageUrl] = useState(currentUser?.photoURL || "");
+  const [imageUrl, setImageUrl] = useState(photoURL || "");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+
+  // The uploaded picture arrives from the profile record just after the page opens.
+  useEffect(() => {
+    if (!isEditing) setImageUrl(photoURL || "");
+  }, [photoURL, isEditing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -181,7 +186,7 @@ export default function Profile() {
                     onClick={() => {
                       setIsEditing(false);
                       setName(currentUser?.displayName || "");
-                      setImageUrl(currentUser?.photoURL || "");
+                      setImageUrl(photoURL || "");
                     }}
                     className="bg-white border-[#E8DDB0] text-[#1A1A1A] hover:bg-[#FBF7E9]"
                   >
