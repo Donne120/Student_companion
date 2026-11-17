@@ -186,7 +186,10 @@ export async function setTwoStep(accessToken: string, on: boolean): Promise<void
 /** The address to show as a QR code for authenticator apps. */
 export function authenticatorLink(secret: string, email: string): string {
   const label = encodeURIComponent(`Student Companion AI:${norm(email)}`);
-  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent("Student Companion AI")}`;
+  // `image`: the logo, for apps that show one (2FAS, FreeOTP, Aegis...);
+  // Google and Microsoft Authenticator ignore it.
+  const logo = encodeURIComponent(`${window.location.origin}/icon-192.png`);
+  return `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent("Student Companion AI")}&image=${logo}`;
 }
 
 export async function forgotPassword(email: string): Promise<void> {
