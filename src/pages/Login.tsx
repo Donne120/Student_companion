@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
+import { TwoStepCodeForm } from "@/components/auth/TwoStepCodeForm";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,8 @@ export default function Login() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [awaitingCode, setAwaitingCode] = useState(false);
-  const { login, signupWithGoogle, confirmSignup, resendSignupCode } = useAuth();
+  const [awaitingTwoStep, setAwaitingTwoStep] = useState(false);
+  const { login, signupWithGoogle, confirmSignup, resendSignupCode, completeTwoStepSignIn } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,6 +29,10 @@ export default function Login() {
       toast.success("Welcome back");
       navigate("/chat");
     } catch (error) {
+      if ((error as { code?: string })?.code === "auth/two-step-required") {
+        setAwaitingTwoStep(true);
+        return;
+      }
       if ((error as { code?: string })?.code === "auth/needs-confirmation") {
         setAwaitingCode(true);
         toast.info("Confirm your email to finish signing in.");
@@ -92,7 +98,19 @@ export default function Login() {
               Sign in to continue your conversation with the Companion.
             </p>
 
-            {awaitingCode ? (
+            {awaitingTwoStep ? (
+              <TwoStepCodeForm
+                onSubmit={async (code) => {
+                  await completeTwoStepSignIn(code);
+                  toast.success("Welcome back");
+                  navigate("/chat");
+                }}
+                onBack={() => {
+                  setAwaitingTwoStep(false);
+                  setPassword("");
+                }}
+              />
+            ) : awaitingCode ? (
 
               <EmailCodeForm
 
