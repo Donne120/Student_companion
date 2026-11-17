@@ -13,7 +13,7 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
-import { upsertUserProfile, updateUserProfileFields } from "@/services/userService";
+import { upsertUserProfile, updateUserProfileFields, getUserProfile } from "@/services/userService";
 import { checkOrganizationDomain } from "@/services/organizationService";
 import * as cognito from "@/lib/cognito";
 
@@ -21,6 +21,9 @@ type ProfileUpdate = { name?: string; picture?: string };
 
 type AuthContextType = {
   currentUser: User | null;
+  /** The profile picture to show: an uploaded one (kept in the profile
+   *  record) or the sign-in provider's (e.g. Google). */
+  photoURL: string | null;
   /** With Cognito, `needsConfirmation` is true: a code was emailed; call confirmSignup next. */
   signup: (email: string, password: string, name: string) => Promise<{ needsConfirmation: boolean }>;
   /** Confirm the emailed sign-up code, then sign in. */
@@ -102,6 +105,7 @@ const friendlyAuthError = (error: unknown): Error => {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [photoURL, setPhotoURL] = useState<string | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   // An email sign-in waiting for the authenticator app's code.
   const pendingTwoStep = useRef<{ challenge: cognito.TwoStepRequired; email: string; name?: string } | null>(null);
@@ -266,40 +270,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return signOut(auth);
   }
 
-  /** Update Firebase Auth profile + Firestore document */
+  /** Update the name (sign-in profile) and picture (profile record).
+   *
+   * An uploaded picture is a small image held in the text of the profile
+   * record: the sign-in profile only takes a web address for its picture,
+   * and refuses an image itself. */
   async function updateUserProfile(updates: ProfileUpdate): Promise<void> {
     const user = auth.currentUser;
     if (!user) throw new Error("Not signed in");
     const displayName = (updates.name ?? user.displayName ?? "").trim();
-    const photoChanged = updates.picture !== undefined && updates.picture !== (user.photoURL ?? "");
-    let pictureSaved = true;
+    const photoChanged = updates.picture !== undefined && updates.picture !== (photoURL ?? "");
+    const uploaded = photoChanged && (updates.picture ?? "").startsWith("data:");
     try {
       await updateProfile(user, {
         displayName: displayName || null,
-        ...(photoChanged ? { photoURL: updates.picture || null } : {}),
+        ...(photoChanged && !uploaded ? { photoURL: updates.picture || null } : {}),
       });
     } catch (error) {
-      if (!photoChanged) throw friendlyAuthError(error);
-      console.error("[profile] picture not accepted:", error);
-      // Keep the name change even if the picture is refused.
-      await updateProfile(user, { displayName: displayName || null });
-      pictureSaved = false;
+      throw friendlyAuthError(error);
     }
-    // The Firestore copy is a record, not what the app shows: a failure is
-    // logged, never shown as a failed save.
     const google = user.providerData.some((p) => p.providerId === "google.com");
-    updateUserProfileFields(
+    const record = updateUserProfileFields(
       user.uid,
-      {
-        displayName,
-        ...(photoChanged && pictureSaved ? { photoURL: updates.picture ?? "" } : {}),
-      },
+      { displayName, ...(photoChanged ? { photoURL: updates.picture ?? "" } : {}) },
       user.email ? { email: user.email.toLowerCase(), provider: google ? "google.com" : "password" } : undefined
-    ).catch((err) => console.error("[Firestore] profile update failed:", err));
+    );
     setCurrentUser({ ...user });
-    if (!pictureSaved) {
-      throw new Error("Your name was saved, but the picture couldn't be. Try a different picture.");
+    if (!photoChanged) {
+      // The name is saved; the record is only a copy of it.
+      record.catch((err) => console.error("[Firestore] profile update failed:", err));
+      return;
     }
+    try {
+      await record;
+    } catch (err) {
+      console.error("[Firestore] picture not saved:", err);
+      throw new Error("Your name was saved, but the picture couldn't be. Please try again.");
+    }
+    setPhotoURL(updates.picture || user.photoURL || null);
   }
 
   /** Password reset email */
@@ -347,13 +355,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
+      setPhotoURL(user?.photoURL ?? null);
       setIsAuthReady(true);
+      if (user) {
+        getUserProfile(user.uid)
+          .then((profile) => {
+            if (profile?.photoURL && auth.currentUser?.uid === user.uid) setPhotoURL(profile.photoURL);
+          })
+          .catch(() => {
+            /* no record yet: the sign-in picture stays */
+          });
+      }
     });
     return unsubscribe;
   }, []);
 
   const value: AuthContextType = {
     currentUser,
+    photoURL,
     signup,
     confirmSignup,
     resendSignupCode,
