@@ -26,6 +26,8 @@ export interface SupportResult {
   team_name: string;
   to_email: string;
   emailed: boolean;
+  /** A copy was emailed to the student. */
+  confirmed?: boolean;
 }
 
 export const SUPPORT_TOPICS = [

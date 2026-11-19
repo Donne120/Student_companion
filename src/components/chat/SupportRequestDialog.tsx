@@ -138,6 +138,7 @@ function SupportRequestDialog({
               <DialogDescription>
                 The {done.team_name} team has your request <strong>{done.reference}</strong>. They will reply by
                 email to {currentUser?.email}. Quote the reference if you write to them at {done.to_email}.
+                {done.confirmed ? " We've also emailed you a copy." : ""}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
