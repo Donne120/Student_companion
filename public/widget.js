@@ -9,7 +9,12 @@
  * their university email, exactly as on the full app.
  *
  * Optional attributes: data-label (button tooltip and window title),
- * data-color (button colour, default gold), data-position ("left" or "right").
+ * data-color (button colour, default gold), data-position ("left" or "right"),
+ * data-context (a word or two about this part of the site, e.g. "admissions",
+ * which the assistant uses as a hint).
+ *
+ * The window is told which page it was opened from (address and title), so
+ * "this" or "here" in a question means that page.
  *
  * The partner site must be on the chat site's allowed list (vercel.json,
  * frame-ancestors on /embed), or the browser will refuse to show the window.
@@ -25,6 +30,7 @@
   var label = (script && script.getAttribute("data-label")) || "Ask Student Companion";
   var color = (script && script.getAttribute("data-color")) || "#D4AF37";
   var side = (script && script.getAttribute("data-position")) === "left" ? "left" : "right";
+  var context = ((script && script.getAttribute("data-context")) || "").slice(0, 60);
 
   var css =
     ".scw-btn{position:fixed;bottom:20px;" + side + ":20px;z-index:2147483000;width:60px;height:60px;border-radius:50%;border:0;" +
@@ -65,6 +71,14 @@
   btn.innerHTML = chatIcon;
 
   var frame = null;
+  // Tell the chat which page it is on (sent only to the chat site itself).
+  function sendPage() {
+    if (!frame || !frame.contentWindow) return;
+    frame.contentWindow.postMessage(
+      { type: "sc-widget:page", url: location.href, title: document.title, context: context },
+      base
+    );
+  }
   function open() {
     if (!frame) {
       // Loaded on first open only, so the partner page stays fast.
@@ -72,7 +86,10 @@
       frame.src = base + "/embed";
       frame.title = label;
       frame.allow = "microphone; clipboard-write";
+      frame.addEventListener("load", sendPage);
       panel.appendChild(frame);
+    } else {
+      sendPage(); // the page may have changed since (single-page sites)
     }
     panel.classList.add("scw-open");
     btn.innerHTML = closeIcon;
@@ -92,7 +109,9 @@
   });
   // The window's own close button (on phones the window covers the screen).
   window.addEventListener("message", function (e) {
-    if (e.origin === base && e.data && e.data.type === "sc-widget:close") close();
+    if (e.origin !== base || !e.data) return;
+    if (e.data.type === "sc-widget:close") close();
+    if (e.data.type === "sc-widget:ready") sendPage();
   });
 
   function mount() {
