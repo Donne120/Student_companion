@@ -28,6 +28,7 @@ const Opportunities    = lazy(() => import("./pages/Opportunities"));
 const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const Pathfinder       = lazy(() => import("./pages/Pathfinder"));
 const Parents          = lazy(() => import("./pages/Parents"));
+const Embed            = lazy(() => import("./pages/Embed"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
@@ -41,6 +42,7 @@ const TITLE_MAP: Record<string, string> = {
   "/forgot-password":    "Reset password — Student Companion AI",
   "/pathfinder":         "Pathfinder — Find your course | Student Companion AI",
   "/chat":               "Chat — Student Companion AI",
+  "/embed":              "Student Companion AI",
   "/opportunities":      "Opportunities — Student Companion AI",
   "/profile":            "Profile — Student Companion AI",
   "/settings":           "Settings — Student Companion AI",
@@ -113,6 +115,8 @@ function App() {
 
               {/* Protected app */}
               <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              {/* The mini chat partner websites show (public/widget.js). */}
+              <Route path="/embed" element={<ProtectedRoute><Embed /></ProtectedRoute>} />
               <Route path="/chatbot" element={<Navigate to="/chat" replace />} />
               <Route path="/news" element={<Navigate to="/chat" replace />} />
               <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />

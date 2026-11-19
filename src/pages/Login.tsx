@@ -3,6 +3,7 @@ import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { TwoStepCodeForm } from "@/components/auth/TwoStepCodeForm";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { afterAuthPath, IN_FRAME } from "@/lib/afterAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -27,7 +28,7 @@ export default function Login() {
     try {
       await login(email, password);
       toast.success("Welcome back");
-      navigate("/chat");
+      navigate(afterAuthPath());
     } catch (error) {
       if ((error as { code?: string })?.code === "auth/two-step-required") {
         setAwaitingTwoStep(true);
@@ -55,7 +56,7 @@ export default function Login() {
           localStorage.removeItem("redirectAfterAuth");
           navigate(redirectPath);
         } else {
-          navigate("/chat", { replace: true });
+          navigate(afterAuthPath(), { replace: true });
         }
       }, 400);
     } catch (error) {
@@ -72,7 +73,7 @@ export default function Login() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-64 brand-glow" />
         <Link
           to="/"
-          className="relative inline-flex items-center gap-2 text-sm text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors mb-12"
+          className={`relative inline-flex items-center gap-2 text-sm text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors mb-12 ${IN_FRAME ? "hidden" : ""}`}
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
@@ -103,7 +104,7 @@ export default function Login() {
                 onSubmit={async (code) => {
                   await completeTwoStepSignIn(code);
                   toast.success("Welcome back");
-                  navigate("/chat");
+                  navigate(afterAuthPath());
                 }}
                 onBack={() => {
                   setAwaitingTwoStep(false);
@@ -124,7 +125,7 @@ export default function Login() {
 
                   toast.success("Welcome back");
 
-                  navigate("/chat");
+                  navigate(afterAuthPath());
 
                 }}
 
