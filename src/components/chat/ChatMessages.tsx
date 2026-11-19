@@ -3,6 +3,7 @@ import { ChatMessage } from "../ChatMessage";
 import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { isUnknownResponse } from "./ChatMessageHandler";
+import { TalkToAPerson } from "./SupportRequestDialog";
 import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
 import { trendingService } from "@/services/trendingService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -185,6 +186,11 @@ export const ChatMessages = ({
                 </div>
                 </div>
               )}
+
+            {/* Talk to a person — under the newest answer, when the university has a team */}
+            {message.isAi && idx === messages.length - 1 && !isLoading && message.text.trim() && (
+              <TalkToAPerson conversation={messages} emphasize={isUnknownResponse(message.text)} />
+            )}
 
             {/* Suggest-an-answer form — shown when bot doesn't know */}
             {message.isAi &&
