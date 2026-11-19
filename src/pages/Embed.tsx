@@ -1,9 +1,11 @@
-import { ExternalLink, Plus, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ExternalLink, MapPin, Plus, X } from "lucide-react";
 import { useConversations } from "@/hooks/useConversations";
 import { useChatMessageHandler } from "@/components/chat/ChatMessageHandler";
 import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import { IN_FRAME } from "@/lib/afterAuth";
+import { acceptEmbedPage, getEmbedPage, type EmbedPage } from "@/lib/embedPage";
 
 /**
  * /embed — the mini chat that partner websites show in a small window
@@ -31,6 +33,19 @@ export default function Embed() {
   });
 
   const close = () => window.parent?.postMessage({ type: "sc-widget:close" }, "*");
+
+  // Which partner page the chat was opened from (sent by widget.js).
+  const [page, setPage] = useState<EmbedPage | null>(getEmbedPage());
+  useEffect(() => {
+    const onMessage = (event: MessageEvent) => {
+      const accepted = acceptEmbedPage(event);
+      if (accepted) setPage(accepted);
+    };
+    window.addEventListener("message", onMessage);
+    // Ask for the page now that we are listening.
+    if (IN_FRAME) window.parent.postMessage({ type: "sc-widget:ready" }, "*");
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
 
   return (
     <div className="min-h-[100dvh] bg-white font-sans text-[#1C1B19]">
@@ -70,6 +85,12 @@ export default function Embed() {
           </button>
         ) : null}
       </header>
+      {page?.title ? (
+        <p className="px-3 py-1.5 flex items-center gap-1.5 text-[12px] text-[#6B6862] border-b border-[#EDEBE6] bg-[#FAFAF8]">
+          <MapPin className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+          <span className="truncate">Helping with: {page.title}</span>
+        </p>
+      ) : null}
 
       <div className="pb-36">
         <ChatMessages

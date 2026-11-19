@@ -1,10 +1,17 @@
 import { Message, MessageSource } from "@/types/chat";
+import { getEmbedPage } from "@/lib/embedPage";
 import { API_URL, fetchWithTimeout, authHeader } from "@/config/api";
 
 // Phase 2: hits the Claude + RAG endpoint on the HF backend.
 // To revert to the legacy alu_brain + Groq fallback, change this back to `/api/chat`.
 const CHAT_ENDPOINT = `${API_URL}/api/chat/claude`;
 const CHAT_STREAM_ENDPOINT = `${API_URL}/api/chat/claude/stream`;
+
+/** In the mini chat on a partner site: which page it was opened from. */
+const pageField = () => {
+  const page = getEmbedPage();
+  return page ? { page } : {};
+};
 const HEALTH_CACHE_MS = 30_000;
 
 /** A file attached to a question, as the backend expects it (base64 data). */
@@ -90,7 +97,7 @@ const getResponseFromBackend = async (
     {
       method: "POST",
       headers: { "Content-Type": "application/json", ...(await authHeader()) },
-      body: JSON.stringify({ message: query, history, options, attachments }),
+      body: JSON.stringify({ message: query, history, options, attachments, ...pageField() }),
     },
     attachments.length ? 90_000 : 30_000
   );
@@ -134,7 +141,7 @@ const streamResponseFromBackend = async (
       Accept: "text/event-stream",
       ...(await authHeader()),
     },
-    body: JSON.stringify({ message: query, history, attachments }),
+    body: JSON.stringify({ message: query, history, attachments, ...pageField() }),
   });
 
   if (res.status === 400) {
