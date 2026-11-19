@@ -15,7 +15,7 @@
  * https://api.studentcompanionai.rw.
  */
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { detailCard, esc, heading, layout, paragraph, textFooter } from "../_email";
+import { detailCard, esc, heading, layout, paragraph, textFooter } from "../_email.js";
 
 const BACKEND = (process.env.BACKEND_URL || process.env.VITE_API_URL || "https://api.studentcompanionai.rw").replace(/\/+$/, "");
 const FROM_ADDRESS =
