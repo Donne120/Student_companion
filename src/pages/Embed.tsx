@@ -6,6 +6,7 @@ import { ChatMessages } from "@/components/chat/ChatMessages";
 import { ChatInput } from "@/components/ChatInput";
 import { IN_FRAME } from "@/lib/afterAuth";
 import { acceptEmbedPage, getEmbedPage, type EmbedPage } from "@/lib/embedPage";
+import { suggestionsForPage } from "@/lib/embedSuggestions";
 
 /**
  * /embed — the mini chat that partner websites show in a small window
@@ -88,7 +89,7 @@ export default function Embed() {
       {page?.title ? (
         <p className="px-3 py-1.5 flex items-center gap-1.5 text-[12px] text-[#6B6862] border-b border-[#EDEBE6] bg-[#FAFAF8]">
           <MapPin className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-          <span className="truncate">Helping with: {page.title}</span>
+          <span className="truncate">Helping with: {page.title.split(/\s+[|–—-]\s+/)[0]}</span>
         </p>
       ) : null}
 
@@ -97,6 +98,7 @@ export default function Embed() {
           messages={current?.messages || []}
           isLoading={isLoading}
           onEditMessage={handleEditMessage}
+          pageSuggestions={suggestionsForPage(page)}
         />
       </div>
 
