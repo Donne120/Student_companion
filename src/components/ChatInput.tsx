@@ -25,6 +25,8 @@ interface ChatInputProps {
   /** `viaVoice`: the question was spoken, so the answer is read aloud. */
   onSend: (message: string, attachments: File[], viaVoice?: boolean) => void;
   disabled?: boolean;
+  /** Inside the mini chat (/embed): no tab bar or side panels to make room for. */
+  embedded?: boolean;
 }
 
 /** Returns a suitable icon for a file based on its MIME type. */
@@ -42,7 +44,7 @@ const formatBytes = (bytes: number): string => {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
+export const ChatInput = ({ onSend, disabled, embedded = false }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isListening, setIsListening] = useState(false);
@@ -211,7 +213,7 @@ export const ChatInput = ({ onSend, disabled }: ChatInputProps) => {
     : message;
 
   return (
-    <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 left-0 md:left-64 right-0 lg:right-80 pointer-events-none transition-all duration-300">
+    <div className={`fixed pointer-events-none transition-all duration-300 ${embedded ? "bottom-0 inset-x-0" : "bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-0 left-0 md:left-64 right-0 lg:right-80"}`}>
       <div className="h-8 bg-gradient-to-b from-transparent to-white" />
       <div className="bg-white pointer-events-auto">
         <div className="max-w-[46rem] mx-auto px-3 md:px-4 pb-3 md:pb-5 pt-2">

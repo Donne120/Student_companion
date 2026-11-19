@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { afterAuthPath, IN_FRAME } from "@/lib/afterAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -58,7 +59,7 @@ export default function Signup() {
       toast.success("Account created", {
         description: "We emailed you a verification link — click it to unlock the Companion.",
       });
-      navigate("/chat"); // ProtectedRoute shows the verify screen until the link is clicked
+      navigate(afterAuthPath()); // ProtectedRoute shows the verify screen until the link is clicked
 
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to create account");
@@ -78,7 +79,7 @@ export default function Signup() {
           localStorage.removeItem("redirectAfterAuth");
           navigate(redirectPath);
         } else {
-          navigate("/chat", { replace: true });
+          navigate(afterAuthPath(), { replace: true });
         }
       }, 400);
     } catch (error) {
@@ -95,7 +96,7 @@ export default function Signup() {
       <div className="flex flex-col px-6 py-10 lg:px-16 lg:py-14 order-2 lg:order-1">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-sm text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors mb-12"
+          className={`inline-flex items-center gap-2 text-sm text-[#1A1A1A]/60 hover:text-[#1A1A1A] transition-colors mb-12 ${IN_FRAME ? "hidden" : ""}`}
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
@@ -135,7 +136,7 @@ export default function Signup() {
 
                   toast.success("Welcome to Student Companion");
 
-                  navigate("/chat", { replace: true });
+                  navigate(afterAuthPath(), { replace: true });
 
                 }}
 
