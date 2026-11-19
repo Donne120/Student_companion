@@ -14,6 +14,9 @@ interface ChatMessagesProps {
   onEditMessage: (messageId: string, newText: string) => void;
   onSuggestPrompt?: (prompt: string) => void;
   activeModel?: string;
+  /** Mini chat on a partner page: examples and intro for that page
+   *  (embedSuggestions.ts); the university-wide "popular" list is hidden. */
+  pageSuggestions?: { intro: string; suggestions: { title: string; prompt: string }[] } | null;
 }
 
 const STATIC_SUGGESTIONS = [
@@ -44,6 +47,7 @@ export const ChatMessages = ({
   messages,
   isLoading,
   onEditMessage,
+  pageSuggestions = null,
 }: ChatMessagesProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
@@ -89,7 +93,8 @@ export const ChatMessages = ({
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (messages.length === 0) {
-    const showTrending = trendingTopics.length >= 3;
+    const showTrending = !pageSuggestions && trendingTopics.length >= 3;
+    const suggestions = pageSuggestions?.suggestions ?? STATIC_SUGGESTIONS;
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
@@ -101,12 +106,12 @@ export const ChatMessages = ({
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
           <p className="mt-2 text-[15px] text-[#6B6862] leading-relaxed">
-            Ask about courses, deadlines, campus services or opportunities at your university.
+            {pageSuggestions?.intro ?? "Ask about courses, deadlines, campus services or opportunities at your university."}
           </p>
 
           {/* Suggested questions */}
           <div className="mt-8 rounded-xl border border-[#E5E3DE] divide-y divide-[#EDEBE6] overflow-hidden">
-            {STATIC_SUGGESTIONS.map(({ title, prompt }) => (
+            {suggestions.map(({ title, prompt }) => (
               <button
                 key={title}
                 onClick={() => firePrompt(prompt)}
