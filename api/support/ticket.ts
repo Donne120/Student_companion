@@ -7,7 +7,8 @@
  *    else.
  * 2. The team is emailed through Resend, with reply-to set to the student,
  *    so replying to the email answers them.
- * 3. The backend is told whether the email went (…/delivered). The request
+ * 3. The student gets a receipt by email (reference, team, their message).
+ * 4. The backend is told whether the email went (…/delivered). The request
  *    is in the team's dashboard (Inquiries) either way.
  *
  * Env: RESEND_API_KEY (shared with Pathfinder); SUPPORT_FROM_EMAIL, else
@@ -91,6 +92,67 @@ function emailFor(t: Ticket) {
   };
 }
 
+/** When it was sent, in Kigali time: "Wed 19 Nov 2026, 14:22". */
+function sentAt(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Kigali", weekday: "short", day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const v = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  return `${v("weekday")} ${v("day")} ${v("month")} ${v("year")}, ${v("hour")}:${v("minute")} (Kigali time)`;
+}
+
+/** The student's receipt: what was sent, to whom, and what happens next.
+ *  Only ever goes to the address they signed in with. */
+export function confirmationFor(t: Ticket) {
+  const first = (t.student_name || "").trim().split(/\s+/)[0];
+  const hello = first ? `Hi ${first},` : "Hi,";
+  const when = sentAt(t.created_at);
+  const rows: Array<[string, string]> = [
+    ["Reference", t.reference],
+    ["Sent to", t.team_name],
+    ["Sent", when],
+    ["Topic", t.topic],
+  ];
+  const html = layout({
+    preheader: `Your request ${t.reference} is with the ${t.team_name} team.`,
+    title: "Your request has been sent",
+    body:
+      paragraph(`${esc(hello)} your request has been sent to the <strong>${esc(t.team_name)}</strong> team at ${esc(t.organization_name)}.`) +
+      detailCard(rows) +
+      `<div style="margin-top:18px">${heading("Your message")}${paragraph(esc(t.message).replace(/\n/g, "<br>"))}</div>` +
+      `<div style="margin-top:18px">${heading("What happens next")}${paragraph(
+        `The team will reply to this email address. If you need to follow up, write to <a href="mailto:${esc(t.to_email)}">${esc(t.to_email)}</a> and quote <strong>${esc(t.reference)}</strong>.`
+      )}</div>`,
+    footerNote: `You're receiving this because you sent a request from Student Companion AI as ${t.student_email}.`,
+  });
+  const text = [
+    hello,
+    "",
+    `Your request has been sent to the ${t.team_name} team at ${t.organization_name}.`,
+    "",
+    `Reference: ${t.reference}`,
+    ...(when ? [`Sent: ${when}`] : []),
+    `Topic: ${t.topic}`,
+    "",
+    "Your message:",
+    t.message,
+    "",
+    `What happens next: the team will reply to this email address. If you need to follow up, write to ${t.to_email} and quote ${t.reference}.`,
+    "",
+    textFooter(`You're receiving this because you sent a request from Student Companion AI as ${t.student_email}.`),
+  ].join("\n");
+  return {
+    to: [t.student_email],
+    reply_to: t.to_email,
+    subject: `We've sent your request to ${t.team_name} [${t.reference}]`,
+    html,
+    text,
+  };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   const auth = req.headers.authorization;
@@ -151,7 +213,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!emailed) console.error("[support/ticket] email failed", ticket.reference, error);
   }
 
-  // 3. Record delivery (best effort: the request is stored either way).
+  // 3. The student's receipt (best effort: it never fails the request).
+  let confirmed = false;
+  if (key) {
+    try {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body: JSON.stringify({ from: FROM_ADDRESS, ...confirmationFor(ticket) }),
+        signal: AbortSignal.timeout(15000),
+      });
+      confirmed = r.ok;
+      if (!r.ok) console.error("[support/ticket] confirmation failed", ticket.reference, r.status, (await r.text().catch(() => "")).slice(0, 200));
+    } catch (e) {
+      console.error("[support/ticket] confirmation failed", ticket.reference, e);
+    }
+  }
+
+  // 4. Record delivery (best effort: the request is stored either way).
   try {
     await fetch(`${BACKEND}/api/support/tickets/${encodeURIComponent(ticket.id)}/delivered`, {
       method: "POST",
@@ -168,5 +247,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     team_name: ticket.team_name,
     to_email: ticket.to_email,
     emailed,
+    confirmed,
   });
 }
