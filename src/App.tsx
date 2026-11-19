@@ -27,6 +27,7 @@ const OfficeHours      = lazy(() => import("./pages/office-hours"));
 const Opportunities    = lazy(() => import("./pages/Opportunities"));
 const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const Pathfinder       = lazy(() => import("./pages/Pathfinder"));
+const Parents          = lazy(() => import("./pages/Parents"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
@@ -108,6 +109,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               {/* Public, no account — free guidance for high-school leavers. */}
               <Route path="/pathfinder"      element={<Pathfinder />} />
+              <Route path="/parents"         element={<Parents />} />
 
               {/* Protected app */}
               <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
