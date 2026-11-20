@@ -93,7 +93,7 @@ export const ChatMessages = ({
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (messages.length === 0) {
-    const showTrending = !pageSuggestions && trendingTopics.length >= 3;
+    const showTrending = !pageSuggestions && trendingTopics.length > 0;
     const suggestions = pageSuggestions?.suggestions ?? STATIC_SUGGESTIONS;
 
     const hour = new Date().getHours();

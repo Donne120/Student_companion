@@ -17,7 +17,6 @@ const toSpeech = (markdown: string): string =>
     .replace(/[*_`>]+/g, "")
     .replace(/\n{2,}/g, ". ")
     .trim();
-import { trendingService } from "@/services/trendingService";
 import { API_URL, authHeader, fetchWithTimeout } from "@/config/api";
 
 interface ChatMessageHandlerProps {
@@ -228,10 +227,8 @@ export const useChatMessageHandler = ({
         return;
       }
 
-      // Track anonymously for trending
-      if (message.trim()) {
-        trendingService.trackQuestion(message.trim());
-      }
+      // Popular questions are counted by the backend from the questions it
+      // answers (per university, real questions only): nothing to send here.
 
       const attachments =
         files.length > 0
