@@ -4,7 +4,9 @@ Student Companion AI ("Student Companion", "we", "us") helps students, alumni, f
 
 ### 1. Who we are
 
-Student Companion AI is based in Kigali, Rwanda. For anything about your data, contact our Data Protection Officer at privacy@studentcompanionai.rw.
+Student Companion AI is the trading name of STUDENT COMPANION AI CHATBOT, a business registered in Rwanda with the Rwanda Development Board (enterprise code 150562967), owned and run by its founder, Andrew Steven Boima. Our office is in Bumbogo, Gasabo, Kigali, Rwanda.
+
+Our founder, Andrew Steven Boima, acts as our Data Protection Officer. For anything about your data, contact privacy@studentcompanionai.rw.
 
 When we provide the service to a university, the university is the data controller: it decides how its students', alumni's and staff's data is used, and we process it on its behalf under a data processing agreement. For example, for African Leadership University users, ALU is the controller and you can also contact ALU's Data Protection Officer. For people who use our services directly (for example Pathfinder or the career site), we decide how the data is used.
 
@@ -134,4 +136,6 @@ If we make important changes, we will tell you on the platform or by email befor
 
 ### 13. Contact
 
-Student Companion AI, Kigali, Rwanda. Email: privacy@studentcompanionai.rw.
+STUDENT COMPANION AI CHATBOT (enterprise code 150562967), Bumbogo, Gasabo, Kigali, Rwanda.
+
+Data Protection Officer: Andrew Steven Boima, founder. Email: privacy@studentcompanionai.rw.

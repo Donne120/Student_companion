@@ -45,7 +45,7 @@ Opportunities, scholarships and links to other sites come from third parties. We
 
 ### 7. Our service
 
-Student Companion AI owns the assistant, its software and design. Your university owns its name, logo and content. We may change, pause or end features, and we try to give notice of important changes. The service is provided "as is": as far as the law allows, we are not liable for decisions made on the basis of an answer, or for losses caused by the service being unavailable.
+Student Companion AI (STUDENT COMPANION AI CHATBOT, enterprise code 150562967, Kigali, Rwanda) owns the assistant, its software and design. Your university owns its name, logo and content. We may change, pause or end features, and we try to give notice of important changes. The service is provided "as is": as far as the law allows, we are not liable for decisions made on the basis of an answer, or for losses caused by the service being unavailable.
 
 ### 8. Ending your use
 
