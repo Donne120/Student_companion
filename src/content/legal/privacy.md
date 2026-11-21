@@ -124,7 +124,7 @@ Student Companion's use and transfer of information received from Google APIs ad
 
 ### 10. Children
 
-If you are under 16, you may use our platforms only with the consent of a parent or legal guardian. If you are under 18, we recommend a parent or guardian agrees too. Pathfinder is often used by secondary-school students, so if you are under 16, please ask a parent or guardian to agree before you send an enquiry. If we learn we hold data from a child without the required consent, we will delete it.
+If you are under 16, you may use our platforms only with the consent of a parent or legal guardian. If you are under 18, we recommend a parent or guardian agrees too. Pathfinder is often used by secondary-school students, so before you send an enquiry it asks you to confirm that you are 16 or older, or that a parent or guardian agrees. If we learn we hold data from a child without the required consent, we will delete it.
 
 ### 11. Cookies and similar technology
 

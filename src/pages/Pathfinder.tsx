@@ -810,6 +810,21 @@ function LeadForm({
       <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
         <input
           type="checkbox"
+          required
+          className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
+        />
+        <span>
+          I am 16 or older, or my parent or guardian agrees to me sharing these details. See our{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+            Privacy Policy
+          </a>
+          .
+        </span>
+      </label>
+
+      <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
+        <input
+          type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
           className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
@@ -1198,6 +1213,21 @@ function UndergradLeadForm({
         placeholder="What would you like advice on? (optional) For example: my CV, an application, choosing between offers"
         className={`${input} mt-2.5 resize-none`}
       />
+
+      <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
+        <input
+          type="checkbox"
+          required
+          className="mt-0.5 h-4 w-4 accent-[#B8941F] flex-shrink-0"
+        />
+        <span>
+          I am 16 or older, or my parent or guardian agrees to me sharing these details. See our{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+            Privacy Policy
+          </a>
+          .
+        </span>
+      </label>
 
       <label className="mt-3 flex items-start gap-2.5 text-[12.5px] text-[#4A4437] cursor-pointer">
         <input
