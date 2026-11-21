@@ -102,6 +102,14 @@ const Parents = () => {
     }
   }
 
+  // Signed in with another account (for example a student or alumni email,
+  // which can't join as a parent): sign out here so a different Google
+  // account can be chosen. The code stays filled in.
+  async function switchAccount() {
+    setError(null);
+    await signOut(auth).catch(() => undefined);
+  }
+
   const ready = check?.state === "valid";
 
   return (
@@ -143,6 +151,7 @@ const Parents = () => {
         </div>
 
         {currentUser ? (
+          <div className="space-y-3">
           <button
             type="button"
             onClick={handleSignedIn}
@@ -151,6 +160,18 @@ const Parents = () => {
           >
             {busy ? "Joining…" : `Join as ${currentUser.email}`}
           </button>
+          <p className="text-center text-sm text-[#1A1A1A]/60 dark:text-[#F3EFE6]/60">
+            Not the email you want to use?{" "}
+            <button
+              type="button"
+              onClick={switchAccount}
+              disabled={busy}
+              className="font-medium text-[#8A6D12] underline underline-offset-4 hover:text-[#1A1A1A] dark:text-[#D4AF37] dark:hover:text-[#F3EFE6] disabled:opacity-50"
+            >
+              Use a different account
+            </button>
+          </p>
+          </div>
         ) : (
           <button
             type="button"
