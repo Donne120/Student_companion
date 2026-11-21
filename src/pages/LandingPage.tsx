@@ -937,6 +937,16 @@ export default function LandingPage() {
                     Product overview
                   </a>
                 </li>
+                <li>
+                  <a href="/privacy" className="text-white/70 hover:text-[#D4AF37] transition-colors">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="/terms" className="text-white/70 hover:text-[#D4AF37] transition-colors">
+                    Terms of Use
+                  </a>
+                </li>
               </ul>
             </div>
           </div>

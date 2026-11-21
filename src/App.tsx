@@ -29,6 +29,7 @@ const LandingPage      = lazy(() => import("./pages/LandingPage"));
 const Pathfinder       = lazy(() => import("./pages/Pathfinder"));
 const Parents          = lazy(() => import("./pages/Parents"));
 const Embed            = lazy(() => import("./pages/Embed"));
+const LegalPage        = lazy(() => import("./pages/LegalPage"));
 const AnalyticsDashboard  = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ApiDocumentation    = lazy(() => import("./pages/admin/ApiDocumentation"));
 const FeedbackDashboard   = lazy(() => import("./pages/admin/FeedbackDashboard"));
@@ -36,6 +37,8 @@ const SuggestionsDashboard = lazy(() => import("./pages/admin/SuggestionsDashboa
 
 // ── Page title map ────────────────────────────────────────────────────────────
 const TITLE_MAP: Record<string, string> = {
+  "/privacy": "Privacy Policy — Student Companion AI",
+  "/terms": "Terms of Use — Student Companion AI",
   "/":                   "Student Companion AI",
   "/login":              "Sign in — Student Companion AI",
   "/signup":             "Create account — Student Companion AI",
@@ -112,6 +115,8 @@ function App() {
               {/* Public, no account — free guidance for high-school leavers. */}
               <Route path="/pathfinder"      element={<Pathfinder />} />
               <Route path="/parents"         element={<Parents />} />
+              <Route path="/privacy"         element={<LegalPage page="privacy" />} />
+              <Route path="/terms"           element={<LegalPage page="terms" />} />
 
               {/* Protected app */}
               <Route path="/chat" element={<ProtectedRoute><Index /></ProtectedRoute>} />
