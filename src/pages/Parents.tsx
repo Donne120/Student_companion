@@ -5,6 +5,8 @@ import { Loader, ShieldCheck, Users } from "lucide-react";
 import { auth, googleProvider } from "@/lib/firebase";
 import { API_URL } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { resetParent } from "@/hooks/useParent";
+import { resetBranding } from "@/hooks/useBranding";
 
 /**
  * /parents?code=ALU-7KX2-9QPM — a parent or guardian joins their child's
@@ -70,7 +72,10 @@ const Parents = () => {
 
   async function finish() {
     await joinWith(code.trim());
-    navigate("/chat", { replace: true });
+    // The chat asks again who this is: now a parent, with the university's look.
+    resetParent();
+    resetBranding();
+    navigate("/chat?joined=parent", { replace: true });
   }
 
   async function handleGoogle() {

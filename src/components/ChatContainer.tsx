@@ -11,10 +11,13 @@ import { Menu, Plus } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { BrandBand } from "./mobile/BrandBand";
 import { ViewAsBar } from "./chat/ViewAsBar";
+import { useParent } from "@/hooks/useParent";
 
 export const ChatContainer = () => {
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // Opportunities (scholarships, internships, jobs) are for students.
+  const parent = useParent();
 
   useEffect(() => {
     setAccessibilityMode(localStorage.getItem("ACCESSIBILITY_MODE") === "true");
@@ -57,7 +60,7 @@ export const ChatContainer = () => {
         />
       </div>
 
-      <main className="flex-1 min-w-0 md:pl-64 lg:pr-80 transition-all duration-300 relative overflow-x-clip">
+      <main className={`flex-1 min-w-0 md:pl-64 ${parent ? "" : "lg:pr-80"} transition-all duration-300 relative overflow-x-clip`}>
         {/* Mobile top bar */}
         <div className="md:hidden sticky top-0 z-20 bg-white/95 backdrop-blur border-b border-[#E5E3DE] safe-top">
           {/* Platform admins: which university to view the chat as. */}
@@ -132,7 +135,8 @@ export const ChatContainer = () => {
         <ChatInput onSend={handleSendMessage} disabled={isLoading} />
       </main>
 
-      {/* Right rail: Opportunities — desktop only */}
+      {/* Right rail: Opportunities — desktop only, students only */}
+      {parent ? null : (
       <aside className="hidden lg:flex fixed right-0 top-0 h-full w-80 bg-[#FAFAF8] border-l border-[#EDEBE6] flex-col z-30">
         <div className="h-14 px-5 flex items-center border-b border-[#EDEBE6]">
           <span className="text-[14px] font-semibold text-[#1C1B19]">Opportunities</span>
@@ -141,6 +145,7 @@ export const ChatContainer = () => {
           <OpportunityWidget />
         </div>
       </aside>
+      )}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { Compass, MessageSquare, Sparkles, User } from "lucide-react";
+import { useParent } from "@/hooks/useParent";
 
 const tabs = [
   { to: "/chat", label: "Chat", icon: MessageSquare },
@@ -9,13 +10,16 @@ const tabs = [
 ];
 
 export const MobileTabBar = () => {
+  // Parents: chat and their profile only (Discover and Pathfinder are for students).
+  const parent = useParent();
+  const shown = parent ? tabs.filter((t) => t.to === "/chat" || t.to === "/profile") : tabs;
   return (
     <nav
       aria-label="Primary"
       className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-[#E8DDB0] safe-bottom"
     >
-      <ul className="grid grid-cols-4">
-        {tabs.map(({ to, label, icon: Icon }) => (
+      <ul className={`grid ${shown.length === 2 ? "grid-cols-2" : "grid-cols-4"}`}>
+        {shown.map(({ to, label, icon: Icon }) => (
           <li key={to}>
             <NavLink
               to={to}
