@@ -57,4 +57,4 @@ We may update these terms; we will tell you about important changes before they 
 
 ### 10. Contact
 
-Questions about these terms: support@studentcompanionai.rw. Privacy questions: privacy@studentcompanionai.rw.
+Questions about these terms or your privacy: privacy@studentcompanionai.rw.
