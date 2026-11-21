@@ -7,6 +7,7 @@ import { TalkToAPerson } from "./SupportRequestDialog";
 import { AnswerSuggestionForm } from "./AnswerSuggestionForm";
 import { trendingService } from "@/services/trendingService";
 import { useAuth } from "@/contexts/AuthContext";
+import { useParent } from "@/hooks/useParent";
 
 interface ChatMessagesProps {
   messages: Message[];
@@ -38,6 +39,14 @@ const STATIC_SUGGESTIONS = [
   },
 ];
 
+/** For parents and guardians: general questions about the university. */
+const PARENT_SUGGESTIONS = [
+  { title: "Fees", prompt: "How and when are tuition fees paid?" },
+  { title: "Dates", prompt: "When does the next term start and end?" },
+  { title: "Visas & travel", prompt: "What does my child need for a student visa?" },
+  { title: "Wellbeing", prompt: "What support is there for students' wellbeing?" },
+];
+
 /** Fire the companion:suggest event (populates ChatInput). */
 const firePrompt = (prompt: string) => {
   window.dispatchEvent(new CustomEvent("companion:suggest", { detail: prompt }));
@@ -53,6 +62,7 @@ export const ChatMessages = ({
   const [trendingTopics, setTrendingTopics] = useState<string[]>([]);
   const { currentUser } = useAuth();
   const firstName = (currentUser?.displayName || "").trim().split(/\s+/)[0];
+  const parent = useParent();
 
   useEffect(() => {
     // "end": keep the newest message just above the input. With a full-screen
@@ -93,11 +103,20 @@ export const ChatMessages = ({
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (messages.length === 0) {
-    const showTrending = !pageSuggestions && trendingTopics.length > 0;
-    const suggestions = pageSuggestions?.suggestions ?? STATIC_SUGGESTIONS;
+    // Parents don't see what students are asking.
+    const showTrending = !parent && !pageSuggestions && trendingTopics.length > 0;
+    const suggestions = pageSuggestions?.suggestions ?? (parent ? PARENT_SUGGESTIONS : STATIC_SUGGESTIONS);
+    const intro =
+      pageSuggestions?.intro ??
+      (parent
+        ? `Ask about ${parent.university}: fees and payments, key dates, visas and travel, accommodation, wellbeing and family events.`
+        : "Ask about courses, deadlines, campus services or opportunities at your university.");
 
     const hour = new Date().getHours();
-    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    const timeGreeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    // Just joined with the parent code: welcome them to the university.
+    const justJoined = !!parent && new URLSearchParams(window.location.search).get("joined") === "parent";
+    const greeting = justJoined ? `Welcome to ${parent.university}` : timeGreeting;
 
     return (
       <div className="min-h-[calc(100dvh-260px)] md:min-h-[calc(100vh-200px)] flex flex-col justify-center px-4 md:px-8 py-10 bg-white">
@@ -106,8 +125,14 @@ export const ChatMessages = ({
             {greeting}{firstName ? `, ${firstName}` : ""}.
           </h1>
           <p className="mt-2 text-[15px] text-[#6B6862] leading-relaxed">
-            {pageSuggestions?.intro ?? "Ask about courses, deadlines, campus services or opportunities at your university."}
+            {intro}
           </p>
+          {parent ? (
+            <p className="mt-2 text-[13px] text-[#8C887F] leading-relaxed">
+              You joined as a parent or guardian. Answers are about the university in general: Student Companion can't
+              see your child's grades, fees, attendance or other records.
+            </p>
+          ) : null}
 
           {/* Suggested questions */}
           <div className="mt-8 rounded-xl border border-[#E5E3DE] divide-y divide-[#EDEBE6] overflow-hidden">

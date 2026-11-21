@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useBranding } from "@/hooks/useBranding";
 import { BrandLogo } from "@/components/BrandLogo";
+import { useParent } from "@/hooks/useParent";
 import { ViewAsBar } from "./ViewAsBar";
 
 const SERVICES = [
@@ -43,6 +44,9 @@ export const ConversationSidebar = ({
   const [isCollapsed, setIsCollapsed] = useState(false);
   // The university's logo and colours, when its plan includes branding.
   const branding = useBranding();
+  // Parents: housing and travel links are useful, the student careers site isn't.
+  const parent = useParent();
+  const services = parent ? SERVICES.filter((s) => s.label !== "Careers") : SERVICES;
   const darkBand = !!branding?.logo_url && branding.logo_background === "dark" && !isCollapsed;
 
   const getConversationTitle = (conversation: Conversation) => {
@@ -171,8 +175,10 @@ export const ConversationSidebar = ({
 
       {/* Services from the Student Companion team */}
       <div className="px-2 pb-2">
-        {!isCollapsed && <div className="px-3 pt-2 pb-1.5 text-xs text-[#8C887F]">Student services</div>}
-        {SERVICES.map(({ label, hint, url, Icon }) => (
+        {!isCollapsed && (
+          <div className="px-3 pt-2 pb-1.5 text-xs text-[#8C887F]">{parent ? "Useful services" : "Student services"}</div>
+        )}
+        {services.map(({ label, hint, url, Icon }) => (
           <a
             key={url}
             href={url}

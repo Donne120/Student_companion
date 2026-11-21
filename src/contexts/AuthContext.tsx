@@ -15,6 +15,12 @@ import {
 import { auth, googleProvider } from "@/lib/firebase";
 import { upsertUserProfile, updateUserProfileFields, getUserProfile } from "@/services/userService";
 import { checkOrganizationDomain } from "@/services/organizationService";
+import { fetchParent } from "@/lib/parent";
+
+// Students and staff use their university email; parents and guardians join
+// through the invite link (parent code) their child's university shares.
+const PERSONAL_EMAIL_MESSAGE =
+  "Please use your university email to sign up. Parent or guardian? Use the invite link your child's university shared with you.";
 import * as cognito from "@/lib/cognito";
 
 type ProfileUpdate = { name?: string; picture?: string };
@@ -168,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Couldn't verify your university right now. Please try again.");
     }
     if (!orgCheck.allowed) {
-      throw new Error("Please use your university email to sign up.");
+      throw new Error(PERSONAL_EMAIL_MESSAGE);
     }
     if (cognito.cognitoEnabled) {
       await cognito.signUp(email, password, name);
@@ -218,12 +224,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? await checkOrganizationDomain(user.email)
         : { allowed: false, organizationName: null, checkFailed: false };
 
-      if (!user.email || !orgCheck.allowed) {
+      // A personal email is allowed back in only if it already joined a
+      // university with its parent code (parent_access.py).
+      const parent = user.email && !orgCheck.allowed && !orgCheck.checkFailed ? await fetchParent() : null;
+
+      if (!user.email || (!orgCheck.allowed && !parent)) {
         await signOut(auth);
         throw new Error(
           orgCheck.checkFailed
             ? "Couldn't verify your university right now. Please try again."
-            : "Please use your university email to sign up."
+            : PERSONAL_EMAIL_MESSAGE
         );
       }
 
@@ -233,7 +243,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         displayName: user.displayName ?? "",
         photoURL: user.photoURL ?? "",
         provider: "google.com",
-        organizationName: orgCheck.organizationName,
+        organizationName: orgCheck.organizationName ?? parent?.university ?? null,
       }).catch((err) => console.error("[Firestore] upsertUserProfile failed:", err));
 
       return user;
