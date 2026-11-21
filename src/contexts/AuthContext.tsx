@@ -1,3 +1,4 @@
+import { SUSPENDED_EVENT, SUSPENDED_MESSAGE } from "@/lib/accountSuspended";
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
 import {
   createUserWithEmailAndPassword,
@@ -91,7 +92,7 @@ const friendlyAuthError = (error: unknown): Error => {
       case "auth/account-exists-with-different-credential":
         return "This email is linked to a different sign-in method. Try Google sign-in.";
       case "auth/user-disabled":
-        return "This account has been disabled. Contact your university's support.";
+        return SUSPENDED_MESSAGE;
       case "auth/operation-not-allowed":
         return "Email/password sign-in is not enabled. Contact the administrator.";
       default: {
@@ -361,6 +362,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCurrentUser({ ...auth.currentUser });
     return auth.currentUser.emailVerified;
   }
+
+  // An admin suspended this account (lib/accountSuspended.ts): sign out and
+  // show the sign-in page, which explains why.
+  useEffect(() => {
+    const onSuspended = () => {
+      signOut(auth).finally(() => window.location.assign("/login?suspended=1"));
+    };
+    window.addEventListener(SUSPENDED_EVENT, onSuspended);
+    return () => window.removeEventListener(SUSPENDED_EVENT, onSuspended);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {

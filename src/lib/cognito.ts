@@ -79,7 +79,11 @@ async function call<T>(action: string, body: Record<string, unknown>, withClient
   if (!res.ok) {
     const type = String(data.__type || "").split("#").pop() || "Error";
     const raw = String(data.message || data.Message || "");
+    // A suspended account (dashboard → Students → Suspend) is disabled in Cognito.
     const message =
+      type === "NotAuthorizedException" && /disabled/i.test(raw)
+        ? "This account has been suspended. If you think this is a mistake, email privacy@studentcompanionai.rw."
+        :
       FRIENDLY[type] ??
       (type === "UserNotConfirmedException" ? "Please confirm your email first." : raw || "Something went wrong. Please try again.");
     throw new CognitoError(type, message);

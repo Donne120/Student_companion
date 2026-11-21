@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { EmailCodeForm } from "@/components/auth/EmailCodeForm";
 import { TwoStepCodeForm } from "@/components/auth/TwoStepCodeForm";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { SUSPENDED_MESSAGE } from "@/lib/accountSuspended";
 import { useAuth } from "@/contexts/AuthContext";
 import { afterAuthPath, IN_FRAME } from "@/lib/afterAuth";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,8 @@ export default function Login() {
   const [awaitingTwoStep, setAwaitingTwoStep] = useState(false);
   const { login, signupWithGoogle, confirmSignup, resendSignupCode, completeTwoStepSignIn } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const suspended = params.get("suspended") === "1";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,6 +101,12 @@ export default function Login() {
             <p className="text-[#1A1A1A]/70 mb-10">
               Sign in to continue your conversation with the Companion.
             </p>
+
+            {suspended ? (
+              <p role="alert" className="-mt-6 mb-8 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {SUSPENDED_MESSAGE}
+              </p>
+            ) : null}
 
             {awaitingTwoStep ? (
               <TwoStepCodeForm
