@@ -47,32 +47,96 @@
          visitors never see a blank white page. Removed by src/main.tsx once
          the app has drawn its first screen. */
       html.sc-loading, html.sc-loading body { background: #1A1A1A; }
-      #sc-splash { position: fixed; inset: 0; z-index: 2147483000; display: flex; flex-direction: column;
-        align-items: center; justify-content: center; gap: 22px; background: #1A1A1A;
-        transition: opacity .45s ease, visibility .45s ease; }
+      /* Intro: one large book opens across the screen, its pages flip, then
+         it folds into the gold mark, which stays with "Welcome to Student
+         Companion AI" until the app is ready (src/main.tsx removes it). */
+      #sc-splash { position: fixed; inset: 0; z-index: 2147483000; overflow: hidden;
+        background: radial-gradient(ellipse at 50% 45%, #2A2722 0%, #1A1A1A 65%);
+        transition: opacity .55s ease, visibility .55s ease; }
       #sc-splash.sc-hide { opacity: 0; visibility: hidden; }
-      #sc-splash img { width: 56px; height: auto; animation: sc-breathe 2.4s ease-in-out infinite; }
-      #sc-splash .sc-name { font: 500 20px/1.2 "Playfair Display", Georgia, "Times New Roman", serif;
-        letter-spacing: .02em; color: #F5EFDC; margin: 0; opacity: 0; animation: sc-in .7s ease .15s forwards; }
-      #sc-splash .sc-name span { color: #D4AF37; }
-      #sc-splash .sc-bar { width: 120px; height: 2px; border-radius: 2px; background: rgba(212,175,55,.18);
-        overflow: hidden; opacity: 0; animation: sc-in .7s ease .35s forwards; }
-      #sc-splash .sc-bar i { display: block; width: 40%; height: 100%; border-radius: 2px; background: #D4AF37;
-        animation: sc-slide 1.3s ease-in-out infinite; }
-      @keyframes sc-breathe { 0%,100% { transform: scale(1); opacity: .9 } 50% { transform: scale(1.05); opacity: 1 } }
-      @keyframes sc-in { to { opacity: 1 } }
-      @keyframes sc-slide { 0% { transform: translateX(-100%) } 100% { transform: translateX(250%) } }
+      .sc-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+      .sc-book { position: relative; width: min(78vw, 620px); aspect-ratio: 1.55; perspective: 1600px;
+        animation: sc-book-in .5s cubic-bezier(.2,.7,.2,1) both, sc-book-out .55s cubic-bezier(.6,0,.4,1) 3.35s forwards; }
+      .sc-book::before { content: ""; position: absolute; left: -2.2%; right: -2.2%; top: 3%; bottom: -4%;
+        border-radius: 10px; background: linear-gradient(#C29A3A, #8A6A1F); box-shadow: 0 40px 80px rgba(0,0,0,.55); }
+      .sc-page, .sc-leaf { position: absolute; top: 0; width: 50%; height: 100%;
+        background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.20) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat,
+          linear-gradient(90deg, #EDE3C6, #FBF7E9); }
+      .sc-page.l { left: 0; z-index: 0; border-radius: 8px 0 0 8px; box-shadow: inset -26px 0 36px -26px rgba(120,90,30,.45); }
+      .sc-page.r { left: 50%; border-radius: 0 8px 8px 0; background-color: #FBF7E9;
+        box-shadow: inset 26px 0 36px -26px rgba(120,90,30,.45); }
+      .sc-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-1px); background: rgba(168,131,47,.55); }
+      .sc-leaf { left: 50%; background: none; transform-origin: left center; transform-style: preserve-3d;
+        animation: sc-turn .6s cubic-bezier(.45,.05,.35,1) both; }
+      /* Unturned pages stack first-on-top on the right; once turned, the latest sits on top on the left. */
+      .sc-leaf.a { animation-delay: .75s; --zr: 14; --zl: 21; } .sc-leaf.b { animation-delay: 1.3s; --zr: 13; --zl: 22; }
+      .sc-leaf.c { animation-delay: 1.85s; --zr: 12; --zl: 23; } .sc-leaf.d { animation-delay: 2.4s; --zr: 11; --zl: 24; }
+      .sc-leaf .f, .sc-leaf .b { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        background: inherit; background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.12) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat, #FFFDF5; }
+      .sc-leaf .f { border-radius: 0 8px 8px 0; box-shadow: inset 26px 0 36px -26px rgba(120,90,30,.35), 0 0 0 1px rgba(168,131,47,.25); }
+      .sc-leaf .b { border-radius: 8px 0 0 8px; transform: rotateY(180deg);
+        background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.12) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat, linear-gradient(90deg, #EDE3C6, #FBF7E9);
+        box-shadow: inset -26px 0 36px -26px rgba(120,90,30,.45); }
+      .sc-leaf .f::after, .sc-leaf .b::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+        background: #3A2A0A; opacity: 0; animation: sc-shade .6s ease both; animation-delay: inherit; pointer-events: none; }
+      .sc-leaf .f, .sc-leaf .b { animation-delay: inherit; }
+      @keyframes sc-shade { 0%,10% { opacity: 0 } 50% { opacity: .22 } 90%,100% { opacity: 0 } }
+      /* The phrase on each page. */
+      .sc-txt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 0 9%; text-align: center; font: 600 clamp(17px, 3.8vmin, 36px)/1.2 "Playfair Display", Georgia, "Times New Roman", serif;
+        color: #2E2615; }
+      .sc-txt::before { content: ""; width: 26px; height: 2px; margin-bottom: .55em; background: #C9A24A; border-radius: 2px; }
+      .sc-txt em { font-style: italic; color: #9A7524; }
+      .sc-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      .sc-end img { width: clamp(64px, 11vmin, 96px); height: auto; opacity: 0;
+        animation: sc-mark-in .7s cubic-bezier(.2,.8,.2,1.15) 3.55s forwards, sc-float 3.2s ease-in-out 4.4s infinite; }
+      .sc-end .sc-welcome { margin: 26px 16px 0; text-align: center; font: 500 clamp(22px, 3.6vmin, 34px)/1.25 "Playfair Display", Georgia, "Times New Roman", serif;
+        letter-spacing: .02em; color: #F5EFDC; }
+      .sc-end .sc-welcome i { font-style: normal; display: inline-block; white-space: pre; opacity: 0; transform: translateY(8px); filter: blur(4px);
+        animation: sc-letter .5s ease forwards; animation-delay: calc(3.85s + var(--n) * .035s); }
+      .sc-end .sc-welcome .g { color: #D4AF37; }
+      @keyframes sc-book-in { from { opacity: 0; transform: rotateX(22deg) scale(.92) } to { opacity: 1; transform: none } }
+      @keyframes sc-book-out { to { opacity: 0; transform: scale(.14); filter: blur(2px) } }
+      @keyframes sc-turn {
+        0%   { transform: rotateY(0); z-index: var(--zr); }
+        49%  { z-index: var(--zr); }
+        50%  { transform: rotateY(-90deg) translateZ(14px); z-index: var(--zl); }
+        100% { transform: rotateY(-180deg); z-index: var(--zl); }
+      }
+      @keyframes sc-mark-in { from { opacity: 0; transform: scale(.35) rotate(-8deg) } to { opacity: 1; transform: none } }
+      @keyframes sc-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+      @keyframes sc-letter { to { opacity: 1; transform: none; filter: none } }
+      /* Later loads in the same session, and "reduce motion": skip straight to the logo and welcome. */
+      html.sc-quick .sc-book { display: none; }
+      html.sc-quick .sc-end img, html.sc-quick .sc-end .sc-welcome i { animation-delay: 0s; }
       @media (prefers-reduced-motion: reduce) {
-        #sc-splash img, #sc-splash .sc-bar i { animation: none; }
-        #sc-splash .sc-name, #sc-splash .sc-bar { animation: none; opacity: 1; }
+        .sc-book { display: none; }
+        #sc-splash *, #sc-splash *::before { animation: none !important; }
+        .sc-end img, .sc-end .sc-welcome i { opacity: 1; transform: none; filter: none; }
       }
     </style>
   </head>
   <body>
+    <script>
+      // A repeat load in this browser session skips the book and shows the welcome at once.
+      try { if (sessionStorage.getItem("sc_splash_seen")) document.documentElement.classList.add("sc-quick"); } catch (e) {}
+    </script>
     <div id="sc-splash" role="status" aria-label="Loading Student Companion AI">
-      <img src="/splash-mark.png" alt="" width="56" />
-      <p class="sc-name">Student Companion <span>AI</span></p>
-      <div class="sc-bar"><i></i></div>
+      <div class="sc-stage">
+        <div class="sc-book" aria-hidden="true">
+          <div class="sc-page l"><span class="sc-txt">Every answer</span></div>
+          <div class="sc-page r"><span class="sc-txt">Always <em>with you.</em></span></div>
+          <div class="sc-spine"></div>
+          <div class="sc-leaf a"><div class="f"><span class="sc-txt">from your <em>university</em></span></div><div class="b"><span class="sc-txt">Courses &amp; deadlines</span></div></div>
+          <div class="sc-leaf b"><div class="f"><span class="sc-txt">Policies &amp; handbooks</span></div><div class="b"><span class="sc-txt">Campus life</span></div></div>
+          <div class="sc-leaf c"><div class="f"><span class="sc-txt">Opportunities</span></div><div class="b"><span class="sc-txt">Careers &amp; scholarships</span></div></div>
+          <div class="sc-leaf d"><div class="f"><span class="sc-txt">Your next step</span></div><div class="b"><span class="sc-txt">In <em>seconds.</em></span></div></div>
+        </div>
+      </div>
+      <div class="sc-end">
+        <img src="/splash-mark.png" alt="" />
+        <p class="sc-welcome" aria-hidden="true"><i style="--n:0">W</i><i style="--n:1">e</i><i style="--n:2">l</i><i style="--n:3">c</i><i style="--n:4">o</i><i style="--n:5">m</i><i style="--n:6">e</i><i style="--n:7"> </i><i style="--n:8">t</i><i style="--n:9">o</i><i style="--n:10"> </i><i style="--n:11">S</i><i style="--n:12">t</i><i style="--n:13">u</i><i style="--n:14">d</i><i style="--n:15">e</i><i style="--n:16">n</i><i style="--n:17">t</i><i style="--n:18"> </i><i style="--n:19">C</i><i style="--n:20">o</i><i style="--n:21">m</i><i style="--n:22">p</i><i style="--n:23">a</i><i style="--n:24">n</i><i style="--n:25">i</i><i style="--n:26">o</i><i style="--n:27">n</i><i style="--n:28"> </i><i class="g" style="--n:29">A</i><i class="g" style="--n:30">I</i></p>
+      </div>
     </div>
     <div id="root"></div>
     <script>
