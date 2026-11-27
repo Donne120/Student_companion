@@ -6,6 +6,7 @@ import { toAttachmentPayload } from "@/lib/attachments";
 import { speak } from "@/utils/speech";
 import { stripSourceMarkers } from "@/lib/citations";
 import { splitQuickReplies } from "@/lib/quickReplies";
+import { createTypewriter } from "@/lib/typewriter";
 
 /** An answer as it should be heard: no markdown symbols, links read as their text. */
 const toSpeech = (markdown: string): string =>
@@ -146,6 +147,12 @@ export const useChatMessageHandler = ({
       onAddMessage(currentConversationId, aiMessage);
 
       let accumulated = "";
+      // The answer appears as if typed (src/lib/typewriter.ts); sources show
+      // once it has finished.
+      const typer = createTypewriter((shown) =>
+        onUpdateMessage(currentConversationId, aiMessageId, shown, { silent: true })
+      );
+      let sources: Message["sources"] | undefined;
       try {
         await aiService.streamResponse(
           userText,
@@ -153,37 +160,34 @@ export const useChatMessageHandler = ({
           {
             onChunk: (text) => {
               accumulated += text;
-              onUpdateMessage(currentConversationId, aiMessageId, accumulated, { silent: true });
+              typer.push(accumulated);
             },
             onStatus: (status) => {
               if (!accumulated) {
                 onUpdateMessage(currentConversationId, aiMessageId, accumulated, { silent: true, status });
               }
             },
-            onSources: (sources) => {
-              onUpdateMessage(currentConversationId, aiMessageId, accumulated, {
-                silent: true,
-                sources,
-              });
+            onSources: (found) => {
+              sources = found;
             },
             onLimit: (message) => {
               // Daily question limit: the explanation is the answer, not an error.
-              onUpdateMessage(currentConversationId, aiMessageId, message, { silent: true });
+              typer.push(message);
             },
             onError: (message) => {
               toast.error(message);
               if (!accumulated) {
-                onUpdateMessage(
-                  currentConversationId,
-                  aiMessageId,
-                  "I'm sorry — I couldn't generate a response just now. Please try again.",
-                  { silent: true }
-                );
+                typer.push("I'm sorry — I couldn't generate a response just now. Please try again.");
               }
             },
           },
           attachments
         );
+
+        await typer.finish();
+        if (sources?.length) {
+          onUpdateMessage(currentConversationId, aiMessageId, typer.shown, { silent: true, sources });
+        }
 
         // Questions left today may have changed (UsageNote).
         window.dispatchEvent(new Event("sc-usage-changed"));
@@ -206,6 +210,7 @@ export const useChatMessageHandler = ({
           });
         }
       } catch (error) {
+        typer.flush();
         console.error("Streaming error:", error);
         toast.error(error instanceof Error ? error.message : "Failed to get response");
         if (!accumulated) {

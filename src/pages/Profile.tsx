@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Camera, LogOut, User } from "lucide-react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemePicker } from "@/components/settings/ThemePicker";
 import { shrinkImage } from "@/lib/avatar";
@@ -218,6 +219,9 @@ export default function Profile() {
           <p className="mt-1 mb-5 text-sm text-[#1A1A1A]/70">Choose how the Companion looks on this device.</p>
           <ThemePicker />
         </section>
+        <div className="mt-8">
+          <SignOutButton />
+        </div>
       </main>
     </div>
   );

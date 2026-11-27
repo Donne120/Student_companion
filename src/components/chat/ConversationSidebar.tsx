@@ -17,6 +17,7 @@ import { useBranding } from "@/hooks/useBranding";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useParent } from "@/hooks/useParent";
 import { ViewAsBar } from "./ViewAsBar";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 const SERVICES = [
   { label: "Careers", hint: "opportunities & courses", url: "https://career.studentcompanionai.rw", Icon: Briefcase },
@@ -210,6 +211,7 @@ export const ConversationSidebar = ({
           <Settings className="h-4 w-4 flex-shrink-0" />
           {!isCollapsed && <span>Settings</span>}
         </button>
+        <SignOutButton variant="menu" collapsed={isCollapsed} />
         <button
           onClick={() => navigate("/profile")}
           className={`w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-lg text-[#1C1B19] hover:bg-[#F4F3F0] text-sm transition-colors ${
