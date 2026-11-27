@@ -877,16 +877,6 @@ export default function LandingPage() {
               </p>
               <ul className="space-y-3 text-sm">
                 <li>
-                  <a
-                    href="/presentation.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-white/70 hover:text-[#D4AF37] transition-colors"
-                  >
-                    Product overview
-                  </a>
-                </li>
-                <li>
                   <a href="/privacy" className="text-white/70 hover:text-[#D4AF37] transition-colors">
                     Privacy Policy
                   </a>
