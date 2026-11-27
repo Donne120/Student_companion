@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { BackendStatus } from "@/components/chat/BackendStatus";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +14,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import {
   ArrowLeft,
   Server,
-  Globe,
   Shield,
   RefreshCw,
   PlayCircle,
@@ -31,7 +29,7 @@ import {
   Palette,
   UserRound,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { isAdmin as isAdminUser, grantAdminSession, getAdminEmail, clearAdminSession } from "@/utils/adminAuth";
 import { API_URL, checkBackendHealth } from "@/config/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -130,6 +128,8 @@ type FeedbackItem = {
 export default function Settings() {
   const { currentUser, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const showAdvanced = isAdminUser() || location.hash === "#advanced";
 
   // ---------------------------------------------------------------------
   // Chat preferences — each of these keys is read by the chat UI:
@@ -151,38 +151,6 @@ export default function Settings() {
     apply(value);
     localStorage.setItem(key, value ? "true" : "false");
     toast.success("Saved", { description: "Takes effect next time you open the chat." });
-  };
-
-  // ---------------------------------------------------------------------
-  // Backend connection (read-only URL + live test)
-  // ---------------------------------------------------------------------
-  const [isTestingBackend, setIsTestingBackend] = useState(false);
-  const [backendTestResult, setBackendTestResult] = useState<null | boolean>(null);
-  const [responseTime, setResponseTime] = useState<number | null>(null);
-
-  const testBackendConnection = async () => {
-    setIsTestingBackend(true);
-    setBackendTestResult(null);
-    const start = Date.now();
-    try {
-      const healthy = await checkBackendHealth();
-      setResponseTime(Date.now() - start);
-      setBackendTestResult(healthy);
-      if (healthy) {
-        toast.success("Backend connection successful");
-      } else {
-        toast.error("Backend connection failed", {
-          description: "The Companion backend did not respond.",
-        });
-      }
-    } catch (error) {
-      setBackendTestResult(false);
-      toast.error("Backend connection failed", {
-        description: `Error: ${error instanceof Error ? error.message : String(error)}`,
-      });
-    } finally {
-      setIsTestingBackend(false);
-    }
   };
 
   // ---------------------------------------------------------------------
@@ -349,7 +317,6 @@ export default function Settings() {
                 </Button>
               </>
             )}
-            <BackendStatus />
           </div>
         </div>
       </header>
@@ -362,8 +329,10 @@ export default function Settings() {
           </p>
         </div>
 
-        <Tabs defaultValue="general" className="w-full">
-          <TabsList className="grid grid-cols-2 mb-8 bg-[#FBF7E9] border border-[#E8DDB0] p-1 h-auto">
+        <Tabs defaultValue={showAdvanced && location.hash === "#advanced" ? "advanced" : "general"} className="w-full">
+          {/* Students only see their own settings; the Advanced (admin) tab
+              appears for admins, or at /settings#advanced to sign in as one. */}
+          <TabsList className={`${showAdvanced ? "grid" : "hidden"} grid-cols-2 mb-8 bg-[#FBF7E9] border border-[#E8DDB0] p-1 h-auto`}>
             <TabsTrigger
               value="general"
               className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-[#1A1A1A] data-[state=active]:shadow-sm text-[#1A1A1A]/60 py-2"
@@ -494,37 +463,6 @@ export default function Settings() {
               </div>
             </SettingsSection>
 
-            <SettingsSection
-              title="Connection"
-              description="The Companion backend this app talks to"
-              icon={<Globe className="h-5 w-5" />}
-            >
-              <div className="space-y-3">
-                <Label>Backend</Label>
-                <div className="flex gap-2 items-center">
-                  <code className="flex-1 text-sm bg-[#FBF7E9]/60 border border-[#E8DDB0] rounded-md px-3 py-2 truncate">
-                    {API_URL}
-                  </code>
-                  <Button variant="outline" onClick={testBackendConnection} disabled={isTestingBackend}>
-                    {isTestingBackend ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <span>Test Connection</span>
-                    )}
-                  </Button>
-                </div>
-
-                {backendTestResult !== null && (
-                  <Alert variant={backendTestResult ? "default" : "destructive"} className="mt-2">
-                    <AlertDescription>
-                      {backendTestResult
-                        ? `Connection successful${responseTime !== null ? ` (${responseTime}ms)` : ""}. The Companion backend is reachable.`
-                        : "Connection failed. The backend may be waking up — try again in a minute."}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </SettingsSection>
           </TabsContent>
 
           {/* ------------------------------------------------------------ */}
@@ -813,8 +751,8 @@ export default function Settings() {
         <div className="mt-12 p-4 rounded-lg bg-[#FBF7E9]/60 border border-[#E8DDB0] flex items-start gap-3">
           <Info size={16} className="text-[#B8941F] mt-0.5 flex-shrink-0" />
           <p className="text-sm text-[#1A1A1A]/70">
-            Chat preferences are saved to this browser. Your email briefing settings are saved to your
-            account and follow you across devices.
+            Chat preferences are saved on this device. Your email briefing settings are saved to your
+            account and follow you everywhere.
           </p>
         </div>
       </main>
