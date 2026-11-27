@@ -13,24 +13,20 @@ createRoot(document.getElementById("root")!).render(<App />);
 // never adds waiting beyond that.
 const splash = document.getElementById("sc-splash");
 if (splash) {
-  // The first open in a browser session plays the whole intro (the book's
-  // pages flip and fold into the logo, then the welcome writes in: 4.8 s).
-  // Later loads skip the book (index.html) and wait only 0.9 s.
-  let firstVisit = true;
-  try {
-    firstVisit = !sessionStorage.getItem("sc_splash_seen");
-    sessionStorage.setItem("sc_splash_seen", "1");
-  } catch {
-    /* storage unavailable: treat as a first visit */
-  }
-  const minimum = firstVisit ? 4800 : 900;
+  // Every page load plays the whole intro: the book's pages flip and fold
+  // into the logo, then the welcome writes in (4.8 s). A tap or click
+  // skips it; the app is already drawn underneath.
+  const minimum = 4800;
+  const hide = () => {
+    if (!splash.isConnected) return;
+    splash.classList.add("sc-hide");
+    document.documentElement.classList.remove("sc-loading");
+    setTimeout(() => splash.remove(), 600);
+  };
+  splash.addEventListener("click", hide);
   requestAnimationFrame(() => {
     // performance.now() counts from when the page started opening.
     const wait = Math.max(0, minimum - performance.now());
-    setTimeout(() => {
-      splash.classList.add("sc-hide");
-      document.documentElement.classList.remove("sc-loading");
-      setTimeout(() => splash.remove(), 500);
-    }, wait);
+    setTimeout(hide, wait);
   });
 }

@@ -106,9 +106,12 @@
       @keyframes sc-mark-in { from { opacity: 0; transform: scale(.35) rotate(-8deg) } to { opacity: 1; transform: none } }
       @keyframes sc-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       @keyframes sc-letter { to { opacity: 1; transform: none; filter: none } }
-      /* Later loads in the same session, and "reduce motion": skip straight to the logo and welcome. */
-      html.sc-quick .sc-book { display: none; }
-      html.sc-quick .sc-end img, html.sc-quick .sc-end .sc-welcome i { animation-delay: 0s; }
+      /* A quiet way out for anyone in a hurry: a tap or click anywhere skips the intro. */
+      #sc-splash { cursor: pointer; }
+      .sc-skip { position: absolute; right: 22px; bottom: 20px; font: 500 12px/1 Inter, system-ui, sans-serif; letter-spacing: .14em;
+        text-transform: uppercase; color: rgba(245,239,220,.45); opacity: 0; animation: sc-in .6s ease .8s forwards; }
+      @keyframes sc-in { to { opacity: 1 } }
+      /* "Reduce motion": skip straight to the logo and welcome. */
       @media (prefers-reduced-motion: reduce) {
         .sc-book { display: none; }
         #sc-splash *, #sc-splash *::before { animation: none !important; }
@@ -117,10 +120,6 @@
     </style>
   </head>
   <body>
-    <script>
-      // A repeat load in this browser session skips the book and shows the welcome at once.
-      try { if (sessionStorage.getItem("sc_splash_seen")) document.documentElement.classList.add("sc-quick"); } catch (e) {}
-    </script>
     <div id="sc-splash" role="status" aria-label="Loading Student Companion AI">
       <div class="sc-stage">
         <div class="sc-book" aria-hidden="true">
@@ -133,6 +132,7 @@
           <div class="sc-leaf d"><div class="f"><span class="sc-txt">Your next step</span></div><div class="b"><span class="sc-txt">In <em>seconds.</em></span></div></div>
         </div>
       </div>
+      <span class="sc-skip">Tap to skip</span>
       <div class="sc-end">
         <img src="/splash-mark.png" alt="" />
         <p class="sc-welcome" aria-hidden="true"><i style="--n:0">W</i><i style="--n:1">e</i><i style="--n:2">l</i><i style="--n:3">c</i><i style="--n:4">o</i><i style="--n:5">m</i><i style="--n:6">e</i><i style="--n:7"> </i><i style="--n:8">t</i><i style="--n:9">o</i><i style="--n:10"> </i><i style="--n:11">S</i><i style="--n:12">t</i><i style="--n:13">u</i><i style="--n:14">d</i><i style="--n:15">e</i><i style="--n:16">n</i><i style="--n:17">t</i><i style="--n:18"> </i><i style="--n:19">C</i><i style="--n:20">o</i><i style="--n:21">m</i><i style="--n:22">p</i><i style="--n:23">a</i><i style="--n:24">n</i><i style="--n:25">i</i><i style="--n:26">o</i><i style="--n:27">n</i><i style="--n:28"> </i><i class="g" style="--n:29">A</i><i class="g" style="--n:30">I</i></p>
