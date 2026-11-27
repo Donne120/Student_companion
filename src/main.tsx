@@ -16,7 +16,6 @@ if (splash) {
   // Every page load plays the whole intro: the book's pages flip and fold
   // into the logo, then "Welcome to Student Companion AI" writes in (done
   // at about 5.2 s) and stays about 1.6 s so it can be read: 6.8 s in all.
-  // A tap or click skips it; the app is already drawn underneath.
   const minimum = 6800;
   const hide = () => {
     if (!splash.isConnected) return;
@@ -24,7 +23,6 @@ if (splash) {
     document.documentElement.classList.remove("sc-loading");
     setTimeout(() => splash.remove(), 600);
   };
-  splash.addEventListener("click", hide);
   requestAnimationFrame(() => {
     // performance.now() counts from when the page started opening.
     const wait = Math.max(0, minimum - performance.now());
