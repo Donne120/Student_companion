@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { BrandBand } from "./mobile/BrandBand";
 import { ViewAsBar } from "./chat/ViewAsBar";
 import { useParent } from "@/hooks/useParent";
+import { RoleQuestion } from "./chat/RoleQuestion";
 
 export const ChatContainer = () => {
   const [accessibilityMode, setAccessibilityMode] = useState(false);
@@ -121,6 +122,9 @@ export const ChatContainer = () => {
 
         {/* Spoken email briefing — appears once per session when connected */}
         <EmailBriefingGreeting />
+
+        {/* "Student, alumni or staff?" once, when the university email doesn't say */}
+        {parent ? null : <RoleQuestion />}
 
         {/* Messages */}
         <div className="pb-[180px] md:pb-44">
