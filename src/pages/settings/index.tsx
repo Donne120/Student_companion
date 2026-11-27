@@ -29,6 +29,7 @@ import {
   CalendarClock,
   ChevronDown,
   Palette,
+  UserRound,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { isAdmin as isAdminUser, grantAdminSession, getAdminEmail, clearAdminSession } from "@/utils/adminAuth";
@@ -38,6 +39,7 @@ import { EmailBriefingSettings } from "@/components/settings/EmailBriefingSettin
 import { OfficeHoursSummary } from "@/components/settings/OfficeHoursSummary";
 import { TwoStepSettings } from "@/components/settings/TwoStepSettings";
 import { ThemePicker } from "@/components/settings/ThemePicker";
+import { RoleSettings } from "@/components/settings/RoleSettings";
 
 // Settings section props
 type SettingsSectionProps = {
@@ -415,6 +417,15 @@ export default function Settings() {
               collapsible
             >
               <TwoStepSettings />
+            </SettingsSection>
+
+            <SettingsSection
+              title="I am a"
+              description="Student, alumni or staff, so answers fit you"
+              icon={<UserRound className="h-5 w-5" />}
+              collapsible
+            >
+              <RoleSettings />
             </SettingsSection>
 
             <SettingsSection
