@@ -1,6 +1,6 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="sc-loading">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
@@ -41,9 +41,48 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,900;1,500;1,600&display=swap" />
+    <link rel="preload" as="image" href="/splash-mark.png" />
+    <style>
+      /* Shown the instant the page opens, before the app's code arrives, so
+         visitors never see a blank white page. Removed by src/main.tsx once
+         the app has drawn its first screen. */
+      html.sc-loading, html.sc-loading body { background: #1A1A1A; }
+      #sc-splash { position: fixed; inset: 0; z-index: 2147483000; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 22px; background: #1A1A1A;
+        transition: opacity .45s ease, visibility .45s ease; }
+      #sc-splash.sc-hide { opacity: 0; visibility: hidden; }
+      #sc-splash img { width: 56px; height: auto; animation: sc-breathe 2.4s ease-in-out infinite; }
+      #sc-splash .sc-name { font: 500 20px/1.2 "Playfair Display", Georgia, "Times New Roman", serif;
+        letter-spacing: .02em; color: #F5EFDC; margin: 0; opacity: 0; animation: sc-in .7s ease .15s forwards; }
+      #sc-splash .sc-name span { color: #D4AF37; }
+      #sc-splash .sc-bar { width: 120px; height: 2px; border-radius: 2px; background: rgba(212,175,55,.18);
+        overflow: hidden; opacity: 0; animation: sc-in .7s ease .35s forwards; }
+      #sc-splash .sc-bar i { display: block; width: 40%; height: 100%; border-radius: 2px; background: #D4AF37;
+        animation: sc-slide 1.3s ease-in-out infinite; }
+      @keyframes sc-breathe { 0%,100% { transform: scale(1); opacity: .9 } 50% { transform: scale(1.05); opacity: 1 } }
+      @keyframes sc-in { to { opacity: 1 } }
+      @keyframes sc-slide { 0% { transform: translateX(-100%) } 100% { transform: translateX(250%) } }
+      @media (prefers-reduced-motion: reduce) {
+        #sc-splash img, #sc-splash .sc-bar i { animation: none; }
+        #sc-splash .sc-name, #sc-splash .sc-bar { animation: none; opacity: 1; }
+      }
+    </style>
   </head>
   <body>
+    <div id="sc-splash" role="status" aria-label="Loading Student Companion AI">
+      <img src="/splash-mark.png" alt="" width="56" />
+      <p class="sc-name">Student Companion <span>AI</span></p>
+      <div class="sc-bar"><i></i></div>
+    </div>
     <div id="root"></div>
+    <script>
+      // Safety net: if the app hasn't started after 12 s (a failed download,
+      // an error), take the loading screen away rather than spin forever.
+      setTimeout(function () {
+        var s = document.getElementById("sc-splash");
+        if (s) { s.classList.add("sc-hide"); document.documentElement.classList.remove("sc-loading"); }
+      }, 12000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {

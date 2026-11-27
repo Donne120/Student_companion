@@ -41,8 +41,6 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [welcomeVisible, setWelcomeVisible] = useState(true);
-  const [welcomeFading, setWelcomeFading] = useState(false);
   const [heroIn, setHeroIn] = useState(false);
   const [visibleMessages, setVisibleMessages] = useState(0);
   const [typingText, setTypingText] = useState("");
@@ -253,16 +251,6 @@ export default function LandingPage() {
     return () => observer.disconnect();
   }, []);
 
-  // Welcome animation: show for 2.4s then fade out
-  useEffect(() => {
-    const fadeTimer = setTimeout(() => setWelcomeFading(true), 2400);
-    const hideTimer = setTimeout(() => setWelcomeVisible(false), 3000);
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(hideTimer);
-    };
-  }, []);
-
   if (currentUser) {
     return <Navigate to="/chat" replace />;
   }
@@ -270,45 +258,6 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-[#1A1A1A]">
 
-      {/* Welcome splash animation */}
-      {welcomeVisible && (
-        <div
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#1A1A1A]"
-          style={{
-            transition: "opacity 0.6s ease",
-            opacity: welcomeFading ? 0 : 1,
-            pointerEvents: welcomeFading ? "none" : "auto",
-          }}
-        >
-          <img
-            src={COMPANION_LOGO}
-            alt="Student Companion AI"
-            className="w-16 h-16 object-contain mb-6"
-            style={{
-              animation: "welcomeLogo 0.6s ease forwards",
-            }}
-          />
-          <p
-            className="text-white font-serif text-2xl md:text-3xl tracking-wide"
-            style={{
-              animation: "welcomeText 0.8s ease 0.3s both",
-            }}
-          >
-            Welcome to{" "}
-            <span className="text-[#D4AF37]">Student Companion AI</span>
-          </p>
-          <style>{`
-            @keyframes welcomeLogo {
-              from { opacity: 0; transform: scale(0.7); }
-              to   { opacity: 1; transform: scale(1); }
-            }
-            @keyframes welcomeText {
-              from { opacity: 0; transform: translateY(12px); }
-              to   { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
-        </div>
-      )}
 
       {/* Top nav */}
       <header
