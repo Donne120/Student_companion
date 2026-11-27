@@ -38,6 +38,7 @@ import { OfficeHoursSummary } from "@/components/settings/OfficeHoursSummary";
 import { TwoStepSettings } from "@/components/settings/TwoStepSettings";
 import { ThemePicker } from "@/components/settings/ThemePicker";
 import { RoleSettings } from "@/components/settings/RoleSettings";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 
 // Settings section props
 type SettingsSectionProps = {
@@ -754,6 +755,10 @@ export default function Settings() {
             Chat preferences are saved on this device. Your email briefing settings are saved to your
             account and follow you everywhere.
           </p>
+        </div>
+
+        <div className="mt-6 pb-6">
+          <SignOutButton />
         </div>
       </main>
     </div>
