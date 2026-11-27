@@ -14,7 +14,7 @@ createRoot(document.getElementById("root")!).render(<App />);
 const splash = document.getElementById("sc-splash");
 if (splash) {
   // The first open in a browser session plays the whole intro (the book's
-  // pages flip and fold into the logo, then the welcome writes in: 3 s).
+  // pages flip and fold into the logo, then the welcome writes in: 4.8 s).
   // Later loads skip the book (index.html) and wait only 0.9 s.
   let firstVisit = true;
   try {
@@ -23,7 +23,7 @@ if (splash) {
   } catch {
     /* storage unavailable: treat as a first visit */
   }
-  const minimum = firstVisit ? 3000 : 900;
+  const minimum = firstVisit ? 4800 : 900;
   requestAnimationFrame(() => {
     // performance.now() counts from when the page started opening.
     const wait = Math.max(0, minimum - performance.now());

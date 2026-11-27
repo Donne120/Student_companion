@@ -56,32 +56,53 @@
       #sc-splash.sc-hide { opacity: 0; visibility: hidden; }
       .sc-stage { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
       .sc-book { position: relative; width: min(78vw, 620px); aspect-ratio: 1.55; perspective: 1600px;
-        animation: sc-book-in .5s cubic-bezier(.2,.7,.2,1) both, sc-book-out .55s cubic-bezier(.6,0,.4,1) 1.55s forwards; }
+        animation: sc-book-in .5s cubic-bezier(.2,.7,.2,1) both, sc-book-out .55s cubic-bezier(.6,0,.4,1) 3.35s forwards; }
       .sc-book::before { content: ""; position: absolute; left: -2.2%; right: -2.2%; top: 3%; bottom: -4%;
         border-radius: 10px; background: linear-gradient(#C29A3A, #8A6A1F); box-shadow: 0 40px 80px rgba(0,0,0,.55); }
       .sc-page, .sc-leaf { position: absolute; top: 0; width: 50%; height: 100%;
         background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.20) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat,
           linear-gradient(90deg, #EDE3C6, #FBF7E9); }
-      .sc-page.l { left: 0; border-radius: 8px 0 0 8px; box-shadow: inset -26px 0 36px -26px rgba(120,90,30,.45); }
+      .sc-page.l { left: 0; z-index: 0; border-radius: 8px 0 0 8px; box-shadow: inset -26px 0 36px -26px rgba(120,90,30,.45); }
       .sc-page.r { left: 50%; border-radius: 0 8px 8px 0; background-color: #FBF7E9;
         box-shadow: inset 26px 0 36px -26px rgba(120,90,30,.45); }
       .sc-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-1px); background: rgba(168,131,47,.55); }
-      .sc-leaf { left: 50%; border-radius: 0 8px 8px 0; transform-origin: left center; background-color: #FFFDF5;
-        box-shadow: inset 26px 0 36px -26px rgba(120,90,30,.35), 0 0 0 1px rgba(168,131,47,.25);
-        animation: sc-turn .62s cubic-bezier(.45,.05,.35,1) both; }
-      .sc-leaf.a { animation-delay: .35s; } .sc-leaf.b { animation-delay: .55s; }
-      .sc-leaf.c { animation-delay: .75s; } .sc-leaf.d { animation-delay: .95s; }
+      .sc-leaf { left: 50%; background: none; transform-origin: left center; transform-style: preserve-3d;
+        animation: sc-turn .6s cubic-bezier(.45,.05,.35,1) both; }
+      /* Unturned pages stack first-on-top on the right; once turned, the latest sits on top on the left. */
+      .sc-leaf.a { animation-delay: .75s; --zr: 14; --zl: 21; } .sc-leaf.b { animation-delay: 1.3s; --zr: 13; --zl: 22; }
+      .sc-leaf.c { animation-delay: 1.85s; --zr: 12; --zl: 23; } .sc-leaf.d { animation-delay: 2.4s; --zr: 11; --zl: 24; }
+      .sc-leaf .f, .sc-leaf .b { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+        background: inherit; background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.12) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat, #FFFDF5; }
+      .sc-leaf .f { border-radius: 0 8px 8px 0; box-shadow: inset 26px 0 36px -26px rgba(120,90,30,.35), 0 0 0 1px rgba(168,131,47,.25); }
+      .sc-leaf .b { border-radius: 8px 0 0 8px; transform: rotateY(180deg);
+        background: repeating-linear-gradient(#0000 0 7.5%, rgba(168,131,47,.12) 7.5% 7.8%) 50% 60% / 78% 72% no-repeat, linear-gradient(90deg, #EDE3C6, #FBF7E9);
+        box-shadow: inset -26px 0 36px -26px rgba(120,90,30,.45); }
+      .sc-leaf .f::after, .sc-leaf .b::after { content: ""; position: absolute; inset: 0; border-radius: inherit;
+        background: #3A2A0A; opacity: 0; animation: sc-shade .6s ease both; animation-delay: inherit; pointer-events: none; }
+      .sc-leaf .f, .sc-leaf .b { animation-delay: inherit; }
+      @keyframes sc-shade { 0%,10% { opacity: 0 } 50% { opacity: .22 } 90%,100% { opacity: 0 } }
+      /* The phrase on each page. */
+      .sc-txt { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 0 9%; text-align: center; font: 600 clamp(17px, 3.8vmin, 36px)/1.2 "Playfair Display", Georgia, "Times New Roman", serif;
+        color: #2E2615; }
+      .sc-txt::before { content: ""; width: 26px; height: 2px; margin-bottom: .55em; background: #C9A24A; border-radius: 2px; }
+      .sc-txt em { font-style: italic; color: #9A7524; }
       .sc-end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
       .sc-end img { width: clamp(64px, 11vmin, 96px); height: auto; opacity: 0;
-        animation: sc-mark-in .7s cubic-bezier(.2,.8,.2,1.15) 1.75s forwards, sc-float 3.2s ease-in-out 2.6s infinite; }
+        animation: sc-mark-in .7s cubic-bezier(.2,.8,.2,1.15) 3.55s forwards, sc-float 3.2s ease-in-out 4.4s infinite; }
       .sc-end .sc-welcome { margin: 26px 16px 0; text-align: center; font: 500 clamp(22px, 3.6vmin, 34px)/1.25 "Playfair Display", Georgia, "Times New Roman", serif;
         letter-spacing: .02em; color: #F5EFDC; }
       .sc-end .sc-welcome i { font-style: normal; display: inline-block; white-space: pre; opacity: 0; transform: translateY(8px); filter: blur(4px);
-        animation: sc-letter .5s ease forwards; animation-delay: calc(2.05s + var(--n) * .035s); }
+        animation: sc-letter .5s ease forwards; animation-delay: calc(3.85s + var(--n) * .035s); }
       .sc-end .sc-welcome .g { color: #D4AF37; }
       @keyframes sc-book-in { from { opacity: 0; transform: rotateX(22deg) scale(.92) } to { opacity: 1; transform: none } }
       @keyframes sc-book-out { to { opacity: 0; transform: scale(.14); filter: blur(2px) } }
-      @keyframes sc-turn { from { transform: rotateY(0) } 50% { transform: rotateY(-90deg) translateZ(14px); filter: brightness(.8) } to { transform: rotateY(-180deg) } }
+      @keyframes sc-turn {
+        0%   { transform: rotateY(0); z-index: var(--zr); }
+        49%  { z-index: var(--zr); }
+        50%  { transform: rotateY(-90deg) translateZ(14px); z-index: var(--zl); }
+        100% { transform: rotateY(-180deg); z-index: var(--zl); }
+      }
       @keyframes sc-mark-in { from { opacity: 0; transform: scale(.35) rotate(-8deg) } to { opacity: 1; transform: none } }
       @keyframes sc-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
       @keyframes sc-letter { to { opacity: 1; transform: none; filter: none } }
@@ -103,8 +124,13 @@
     <div id="sc-splash" role="status" aria-label="Loading Student Companion AI">
       <div class="sc-stage">
         <div class="sc-book" aria-hidden="true">
-          <div class="sc-page l"></div><div class="sc-page r"></div><div class="sc-spine"></div>
-          <div class="sc-leaf a"></div><div class="sc-leaf b"></div><div class="sc-leaf c"></div><div class="sc-leaf d"></div>
+          <div class="sc-page l"><span class="sc-txt">Every answer</span></div>
+          <div class="sc-page r"><span class="sc-txt">Always <em>with you.</em></span></div>
+          <div class="sc-spine"></div>
+          <div class="sc-leaf a"><div class="f"><span class="sc-txt">from your <em>university</em></span></div><div class="b"><span class="sc-txt">Courses &amp; deadlines</span></div></div>
+          <div class="sc-leaf b"><div class="f"><span class="sc-txt">Policies &amp; handbooks</span></div><div class="b"><span class="sc-txt">Campus life</span></div></div>
+          <div class="sc-leaf c"><div class="f"><span class="sc-txt">Opportunities</span></div><div class="b"><span class="sc-txt">Careers &amp; scholarships</span></div></div>
+          <div class="sc-leaf d"><div class="f"><span class="sc-txt">Your next step</span></div><div class="b"><span class="sc-txt">In <em>seconds.</em></span></div></div>
         </div>
       </div>
       <div class="sc-end">
