@@ -14,9 +14,10 @@ createRoot(document.getElementById("root")!).render(<App />);
 const splash = document.getElementById("sc-splash");
 if (splash) {
   // Every page load plays the whole intro: the book's pages flip and fold
-  // into the logo, then the welcome writes in (4.8 s). A tap or click
-  // skips it; the app is already drawn underneath.
-  const minimum = 4800;
+  // into the logo, then "Welcome to Student Companion AI" writes in (done
+  // at about 5.2 s) and stays about 1.6 s so it can be read: 6.8 s in all.
+  // A tap or click skips it; the app is already drawn underneath.
+  const minimum = 6800;
   const hide = () => {
     if (!splash.isConnected) return;
     splash.classList.add("sc-hide");
